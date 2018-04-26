@@ -1,0 +1,41 @@
+Arianna Chiesa
+
+2D Simulation of Organic Thin Film Transistors
+
+project for the course: "Advanced Programming for Scientific Computing"
+
+====================================
+Built and execution of the program:
+====================================
+
+	What is needed:
+
+1. folder 'src' with the source files
+
+2. Makefile
+
+3. file input: the data set named "input_data.csv"
+
+4. libraries Bim++ and p4est must be installed.
+
+N.B. everything must be placed in a root folder, (2) and (3) outside the 'src' folder.
+
+
+	How to built the code:
+
+1. 'cd' to the directory containing the root folder where (1), (2) and (3) are.
+
+2. Type 'make' to compile.
+
+N.B. Now a 'build' folder should have been created in the root folder.
+
+
+	How to execute the code:
+	
+1. place the data set (3) in the new folder 'build'.
+  
+2. 'cd' to the 'build' directory.
+  
+3. type './mis_main2D' to execute.
+
+N.B. output files will be created in the 'build' folder.

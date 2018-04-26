@@ -1,0 +1,71 @@
+\hypertarget{classNLPoisson}{\section{N\-L\-Poisson Class Reference}
+\label{classNLPoisson}\index{N\-L\-Poisson@{N\-L\-Poisson}}
+}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classNLPoisson_a53fc882605e0a03ec9f24e169b630c71}{N\-L\-Poisson} (\hyperlink{classProbl}{Probl} \&P, std\-::vector$<$ double $>$ \&phi0)
+\item 
+\hypertarget{classNLPoisson_a60dbe42d8820449c1ff049c5ca1c7f37}{std\-::vector$<$ double $>$ \hyperlink{classNLPoisson_a60dbe42d8820449c1ff049c5ca1c7f37}{get\-\_\-nin} ()}\label{classNLPoisson_a60dbe42d8820449c1ff049c5ca1c7f37}
+
+\begin{DoxyCompactList}\small\item\em M\-E\-T\-H\-O\-D\-S. \end{DoxyCompactList}\item 
+\hypertarget{classNLPoisson_a89b1adb9cb861a8b38dc04d07dc85a39}{std\-::vector$<$ double $>$ {\bfseries get\-\_\-\-Vin} ()}\label{classNLPoisson_a89b1adb9cb861a8b38dc04d07dc85a39}
+
+\item 
+\hypertarget{classNLPoisson_a723d6b30b4f9e9884fdafa7aee71e3c2}{std\-::vector$<$ double $>$ {\bfseries get\-\_\-resnrm} ()}\label{classNLPoisson_a723d6b30b4f9e9884fdafa7aee71e3c2}
+
+\item 
+\hypertarget{classNLPoisson_a0e4b899e6a687b697312a990bc97cfeb}{int {\bfseries get\-\_\-niter} ()}\label{classNLPoisson_a0e4b899e6a687b697312a990bc97cfeb}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\-::vector$<$ double $>$ \hyperlink{classNLPoisson_a0fffe8f4cdcc6ed59ec7c83527c2ec2b}{\-\_\-\-Vin}
+\item 
+std\-::vector$<$ double $>$ \hyperlink{classNLPoisson_a6a4fd2946efe89cce686d43889f31eb3}{\-\_\-nin}
+\item 
+std\-::vector$<$ double $>$ \hyperlink{classNLPoisson_ab6ae242b8dba8c26f1a0ad8aa1e93f10}{\-\_\-res}
+\item 
+int \hyperlink{classNLPoisson_ab3168e1f22563d7d9a36feb53e915ca1}{\-\_\-niter}
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classNLPoisson_a53fc882605e0a03ec9f24e169b630c71}{\index{N\-L\-Poisson@{N\-L\-Poisson}!N\-L\-Poisson@{N\-L\-Poisson}}
+\index{N\-L\-Poisson@{N\-L\-Poisson}!NLPoisson@{N\-L\-Poisson}}
+\subsubsection[{N\-L\-Poisson}]{\setlength{\rightskip}{0pt plus 5cm}N\-L\-Poisson\-::\-N\-L\-Poisson (
+\begin{DoxyParamCaption}
+\item[{{\bf Probl} \&}]{P, }
+\item[{std\-::vector$<$ double $>$ \&}]{phi0}
+\end{DoxyParamCaption}
+)}}\label{classNLPoisson_a53fc882605e0a03ec9f24e169b630c71}
+Assemble system matrices.
+
+\hyperlink{classNewton}{Newton}'s algorithm.
+
+Assembling rhs term\-: res(intnodes)
+
+Assembling matrix\-: jac(intnodes,intnodes)
+
+Post-\/processing. 
+
+\subsection{Member Data Documentation}
+\hypertarget{classNLPoisson_a6a4fd2946efe89cce686d43889f31eb3}{\index{N\-L\-Poisson@{N\-L\-Poisson}!\-\_\-nin@{\-\_\-nin}}
+\index{\-\_\-nin@{\-\_\-nin}!NLPoisson@{N\-L\-Poisson}}
+\subsubsection[{\-\_\-nin}]{\setlength{\rightskip}{0pt plus 5cm}std\-::vector$<$double$>$ N\-L\-Poisson\-::\-\_\-nin\hspace{0.3cm}{\ttfamily [protected]}}}\label{classNLPoisson_a6a4fd2946efe89cce686d43889f31eb3}
+Initial guess for the electron density \hypertarget{classNLPoisson_ab3168e1f22563d7d9a36feb53e915ca1}{\index{N\-L\-Poisson@{N\-L\-Poisson}!\-\_\-niter@{\-\_\-niter}}
+\index{\-\_\-niter@{\-\_\-niter}!NLPoisson@{N\-L\-Poisson}}
+\subsubsection[{\-\_\-niter}]{\setlength{\rightskip}{0pt plus 5cm}int N\-L\-Poisson\-::\-\_\-niter\hspace{0.3cm}{\ttfamily [protected]}}}\label{classNLPoisson_ab3168e1f22563d7d9a36feb53e915ca1}
+n. iterations required to compute the initial guess \hypertarget{classNLPoisson_ab6ae242b8dba8c26f1a0ad8aa1e93f10}{\index{N\-L\-Poisson@{N\-L\-Poisson}!\-\_\-res@{\-\_\-res}}
+\index{\-\_\-res@{\-\_\-res}!NLPoisson@{N\-L\-Poisson}}
+\subsubsection[{\-\_\-res}]{\setlength{\rightskip}{0pt plus 5cm}std\-::vector$<$double$>$ N\-L\-Poisson\-::\-\_\-res\hspace{0.3cm}{\ttfamily [protected]}}}\label{classNLPoisson_ab6ae242b8dba8c26f1a0ad8aa1e93f10}
+residual vector \hypertarget{classNLPoisson_a0fffe8f4cdcc6ed59ec7c83527c2ec2b}{\index{N\-L\-Poisson@{N\-L\-Poisson}!\-\_\-\-Vin@{\-\_\-\-Vin}}
+\index{\-\_\-\-Vin@{\-\_\-\-Vin}!NLPoisson@{N\-L\-Poisson}}
+\subsubsection[{\-\_\-\-Vin}]{\setlength{\rightskip}{0pt plus 5cm}std\-::vector$<$double$>$ N\-L\-Poisson\-::\-\_\-\-Vin\hspace{0.3cm}{\ttfamily [protected]}}}\label{classNLPoisson_a0fffe8f4cdcc6ed59ec7c83527c2ec2b}
+Initial guess for the potential 
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+/vagrant/codice/src/\hyperlink{nlpoisson_8h}{nlpoisson.\-h}\item 
+/vagrant/codice/src/\hyperlink{nlpoisson_8cpp}{nlpoisson.\-cpp}\end{DoxyCompactItemize}
