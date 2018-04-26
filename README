@@ -5,7 +5,7 @@ Arianna Chiesa
 project for the course: "Advanced Programming for Scientific Computing"
 
 ====================================
-Built and execution of the program:
+Build and execution of the program:
 ====================================
 
 	What is needed:
@@ -21,7 +21,7 @@ Built and execution of the program:
 N.B. everything must be placed in a root folder, (2) and (3) outside the 'src' folder.
 
 
-	How to built the code:
+	How to build the code:
 
 1. 'cd' to the directory containing the root folder where (1), (2) and (3) are.
 

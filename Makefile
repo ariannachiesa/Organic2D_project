@@ -4,6 +4,7 @@ SRC_DIRS ?= ./src
 # Directory where Bim++ is installed.
 #BIMPP_PREFIX = ../bimpp
 #BIMPP_PREFIX = ./bimpp_install
+#BIMPP_PREFIX = /vagrant/bimpp_install
 BIMPP_PREFIX = /vagrant/bimpp_install
 
 SRCS := $(shell find $(SRC_DIRS) -name '*.cpp')
