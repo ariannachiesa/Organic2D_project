@@ -15,7 +15,17 @@ Probl::Constants::Constants(double T0){
 	_T0 = T0;
 	_Vth = _Kb * _T0 / _q;
 };
-// set T0 e set Vth	sigmankT
+
+/// Method which sets T0 value and update Vth and sigman_kT values
+void 
+Probl::set_T0(double T0){
+	std::cout<<"_T0 = "<<_cnst->_T0<<std::endl;
+	_cnst->_T0 = T0;
+	_cnst->_Vth = _cnst->_Kb * _cnst->_T0 / _cnst->_q;
+	_mat->_sigman_kT = _mat->_sigman / (_cnst->_Kb * _cnst->_T0);
+	std::cout<<"_T0 = "<<_cnst->_T0<<std::endl;
+};
+
 
 Probl::Material::Material(Constants c, double PhiB, double sigman, double mu0n){
 	_eps_semic_r = 2.90;			
@@ -31,7 +41,31 @@ Probl::Material::Material(Constants c, double PhiB, double sigman, double mu0n){
 	_sigman_kT = _sigman / (c._Kb * c._T0);
 	_mu0n = mu0n;
 };
-// set PhiB sigman sigmankT mu0n
+// set mu0n
+
+/// Method which sets PhiB
+void 
+Probl::set_PhiB(double PhiB){
+	_mat->_PhiB = PhiB;
+};
+
+/// Method which sets sigman
+void 
+Probl::set_sigman(double sigman){
+	_mat->_sigman = sigman;
+};
+
+/// Method which sets sigman_kT
+void 
+Probl::set_sigmankT(double sigmankT){
+	_mat->_sigman_kT = sigmankT;
+};
+
+/// Method which sets mu0n
+void 
+Probl::set_mu0n(double mu0n){
+	_mat->_mu0n = mu0n;
+};
 
 Probl::Quad::Quad(int n){
 	/// Quadrature nodes and weights
@@ -431,6 +465,12 @@ Probl::Probl(	int maxcycle,
 	gx.clear();
 	gw.clear();
 	coeff.clear();
+	
+	_cnst = &Cnst;
+	_mat = &Mat;
+	_quad = &Q;
+	_alg = &Alg;
+	_dev = &Dev;
 
 };
 

@@ -67,6 +67,8 @@ int main(int argc, char** argv){
 	/// N.B : if n.cycles = 0 then the mesh will be constitute by a single row of elements on the y-axis
 	/// otherwise it will be refined n.cycles times and will have 2*n.cycles elements on both the x-axis and the y-axis
 	Probl P(0);
+	
+	P.set_T0(295);
 
 	tstart_probl = clock() - tstart_probl;
 	std::cout<<"Construction class Probl run time: "<<tstart_probl<<" , ("<<((float)tstart_probl)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;

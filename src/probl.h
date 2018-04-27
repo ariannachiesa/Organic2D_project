@@ -17,9 +17,6 @@
  */
 class Probl
 {	
-	std::vector<double>	_data_phi_lumo;		/**< interpolation table */
-	std::vector<double>	_data_n;			/**< interpolated values */
-	
     public:
 	
 		/// Class to store physical constants
@@ -231,7 +228,18 @@ class Probl
 
 	std::vector<double>& get_data_phi_lumo();
 	std::vector<double> get_data_n();
+	void set_T0(double T0);
 
+	protected:
+		
+		std::vector<double>	_data_phi_lumo;		/**< interpolation table */
+		std::vector<double>	_data_n;			/**< interpolated values */
+		Constants*			_cnst;
+		Material*			_mat;
+		Quad*				_quad;
+		Algor*				_alg;
+		Device*				_dev;
+	
 };
 
 #endif /* PROBL_H */
