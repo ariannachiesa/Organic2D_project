@@ -15,7 +15,8 @@ Probl::Constants::Constants(double T0){
 	_T0 = T0;
 	_Vth = _Kb * _T0 / _q;
 };
-	
+// set T0 e set Vth	sigmankT
+
 Probl::Material::Material(Constants c, double PhiB, double sigman, double mu0n){
 	_eps_semic_r = 2.90;			
 	_eps_ins_r   = 2.82222;			
@@ -30,6 +31,7 @@ Probl::Material::Material(Constants c, double PhiB, double sigman, double mu0n){
 	_sigman_kT = _sigman / (c._Kb * c._T0);
 	_mu0n = mu0n;
 };
+// set PhiB sigman sigmankT mu0n
 
 Probl::Quad::Quad(int n){
 	/// Quadrature nodes and weights
@@ -42,6 +44,7 @@ Probl::Quad::Quad(int n){
 		_gw.push_back( gw[i] );
 	}
 };
+// set n recompute gx gw
 
 // std::vector<double> 
 // Probl::Quad::get_gx(){
@@ -116,8 +119,7 @@ Probl::Device::Device(	double Vshift, double Csb, double t_semic, double t_ins, 
 	
 	std::vector<int>	row1, row2;
 	
-	if(maxcycle == 0){ 	// Mesh solo lungo l'asse y
-
+	//if(maxcycle == 0){ 	// Mesh solo lungo l'asse y
 		const int	nNodes = 801;
 		std::cout<<"Nnodes = "<<nNodes<<std::endl;
 
@@ -193,6 +195,15 @@ Probl::Device::Device(	double Vshift, double Csb, double t_semic, double t_ins, 
 		}
 
 		_msh.vtk_export ("mesh semic-ins");
+		
+		recursive = 0; partforcoarsen = 1;
+		for (int cycle = 0; cycle < maxcycle; ++cycle)	// loop which refines the mesh uniformly
+		{
+			_msh.set_refine_marker (uniform_refinement);
+			_msh.refine (recursive, partforcoarsen);
+		}
+
+		_msh.vtk_export ("mesh semic-ins refined");
 
 		using idx_t = p4est_gloidx_t;
 		idx_t			indexE;
@@ -215,57 +226,58 @@ Probl::Device::Device(	double Vshift, double Csb, double t_semic, double t_ins, 
 				}
 			}
 		}
-	}
-	else{	// Mesh rifinita uniforme lungo entrambi gli assi
-
-		// Define mesh.
-		if(_ins){	// if insulator is present: mesh with both the insulator and the semiconductor
-			constexpr p4est_topidx_t simple_conn_num_vertices = 6;
-			constexpr p4est_topidx_t simple_conn_num_trees = 2;
-			const double simple_conn_p[simple_conn_num_vertices*2] = {0, -t_semic, L, -t_semic, L, 0, 0, 0, L, t_ins, 0, t_ins};
-			const p4est_topidx_t simple_conn_t[simple_conn_num_trees*5] = {1, 2, 3, 4, 1, 4, 3, 5, 6, 1};
-			_msh.read_connectivity (simple_conn_p, simple_conn_num_vertices, simple_conn_t, simple_conn_num_trees);
-		}
-		else{		// mesh with semiconductor only
-			constexpr p4est_topidx_t simple_conn_num_vertices = 4;
-			constexpr p4est_topidx_t simple_conn_num_trees = 1;
-			const double simple_conn_p[simple_conn_num_vertices*2] = {0, 0, L, 0, L, t_semic, 0, t_semic};
-			const p4est_topidx_t simple_conn_t[simple_conn_num_trees*5] = {1, 2, 3, 4, 1};	
-			_msh.read_connectivity (simple_conn_p, simple_conn_num_vertices, simple_conn_t, simple_conn_num_trees);
-		}
-
-		recursive = 0; partforcoarsen = 1;
-		for (int cycle = 0; cycle < maxcycle; ++cycle)	// loop which refines the mesh uniformly
-		{
-			_msh.set_refine_marker (uniform_refinement);
-			_msh.refine (recursive, partforcoarsen);
-		}
-
-		_msh.vtk_export ("mesh semic-ins refined");
-
-		using idx_t = p4est_gloidx_t;
-		idx_t			indexE;
-		p4est_locidx_t	indexT;
+	//}
+	// else{	// Mesh rifinita uniforme lungo entrambi gli assi
+		// std::cout<<"entra qui: maxcyle = 2 default"<<std::endl;
 	
-		for (auto quadrant = _msh.begin_quadrant_sweep ();
-			quadrant != _msh.end_quadrant_sweep ();
-			++quadrant)
-		{
-			for(int i=0; i<4; i++){
-				indexE = quadrant->e(i);			// index of the boundary which the i-th vertex of the quadrant lies on (in current tree)
-				indexT = quadrant->get_tree_idx ();	// index of the current tree
+		// // Define mesh.
+		// if(_ins){	// if insulator is present: mesh with both the insulator and the semiconductor
+			// constexpr p4est_topidx_t simple_conn_num_vertices = 6;
+			// constexpr p4est_topidx_t simple_conn_num_trees = 2;
+			// const double simple_conn_p[simple_conn_num_vertices*2] = {0, -t_semic, L, -t_semic, L, 0, 0, 0, L, t_ins, 0, t_ins};
+			// const p4est_topidx_t simple_conn_t[simple_conn_num_trees*5] = {1, 2, 3, 4, 1, 4, 3, 5, 6, 1};
+			// _msh.read_connectivity (simple_conn_p, simple_conn_num_vertices, simple_conn_t, simple_conn_num_trees);
+		// }
+		// else{		// mesh with semiconductor only
+			// constexpr p4est_topidx_t simple_conn_num_vertices = 4;
+			// constexpr p4est_topidx_t simple_conn_num_trees = 1;
+			// const double simple_conn_p[simple_conn_num_vertices*2] = {0, 0, L, 0, L, t_semic, 0, t_semic};
+			// const p4est_topidx_t simple_conn_t[simple_conn_num_trees*5] = {1, 2, 3, 4, 1};	
+			// _msh.read_connectivity (simple_conn_p, simple_conn_num_vertices, simple_conn_t, simple_conn_num_trees);
+		// }
+
+		// recursive = 0; partforcoarsen = 1;
+		// for (int cycle = 0; cycle < maxcycle; ++cycle)	// loop which refines the mesh uniformly
+		// {
+			// _msh.set_refine_marker (uniform_refinement);
+			// _msh.refine (recursive, partforcoarsen);
+		// }
+
+		// _msh.vtk_export ("mesh semic-ins refined");
+
+		// using idx_t = p4est_gloidx_t;
+		// idx_t			indexE;
+		// p4est_locidx_t	indexT;
+	
+		// for (auto quadrant = _msh.begin_quadrant_sweep ();
+			// quadrant != _msh.end_quadrant_sweep ();
+			// ++quadrant)
+		// {
+			// for(int i=0; i<4; i++){
+				// indexE = quadrant->e(i);			// index of the boundary which the i-th vertex of the quadrant lies on (in current tree)
+				// indexT = quadrant->get_tree_idx ();	// index of the current tree
 			
-				if( (indexE == 0) && (indexT == 0)){
-					_alldnodes.push_back( quadrant->gt(i) );
-					row1.push_back( quadrant->gt(i) );
-				}
-				if( (indexE == 1) && (indexT == 1) ){	
-					_alldnodes.push_back( quadrant->gt(i) );
-					row2.push_back( quadrant->gt(i) );
-				}
-			}
-		}
-	}
+				// if( (indexE == 0) && (indexT == 0)){
+					// _alldnodes.push_back( quadrant->gt(i) );
+					// row1.push_back( quadrant->gt(i) );
+				// }
+				// if( (indexE == 1) && (indexT == 1) ){	
+					// _alldnodes.push_back( quadrant->gt(i) );
+					// row2.push_back( quadrant->gt(i) );
+				// }
+			// }
+		// }
+	// }
 	
 	std::vector<int>::iterator it1, it2, it3;
 		
@@ -364,14 +376,15 @@ Probl::Device::Device(	double Vshift, double Csb, double t_semic, double t_ins, 
 	_Efield = Vdrain / L;
 };
 
-Probl::Probl(	double T0,	// Constants
+Probl::Probl(	int maxcycle,
+				double T0,	// Constants
 				double PhiB, double sigman, double mu0n,		// Material
 				int nq,		// Quad
 				int pmaxit, int maxit, int maxit_mnewton, int nsteps_check, double maxnpincr, double ptoll,
 				double toll, double dt0, double dtcut, double dtmax, double dtmin, double maxdtincr,	// Algor
 				double Vshift, double Csb, double t_semic, double t_ins,
 				double L, bool ins,		// Device
-				std::array<int,2> pins, std::array<int,2> contacts, double section, double Vdrain, int maxcycle)
+				std::array<int,2> pins, std::array<int,2> contacts, double section, double Vdrain)
 {	
 	///	Calculation of the interpolation table
 	int j = 0;
@@ -391,6 +404,8 @@ Probl::Probl(	double T0,	// Constants
 	Constants	Cnst(T0);
 	Material	Mat(Cnst, PhiB, sigman, mu0n);
 	Quad		Q(nq);
+	Algor		Alg(pmaxit, maxit, maxit_mnewton, nsteps_check, maxnpincr, ptoll, toll, dt0, dtcut, dtmax, dtmin, maxdtincr);
+	Device		Dev(Vshift, Csb, t_semic, t_ins, L, ins, pins, contacts, section, Vdrain, maxcycle);
 	
 	///	Calculation of interpolated n
     std::vector<double> coeff(_data_phi_lumo.size(),0),

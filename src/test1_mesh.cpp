@@ -62,10 +62,11 @@ int main(int argc, char** argv){
 	clock_t tstart_probl;
 	tstart_probl = clock();
 	
-	/// class Probl
-	//Probl 		P(	T0, PhiB, sigman, n, pmaxit, maxit, maxit_mnewton, nsteps_check, maxnpincr, ptoll, toll, dt0, dtcut,
-	//				dtmax, dtmin, maxdtincr, Vshift, Csb, t_semic, t_ins, L, ins, pins, contacts, section, Vdrain, cycle);
-	Probl P;
+	/// class Probl :
+	/// input parameter to be specified by the user: number of refinement cycles for the mesh.
+	/// N.B : if n.cycles = 0 then the mesh will be constitute by a single row of elements on the y-axis
+	/// otherwise it will be refined n.cycles times and will have 2*n.cycles elements on both the x-axis and the y-axis
+	Probl P(0);
 
 	tstart_probl = clock() - tstart_probl;
 	std::cout<<"Construction class Probl run time: "<<tstart_probl<<" , ("<<((float)tstart_probl)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
