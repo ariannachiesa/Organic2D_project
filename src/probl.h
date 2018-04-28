@@ -12,8 +12,12 @@
 #include<vector>
 
 /**
+ * class Probl :
  * It groups all other parameters classes (Constants, Material, Quad, Algor, Device) 
  *	as it contains pointers to them + stores an interpolation table needed when performing Newton's algorithm
+ *	Input parameter for its constructor: number of refinement cycles for the mesh.
+ *	N.B : if n.cycles = 0 then the mesh will be constitute by a single row of elements on the y-axis
+ *	otherwise it will be refined n.cycles times and will have 2*n.cycles elements on both the x-axis and the y-axis
  */
 class Probl
 {	
