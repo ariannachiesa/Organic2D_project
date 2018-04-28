@@ -19,11 +19,9 @@ Probl::Constants::Constants(double T0){
 /// Method which sets T0 value and update Vth and sigman_kT values
 void 
 Probl::set_T0(double T0){
-	std::cout<<"_T0 = "<<_cnst->_T0<<std::endl;
 	_cnst->_T0 = T0;
 	_cnst->_Vth = _cnst->_Kb * _cnst->_T0 / _cnst->_q;
 	_mat->_sigman_kT = _mat->_sigman / (_cnst->_Kb * _cnst->_T0);
-	std::cout<<"_T0 = "<<_cnst->_T0<<std::endl;
 };
 
 
@@ -37,11 +35,10 @@ Probl::Material::Material(Constants c, double PhiB, double sigman, double mu0n){
 	_N0 = 1e27; 
 	_Egap = 1.55; 
 
-	_sigman = sigman * c._Kb * 300;	
+	_sigman = sigman * c._Kb * 300;
 	_sigman_kT = _sigman / (c._Kb * c._T0);
 	_mu0n = mu0n;
 };
-// set mu0n
 
 /// Method which sets PhiB
 void 
@@ -69,6 +66,7 @@ Probl::set_mu0n(double mu0n){
 
 Probl::Quad::Quad(int n){
 	/// Quadrature nodes and weights
+	std::cout<<"n = "<<n<<std::endl;
 	double  gx[n],
 			gw[n];
 	webbur::hermite_compute (n, gx, gw);
@@ -78,27 +76,6 @@ Probl::Quad::Quad(int n){
 		_gw.push_back( gw[i] );
 	}
 };
-// set n recompute gx gw
-
-// std::vector<double> 
-// Probl::Quad::get_gx(){
-	// return _gx;
-// };
-
-// std::vector<double> 
-// Probl::Quad::get_gw(){
-	// return _gw;
-// };
-
-// double* 
-// Probl::Quad::get_pgx(){
-	// return &_gx[0];
-// };
-
-// std::vector<double>* 
-// Probl::Quad::get_pgw(){
-	// return &_gw;
-// };
 
 Probl::Algor::Algor(	int pmaxit, int maxit, int maxit_mnewton, int nsteps_check, double maxnpincr, double ptoll, 
 						double toll, double dt0, double dtcut, double dtmax, double dtmin, double maxdtincr){
@@ -125,9 +102,82 @@ Probl::Algor::Algor(	int pmaxit, int maxit, int maxit_mnewton, int nsteps_check,
 	_clampOnOff = true;
 	_savedata = true;
 };
+
+/// Method which sets pmaxit
+void 
+Probl::set_pmaxit(int pmaxit){
+	_alg->_pmaxit = pmaxit;
+};
+
+/// Method which sets maxit
+void 
+Probl::set_maxit(int maxit){
+	_alg->_maxit = maxit;
+};
+
+/// Method which sets maxit_mnewton
+void 
+Probl::set_maxit_mnewton(int maxit_mnewton){
+	_alg->_maxit_mnewton = maxit_mnewton;
+};
+
+/// Method which sets nsteps_check
+void 
+Probl::set_nsteps_check(int nsteps_check){
+	_alg->_nsteps_check = nsteps_check;
+};
+
+/// Method which sets maxnpincr
+void 
+Probl::set_maxnpincr(double maxnpincr){
+	_alg->_maxnpincr = maxnpincr;
+};
+
+/// Method which sets ptoll
+void 
+Probl::set_ptoll(double ptoll){
+	_alg->_ptoll = ptoll;
+};
+
+/// Method which sets toll
+void 
+Probl::set_toll(double toll){
+	_alg->_toll = toll;
+};
+
+/// Method which sets dt0
+void 
+Probl::set_dt0(double dt0){
+	_alg->_dt0 = dt0;
+};
+
+/// Method which sets dtcut
+void 
+Probl::set_dtcut(double dtcut){
+	_alg->_dtcut = dtcut;
+};
+
+/// Method which sets dtmax
+void 
+Probl::set_dtmax(double dtmax){
+	_alg->_dtmax = dtmax;
+};
+
+/// Method which sets dtmin
+void 
+Probl::set_dtmin(double dtmin){
+	_alg->_dtmin = dtmin;
+};
+
+/// Method which sets maxdtincr
+void 
+Probl::set_maxdtincr(double maxdtincr){
+	_alg->_maxdtincr= maxdtincr;
+};
 	
 Probl::Device::Device(	double Vshift, double Csb, double t_semic, double t_ins, double L, bool ins, std::array<int,2>& pins, 
-						std::array<int,2>& contacts, double section, double Vdrain, int maxcycle){
+						std::array<int,2>& contacts, double section, double Vdrain, int maxcycle)
+{
 	
 	int	recursive, partforcoarsen;
 
@@ -153,7 +203,6 @@ Probl::Device::Device(	double Vshift, double Csb, double t_semic, double t_ins, 
 	
 	std::vector<int>	row1, row2;
 	
-	//if(maxcycle == 0){ 	// Mesh solo lungo l'asse y
 		const int	nNodes = 801;
 		std::cout<<"Nnodes = "<<nNodes<<std::endl;
 
@@ -260,58 +309,6 @@ Probl::Device::Device(	double Vshift, double Csb, double t_semic, double t_ins, 
 				}
 			}
 		}
-	//}
-	// else{	// Mesh rifinita uniforme lungo entrambi gli assi
-		// std::cout<<"entra qui: maxcyle = 2 default"<<std::endl;
-	
-		// // Define mesh.
-		// if(_ins){	// if insulator is present: mesh with both the insulator and the semiconductor
-			// constexpr p4est_topidx_t simple_conn_num_vertices = 6;
-			// constexpr p4est_topidx_t simple_conn_num_trees = 2;
-			// const double simple_conn_p[simple_conn_num_vertices*2] = {0, -t_semic, L, -t_semic, L, 0, 0, 0, L, t_ins, 0, t_ins};
-			// const p4est_topidx_t simple_conn_t[simple_conn_num_trees*5] = {1, 2, 3, 4, 1, 4, 3, 5, 6, 1};
-			// _msh.read_connectivity (simple_conn_p, simple_conn_num_vertices, simple_conn_t, simple_conn_num_trees);
-		// }
-		// else{		// mesh with semiconductor only
-			// constexpr p4est_topidx_t simple_conn_num_vertices = 4;
-			// constexpr p4est_topidx_t simple_conn_num_trees = 1;
-			// const double simple_conn_p[simple_conn_num_vertices*2] = {0, 0, L, 0, L, t_semic, 0, t_semic};
-			// const p4est_topidx_t simple_conn_t[simple_conn_num_trees*5] = {1, 2, 3, 4, 1};	
-			// _msh.read_connectivity (simple_conn_p, simple_conn_num_vertices, simple_conn_t, simple_conn_num_trees);
-		// }
-
-		// recursive = 0; partforcoarsen = 1;
-		// for (int cycle = 0; cycle < maxcycle; ++cycle)	// loop which refines the mesh uniformly
-		// {
-			// _msh.set_refine_marker (uniform_refinement);
-			// _msh.refine (recursive, partforcoarsen);
-		// }
-
-		// _msh.vtk_export ("mesh semic-ins refined");
-
-		// using idx_t = p4est_gloidx_t;
-		// idx_t			indexE;
-		// p4est_locidx_t	indexT;
-	
-		// for (auto quadrant = _msh.begin_quadrant_sweep ();
-			// quadrant != _msh.end_quadrant_sweep ();
-			// ++quadrant)
-		// {
-			// for(int i=0; i<4; i++){
-				// indexE = quadrant->e(i);			// index of the boundary which the i-th vertex of the quadrant lies on (in current tree)
-				// indexT = quadrant->get_tree_idx ();	// index of the current tree
-			
-				// if( (indexE == 0) && (indexT == 0)){
-					// _alldnodes.push_back( quadrant->gt(i) );
-					// row1.push_back( quadrant->gt(i) );
-				// }
-				// if( (indexE == 1) && (indexT == 1) ){	
-					// _alldnodes.push_back( quadrant->gt(i) );
-					// row2.push_back( quadrant->gt(i) );
-				// }
-			// }
-		// }
-	// }
 	
 	std::vector<int>::iterator it1, it2, it3;
 		
@@ -407,8 +404,45 @@ Probl::Device::Device(	double Vshift, double Csb, double t_semic, double t_ins, 
 	}
 		
 	_section = section;
-	_Efield = Vdrain / L;
+	_Efield = Vdrain / _L;
+	std::cout<<"_Efield in dev = "<<_Efield<<std::endl;
+	std::cout<<"_Csb in dev = "<<_Csb<<std::endl;
+	std::cout<<"_Vshift in dev = "<<_Vshift<<std::endl;
 };
+
+// double t_semic, double t_ins, double L, bool ins, std::array<int,2>& pins, 
+//						std::array<int,2>& contacts, double section, int maxcycle
+
+/// Method which sets Vshift
+void 
+Probl::set_Vshift(double Vshift){
+	std::cout<<"_Vshift = "<<_dev->_Vshift<<std::endl;
+	_dev->_Vshift = Vshift;
+	std::cout<<"_Vshift = "<<_dev->_Vshift<<std::endl;
+};
+
+/// Method which sets Csb
+void 
+Probl::set_Csb(double Csb){
+	std::cout<<"_Csb = "<<_dev->_Csb<<std::endl;
+	_dev->_Csb = Csb;
+	std::cout<<"_Csb = "<<_dev->_Csb<<std::endl;
+};
+
+/// Method which sets Vdrain and compute value of Efield
+void 
+Probl::set_Vdrain(double Vdrain){
+	std::cout<<"_Efield = "<<_dev->_Efield<<std::endl;
+	_dev->_Efield = Vdrain / _dev->_L;
+	std::cout<<"_Efield = "<<_dev->_Efield<<std::endl;
+};
+
+/// Method which sets section
+void 
+Probl::set_section(double section){
+	_dev->_section = section;
+};
+
 
 Probl::Probl(	int maxcycle,
 				double T0,	// Constants
@@ -432,8 +466,6 @@ Probl::Probl(	int maxcycle,
 		_data_phi_lumo[j] = ( i );
 		j++;
 	}
-
-	std::cout<<"mu0n = "<<mu0n<<std::endl;
 	
 	Constants	Cnst(T0);
 	Material	Mat(Cnst, PhiB, sigman, mu0n);

@@ -228,7 +228,28 @@ class Probl
 
 	std::vector<double>& get_data_phi_lumo();
 	std::vector<double> get_data_n();
+	
 	void set_T0(double T0);
+	void set_PhiB(double PhiB);
+	void set_sigman(double sigman);
+	void set_sigmankT(double sigmankT);
+	void set_mu0n(double mu0n);
+	void set_pmaxit(int pmaxit);
+	void set_maxit(int maxit);
+	void set_maxit_mnewton(int maxit_mnewton);
+	void set_nsteps_check(int nsteps_check);
+	void set_maxnpincr(double maxnpincr);
+	void set_ptoll(double ptoll);
+	void set_toll(double toll);
+	void set_dt0(double dt0);
+	void set_dtcut(double dtcut);
+	void set_dtmax(double dtmax);
+	void set_dtmin(double dtmin);
+	void set_maxdtincr(double maxdtincr);
+	void set_Vshift(double Vshift);
+	void set_Csb(double Csb);
+	void set_Vdrain(double Vdrain);
+	void set_section(double section);
 
 	protected:
 		
