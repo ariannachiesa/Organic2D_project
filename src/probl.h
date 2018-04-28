@@ -24,7 +24,7 @@ class Probl
 		
 		/// Class Material: stores material characteristic prameters
 		class	Material{
-			    protected:
+				public:
 				double _eps_semic_r;			/**< relative permittivity of semiconductor */
 				double _eps_ins_r;				/**< relative permittivity of insulator */
 				double _eps_semic;
@@ -37,70 +37,35 @@ class Probl
 				double _mu0n;					/**< [m^2 V^{-1} s^{-1}] low-field and low-density charge mobility for electrons */
 				double _ni;
 	
-				public:
 				Material() = delete; // default constructor
 				Material(Constants c, double PhiB, double sigman, double mu0n); // constructor
-				
-				friend class Probl;
-	
-				/*double get_PhiB();
-				double get_eps_ins();
-				double get_eps_ins_r();
-				double get_eps_semic();
-				double get_sigman();
-				double get_sigman_kT();
-				double get_N0();
-				double get_mu0n();
-				double get_ni();
-				void assign_ni(double ni);
-				void assign_eps_ins(double x);
-				void assign_eps_ins_r(double x);*/
 		};
 		
 		class	Constants{
-			protected:
+			public:
 			double _Kb;				/**< Boltzmann's constant */
 			double _q;				/**< electron charge */
 			double _eps0;			/**< vacuum permittivity */
 			double _Vth;			/**< threshold voltage */
 			double _T0;				/**< absolute temperature */
 	
-			public:
 			Constants() = delete;
 			Constants(double T0); // constructor
-
-			/*double get_Kb();
-			double get_q();
-			double get_eps0();
-			double get_T0();
-			double get_Vth();*/
-	
-			friend class Probl::Material;
-			friend class Probl;
 		};
 		
 		/// Stores nodes and weigths of Gauss-Hermite quadrature rules
 		class	Quad{
-			protected:
+			public:
 			std::vector<double> _gx;			/**< vectors of nodes for quad. rules */
 			std::vector<double> _gw;			/**< vectors of weigths for quad. rules */
 	
-			public:
 			Quad() = delete; 	// default constructor
 			Quad(int n); 		// constructor
-
-			/*std::vector<double> get_gx();
-			std::vector<double> get_gw();
-	
-			double* get_pgx();
-			std::vector<double>* get_pgw();*/
-			
-			friend class Probl;
 		};
 		
 		/// Stores parameters for loops
 		class	Algor{
-			protected:
+			public:
 			int _pmaxit;
 			int _maxit;
 			int _maxit_mnewton;
@@ -121,32 +86,9 @@ class Probl
 			std::vector<double> _rowscaling;
 			std::vector<int> _clamping;
 	
-			public:
 			Algor() = delete; // default constructor
 			Algor(	int pmaxit, int maxit, int maxit_mnewton, int nsteps_check, double maxnpincr, double ptoll, 
 					double toll, double dt0, double dtcut, double dtmax, double dtmin, double maxdtincr); // constructor
-	
-			/*int get_pmaxit();
-			int get_maxit();
-			int get_maxit_mnewton();
-			double get_ptoll();
-			double get_toll();
-			double get_dt0();
-			double get_dtmax();
-			double get_dtmin();
-			double get_dtcut();
-			double get_maxnpincr();
-			double get_maxdtincr();
-			int get_nsteps_check();
-			bool get_plotsOff();
-			bool get_clampOnOff();
-			bool get_savedata();
-			std::vector<double> get_rowscaling();
-			std::vector<double> get_colscaling();
-			std::vector<int> get_clamping();
-			void assign_row(std::vector<double>& r);*/
-			
-			friend class Probl;
 		};
 		
 		
@@ -156,7 +98,7 @@ class Probl
 		///	which elements are in the semiconductor and which in the insulator
 		///	and which are the boundary nodes
 		class	Device{
-			protected:
+			public:			
 			bool _ins;									/**< true = (default) if insulator is present , false = if there's only semiconductor */
 	
 			double _section;							/**< device section [m^2] */
@@ -179,37 +121,10 @@ class Probl
 	
 			tmesh	_msh;
 	
-			public:
+	
 			Device() = delete; // default constructor
 			Device(	double Vshift, double Csb, double t_semic, double t_ins, double L, bool ins, 
 					std::array<int,2>& pins, std::array<int,2>& contacts, double section, double Vdrain, int maxcycle); // constructor
-	
-			bool get_ins();
-			double get_section();
-			double get_Efield();
-			double get_Vshift();
-			double get_t_semic();
-			double get_t_ins();
-			double get_L();
-			double get_Csb();
-			void assign_Csb(double x);
-
-			double get_mshp(tmesh::idx_t i, tmesh::idx_t j);
-	
-			tmesh* get_msh();
-			tmesh::idx_t get_msh_gnodes();
-			tmesh::idx_t get_msh_lnodes();
-			tmesh::idx_t get_msh_gelem();
-			tmesh::idx_t get_msh_lelem();
-	
-			std::array<int,2> get_pins();
-
-			std::vector<int> get_alldnodes();
-			std::vector<int> get_insulator();
-			std::vector<int> get_scnodes();
-			std::vector< std::vector<int> > get_dnodes();
-			
-			friend class Probl;
 		};
 		
         //Probl() = delete;				
@@ -226,14 +141,21 @@ class Probl
 
     /// METHODS
 
+	Constants* cnst();
+	Material* mat();
+	Quad* quad();
+	Algor* alg();
+	Device* dev();
 	std::vector<double>& get_data_phi_lumo();
 	std::vector<double> get_data_n();
 	
 	void set_T0(double T0);
+	
 	void set_PhiB(double PhiB);
 	void set_sigman(double sigman);
 	void set_sigmankT(double sigmankT);
 	void set_mu0n(double mu0n);
+	
 	void set_pmaxit(int pmaxit);
 	void set_maxit(int maxit);
 	void set_maxit_mnewton(int maxit_mnewton);
@@ -246,6 +168,7 @@ class Probl
 	void set_dtmax(double dtmax);
 	void set_dtmin(double dtmin);
 	void set_maxdtincr(double maxdtincr);
+	
 	void set_Vshift(double Vshift);
 	void set_Csb(double Csb);
 	void set_Vdrain(double Vdrain);

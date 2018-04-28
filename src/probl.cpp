@@ -66,7 +66,6 @@ Probl::set_mu0n(double mu0n){
 
 Probl::Quad::Quad(int n){
 	/// Quadrature nodes and weights
-	std::cout<<"n = "<<n<<std::endl;
 	double  gx[n],
 			gw[n];
 	webbur::hermite_compute (n, gx, gw);
@@ -277,7 +276,7 @@ Probl::Device::Device(	double Vshift, double Csb, double t_semic, double t_ins, 
 			_msh.read_connectivity (simple_conn_p, simple_conn_num_vertices, simple_conn_t, simple_conn_num_trees);
 		}
 
-		_msh.vtk_export ("mesh semic-ins");
+		_msh.vtk_export ("Mesh");
 		
 		recursive = 0; partforcoarsen = 1;
 		for (int cycle = 0; cycle < maxcycle; ++cycle)	// loop which refines the mesh uniformly
@@ -286,7 +285,7 @@ Probl::Device::Device(	double Vshift, double Csb, double t_semic, double t_ins, 
 			_msh.refine (recursive, partforcoarsen);
 		}
 
-		_msh.vtk_export ("mesh semic-ins refined");
+		_msh.vtk_export ("Refined Mesh");
 
 		using idx_t = p4est_gloidx_t;
 		idx_t			indexE;
@@ -405,9 +404,6 @@ Probl::Device::Device(	double Vshift, double Csb, double t_semic, double t_ins, 
 		
 	_section = section;
 	_Efield = Vdrain / _L;
-	std::cout<<"_Efield in dev = "<<_Efield<<std::endl;
-	std::cout<<"_Csb in dev = "<<_Csb<<std::endl;
-	std::cout<<"_Vshift in dev = "<<_Vshift<<std::endl;
 };
 
 // double t_semic, double t_ins, double L, bool ins, std::array<int,2>& pins, 
@@ -440,7 +436,9 @@ Probl::set_Vdrain(double Vdrain){
 /// Method which sets section
 void 
 Probl::set_section(double section){
+	std::cout<<"_section = "<<_dev->_section<<std::endl;
 	_dev->_section = section;
+	std::cout<<"_section = "<<_dev->_section<<std::endl;
 };
 
 
@@ -503,7 +501,26 @@ Probl::Probl(	int maxcycle,
 	_quad = &Q;
 	_alg = &Alg;
 	_dev = &Dev;
+};
 
+Probl::Constants* Probl::cnst(){
+	return _cnst;
+};
+
+Probl::Material* Probl::mat(){
+	return _mat;
+};
+
+Probl::Quad* Probl::quad(){
+	return _quad;
+};
+
+Probl::Algor* Probl::alg(){
+	return _alg;
+};
+
+Probl::Device* Probl::dev(){
+	return _dev;
 };
 
 std::vector<double>& Probl::get_data_phi_lumo(){
