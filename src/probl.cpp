@@ -8,7 +8,137 @@ static int
 uniform_refinement (tmesh::quadrant_iterator q)
 { return 1; }
 
-Probl::Constants::Constants(double T0){
+/// Method which sets T0 value and update Vth and sigman_kT values
+void 
+Probl::set_T0(double T0){
+	_T0 = T0;
+	_Vth = _Kb * _T0 / _q;
+	_sigman_kT = _sigman / (_Kb * _T0);
+};
+
+/// Method which sets PhiB
+void 
+Probl::set_PhiB(double PhiB){
+	_PhiB = PhiB;
+};
+
+/// Method which sets sigman
+void 
+Probl::set_sigman(double sigman){
+	_sigman = sigman;
+};
+
+/// Method which sets sigman_kT
+void 
+Probl::set_sigmankT(double sigmankT){
+	_sigman_kT = sigmankT;
+};
+
+/// Method which sets mu0n
+void 
+Probl::set_mu0n(double mu0n){
+	_mu0n = mu0n;
+};
+
+/// Method which sets pmaxit
+void 
+Probl::set_pmaxit(int pmaxit){
+	_pmaxit = pmaxit;
+};
+
+/// Method which sets maxit
+void 
+Probl::set_maxit(int maxit){
+	_maxit = maxit;
+};
+
+/// Method which sets maxit_mnewton
+void 
+Probl::set_maxit_mnewton(int maxit_mnewton){
+	_maxit_mnewton = maxit_mnewton;
+};
+
+/// Method which sets nsteps_check
+void 
+Probl::set_nsteps_check(int nsteps_check){
+	_nsteps_check = nsteps_check;
+};
+
+/// Method which sets maxnpincr
+void 
+Probl::set_maxnpincr(double maxnpincr){
+	_maxnpincr = maxnpincr;
+};
+
+/// Method which sets ptoll
+void 
+Probl::set_ptoll(double ptoll){
+	_ptoll = ptoll;
+};
+
+/// Method which sets toll
+void 
+Probl::set_toll(double toll){
+	_toll = toll;
+};
+
+/// Method which sets dt0
+void 
+Probl::set_dt0(double dt0){
+	_dt0 = dt0;
+};
+
+/// Method which sets dtcut
+void 
+Probl::set_dtcut(double dtcut){
+	_dtcut = dtcut;
+};
+
+/// Method which sets dtmax
+void 
+Probl::set_dtmax(double dtmax){
+	_dtmax = dtmax;
+};
+
+/// Method which sets dtmin
+void 
+Probl::set_dtmin(double dtmin){
+	_dtmin = dtmin;
+};
+
+/// Method which sets maxdtincr
+void 
+Probl::set_maxdtincr(double maxdtincr){
+	_maxdtincr = maxdtincr;
+};
+	
+
+/// Method which sets Vshift
+void 
+Probl::set_Vshift(double Vshift){
+	_Vshift = Vshift;
+};
+
+/// Method which sets Csb
+void 
+Probl::set_Csb(double Csb){
+	_Csb = Csb;
+};
+
+/// Method which sets Vdrain and compute value of Efield
+void 
+Probl::set_Vdrain(double Vdrain){
+	_Efield = Vdrain / _L;
+};
+
+/// Method which sets section
+void 
+Probl::set_section(double section){
+	_section = section;
+};
+
+void 
+Probl::Constants(double T0){
 	_Kb   = 1.380648813131e-23;
 	_q    = 1.602176620898e-19;		
 	_eps0 = 8.854187817620e-12;				
@@ -16,55 +146,24 @@ Probl::Constants::Constants(double T0){
 	_Vth = _Kb * _T0 / _q;
 };
 
-/// Method which sets T0 value and update Vth and sigman_kT values
 void 
-Probl::set_T0(double T0){
-	_cnst->_T0 = T0;
-	_cnst->_Vth = _cnst->_Kb * _cnst->_T0 / _cnst->_q;
-	_mat->_sigman_kT = _mat->_sigman / (_cnst->_Kb * _cnst->_T0);
-};
-
-
-Probl::Material::Material(Constants c, double PhiB, double sigman, double mu0n){
+Probl::Material(double PhiB, double sigman, double mu0n){
 	_eps_semic_r = 2.90;			
 	_eps_ins_r   = 2.82222;			
-	_eps_semic = c._eps0 * _eps_semic_r;
-	_eps_ins   = c._eps0 * _eps_ins_r;
+	_eps_semic = _eps0 * _eps_semic_r;
+	_eps_ins   = _eps0 * _eps_ins_r;
 
 	_PhiB = -PhiB; 
 	_N0 = 1e27; 
 	_Egap = 1.55; 
 
-	_sigman = sigman * c._Kb * 300;
-	_sigman_kT = _sigman / (c._Kb * c._T0);
+	_sigman = sigman * _Kb * 300;
+	_sigman_kT = _sigman / (_Kb * _T0);
 	_mu0n = mu0n;
 };
 
-/// Method which sets PhiB
-void 
-Probl::set_PhiB(double PhiB){
-	_mat->_PhiB = PhiB;
-};
-
-/// Method which sets sigman
-void 
-Probl::set_sigman(double sigman){
-	_mat->_sigman = sigman;
-};
-
-/// Method which sets sigman_kT
-void 
-Probl::set_sigmankT(double sigmankT){
-	_mat->_sigman_kT = sigmankT;
-};
-
-/// Method which sets mu0n
-void 
-Probl::set_mu0n(double mu0n){
-	_mat->_mu0n = mu0n;
-};
-
-Probl::Quad::Quad(int n){
+void
+Probl::Quad(int n){
 	/// Quadrature nodes and weights
 	double  gx[n],
 			gw[n];
@@ -76,9 +175,9 @@ Probl::Quad::Quad(int n){
 	}
 };
 
-Probl::Algor::Algor(	int pmaxit, int maxit, int maxit_mnewton, int nsteps_check, double maxnpincr, double ptoll, 
-						double toll, double dt0, double dtcut, double dtmax, double dtmin, double maxdtincr){
-
+void
+Probl::Algor(	int pmaxit, int maxit, int maxit_mnewton, int nsteps_check, double maxnpincr, double ptoll, 
+				double toll, double dt0, double dtcut, double dtmax, double dtmin, double maxdtincr){
 	_pmaxit = pmaxit;
 	_maxit = maxit;
 	_maxit_mnewton = maxit_mnewton;
@@ -102,82 +201,10 @@ Probl::Algor::Algor(	int pmaxit, int maxit, int maxit_mnewton, int nsteps_check,
 	_savedata = true;
 };
 
-/// Method which sets pmaxit
-void 
-Probl::set_pmaxit(int pmaxit){
-	_alg->_pmaxit = pmaxit;
-};
-
-/// Method which sets maxit
-void 
-Probl::set_maxit(int maxit){
-	_alg->_maxit = maxit;
-};
-
-/// Method which sets maxit_mnewton
-void 
-Probl::set_maxit_mnewton(int maxit_mnewton){
-	_alg->_maxit_mnewton = maxit_mnewton;
-};
-
-/// Method which sets nsteps_check
-void 
-Probl::set_nsteps_check(int nsteps_check){
-	_alg->_nsteps_check = nsteps_check;
-};
-
-/// Method which sets maxnpincr
-void 
-Probl::set_maxnpincr(double maxnpincr){
-	_alg->_maxnpincr = maxnpincr;
-};
-
-/// Method which sets ptoll
-void 
-Probl::set_ptoll(double ptoll){
-	_alg->_ptoll = ptoll;
-};
-
-/// Method which sets toll
-void 
-Probl::set_toll(double toll){
-	_alg->_toll = toll;
-};
-
-/// Method which sets dt0
-void 
-Probl::set_dt0(double dt0){
-	_alg->_dt0 = dt0;
-};
-
-/// Method which sets dtcut
-void 
-Probl::set_dtcut(double dtcut){
-	_alg->_dtcut = dtcut;
-};
-
-/// Method which sets dtmax
-void 
-Probl::set_dtmax(double dtmax){
-	_alg->_dtmax = dtmax;
-};
-
-/// Method which sets dtmin
-void 
-Probl::set_dtmin(double dtmin){
-	_alg->_dtmin = dtmin;
-};
-
-/// Method which sets maxdtincr
-void 
-Probl::set_maxdtincr(double maxdtincr){
-	_alg->_maxdtincr= maxdtincr;
-};
-	
-Probl::Device::Device(	double Vshift, double Csb, double t_semic, double t_ins, double L, bool ins, std::array<int,2>& pins, 
-						std::array<int,2>& contacts, double section, double Vdrain, int maxcycle)
+void
+Probl::Device(	double Vshift, double Csb, double t_semic, double t_ins, double L, bool ins, std::array<int,2>& pins, 
+				std::array<int,2>& contacts, double section, double Vdrain, int maxcycle)
 {
-	
 	int	recursive, partforcoarsen;
 
 	if( ins ){
@@ -302,7 +329,7 @@ Probl::Device::Device(	double Vshift, double Csb, double t_semic, double t_ins, 
 					_alldnodes.push_back( quadrant->gt(i) );
 					row1.push_back( quadrant->gt(i) );
 				}
-				if( (indexE == 1) && (indexT == (nNodes-2)) ){	
+				if( (indexE == 1) && (indexT == (nNodes-2)) ){		/// dovrebbe comunque essere giusto (controllare)	
 					_alldnodes.push_back( quadrant->gt(i) );
 					row2.push_back( quadrant->gt(i) );
 				}
@@ -337,11 +364,11 @@ Probl::Device::Device(	double Vshift, double Csb, double t_semic, double t_ins, 
 		
 	double 	x = 0, y = 0, smc = 0;
 	
-	if(! _ins){
+	if(! _ins){	// if there's not insulator
 			
 		for(auto quadrant = _msh.begin_quadrant_sweep ();
-		quadrant != _msh.end_quadrant_sweep ();
-		++quadrant){
+			quadrant != _msh.end_quadrant_sweep ();
+			++quadrant){
 			_insulator.push_back(0);
 		}
 		
@@ -350,106 +377,71 @@ Probl::Device::Device(	double Vshift, double Csb, double t_semic, double t_ins, 
 		scnodes.clear();
 	}
 	else{
-	// scorro sui quadranti
-	for(auto quadrant = _msh.begin_quadrant_sweep ();
-		quadrant != _msh.end_quadrant_sweep ();
-		++quadrant)
-	{
-		smc = 0;
-		// per ogni quadrante scorro sui vertici
-		for (int ii = 0; ii < 4; ++ii)
+		// scorro sui quadranti
+		for(auto quadrant = _msh.begin_quadrant_sweep ();
+			quadrant != _msh.end_quadrant_sweep ();
+			++quadrant)
 		{
-			x = quadrant->p(0, ii);
-			y = quadrant->p(1, ii);
+			smc = 0;
+			// per ogni quadrante scorro sui vertici
+			for (int ii = 0; ii < 4; ++ii)
+			{
+				x = quadrant->p(0, ii);
+				y = quadrant->p(1, ii);
 			
-			if(x >= 0 && x <= L && y >= -t_semic && y <= 0){
-				smc++;
-				row1.push_back( quadrant->gt(ii) );
+				if(x >= 0 && x <= L && y >= -t_semic && y <= 0){
+					smc++;
+					row1.push_back( quadrant->gt(ii) );
+				}
+				else{
+					row2.push_back( quadrant->gt(ii) );
+				}
+			}
+			if(smc==4){
+				_insulator.push_back(0);	// if all the vertices of the quadrant lie in the semiconductor
+											//  --> the quadrant is in the semiconductor : 0
+											//  --> otherwise it is in the insulator : 1
 			}
 			else{
-				row2.push_back( quadrant->gt(ii) );
+				_insulator.push_back(1);
 			}
 		}
-		if(smc==4){
-			_insulator.push_back(0);	// if all the vertices of the quadrant lie in the semiconductor
-										//  --> the quadrant is in the semiconductor : 0
-										//  --> otherwise it is in the insulator : 1
-		}
-		else{
-			_insulator.push_back(1);
-		}
-	}
 	
-	std::sort (row1.begin(), row1.end());				// row1 = vector of the semiconductor nodes 
+		std::sort (row1.begin(), row1.end());				// row1 = vector of the semiconductor nodes 
 		
-	it2 = std::unique (row1.begin(), row1.end());		// removal of the common vertices between quadrants which have been
-														//	inserted more than once in the vector
-	row1.resize( std::distance(row1.begin(),it2) );
+		it2 = std::unique (row1.begin(), row1.end());		// removal of the common vertices between quadrants which have been
+															//	inserted more than once in the vector
+		row1.resize( std::distance(row1.begin(),it2) );
 	
-	std::sort (row2.begin(), row2.end());				// row2 = vector of the insulator nodes 
+		std::sort (row2.begin(), row2.end());				// row2 = vector of the insulator nodes 
 	
-	it3 = std::unique (row2.begin(), row2.end());
-	row2.resize( std::distance(row2.begin(),it3) );
+		it3 = std::unique (row2.begin(), row2.end());
+		row2.resize( std::distance(row2.begin(),it3) );
 		
-	// creo il vettore complessivo dei nodi: 1 = semiconductor , 0 = insulator
-	std::vector<int>	scnodes(row1.size()+row2.size(),0);
-	for(unsigned i=0; i<row1.size(); i++){
-		scnodes[i] = 1;
-	}
-	_scnodes = scnodes;
-	scnodes.clear();
-	row1.clear();
-	row2.clear();
+		// creo il vettore complessivo dei nodi: 1 = semiconductor , 0 = insulator
+		std::vector<int>	scnodes(row1.size()+row2.size(),0);
+		for(unsigned i=0; i<row1.size(); i++){
+			scnodes[i] = 1;
+		}
+		_scnodes = scnodes;
+		scnodes.clear();
+		row1.clear();
+		row2.clear();
 	}
 		
 	_section = section;
 	_Efield = Vdrain / _L;
 };
 
-// double t_semic, double t_ins, double L, bool ins, std::array<int,2>& pins, 
-//						std::array<int,2>& contacts, double section, int maxcycle
-
-/// Method which sets Vshift
-void 
-Probl::set_Vshift(double Vshift){
-	std::cout<<"_Vshift = "<<_dev->_Vshift<<std::endl;
-	_dev->_Vshift = Vshift;
-	std::cout<<"_Vshift = "<<_dev->_Vshift<<std::endl;
-};
-
-/// Method which sets Csb
-void 
-Probl::set_Csb(double Csb){
-	std::cout<<"_Csb = "<<_dev->_Csb<<std::endl;
-	_dev->_Csb = Csb;
-	std::cout<<"_Csb = "<<_dev->_Csb<<std::endl;
-};
-
-/// Method which sets Vdrain and compute value of Efield
-void 
-Probl::set_Vdrain(double Vdrain){
-	std::cout<<"_Efield = "<<_dev->_Efield<<std::endl;
-	_dev->_Efield = Vdrain / _dev->_L;
-	std::cout<<"_Efield = "<<_dev->_Efield<<std::endl;
-};
-
-/// Method which sets section
-void 
-Probl::set_section(double section){
-	std::cout<<"_section = "<<_dev->_section<<std::endl;
-	_dev->_section = section;
-	std::cout<<"_section = "<<_dev->_section<<std::endl;
-};
-
 
 Probl::Probl(	int maxcycle,
-				double T0,	// Constants
-				double PhiB, double sigman, double mu0n,		// Material
-				int nq,		// Quad
+				double T0,																						// Constants
+				double PhiB, double sigman, double mu0n,														// Material
+				int nq,																							// Quad
 				int pmaxit, int maxit, int maxit_mnewton, int nsteps_check, double maxnpincr, double ptoll,
-				double toll, double dt0, double dtcut, double dtmax, double dtmin, double maxdtincr,	// Algor
+				double toll, double dt0, double dtcut, double dtmax, double dtmin, double maxdtincr,			// Algor
 				double Vshift, double Csb, double t_semic, double t_ins,
-				double L, bool ins,		// Device
+				double L, bool ins,																				// Device
 				std::array<int,2> pins, std::array<int,2> contacts, double section, double Vdrain)
 {	
 	///	Calculation of the interpolation table
@@ -465,21 +457,21 @@ Probl::Probl(	int maxcycle,
 		j++;
 	}
 	
-	Constants	Cnst(T0);
-	Material	Mat(Cnst, PhiB, sigman, mu0n);
-	Quad		Q(nq);
-	Algor		Alg(pmaxit, maxit, maxit_mnewton, nsteps_check, maxnpincr, ptoll, toll, dt0, dtcut, dtmax, dtmin, maxdtincr);
-	Device		Dev(Vshift, Csb, t_semic, t_ins, L, ins, pins, contacts, section, Vdrain, maxcycle);
+	Constants(T0);
+	Material(PhiB, sigman, mu0n);
+	Quad(nq);
+	Algor(pmaxit, maxit, maxit_mnewton, nsteps_check, maxnpincr, ptoll, toll, dt0, dtcut, dtmax, dtmin, maxdtincr);
+	Device(Vshift, Csb, t_semic, t_ins, L, ins, pins, contacts, section, Vdrain, maxcycle);
 	
 	///	Calculation of interpolated n
     std::vector<double> coeff(_data_phi_lumo.size(),0),
 						n(_data_phi_lumo.size(),0),
-						gx = Q._gx,
-						gw = Q._gw;
+						gx = _gx,
+						gw = _gw;
 						
-    double	q = Cnst._q,
-			kT = Cnst._Kb * Cnst._T0,
-			N0 = Mat._N0,
+    double	q = _q,
+			kT = _Kb * _T0,
+			N0 = _N0,
 			denom;
 	
 	_data_n.resize(_data_phi_lumo.size());
@@ -494,33 +486,7 @@ Probl::Probl(	int maxcycle,
 
 	gx.clear();
 	gw.clear();
-	coeff.clear();
-	
-	_cnst = &Cnst;
-	_mat = &Mat;
-	_quad = &Q;
-	_alg = &Alg;
-	_dev = &Dev;
-};
-
-Probl::Constants* Probl::cnst(){
-	return _cnst;
-};
-
-Probl::Material* Probl::mat(){
-	return _mat;
-};
-
-Probl::Quad* Probl::quad(){
-	return _quad;
-};
-
-Probl::Algor* Probl::alg(){
-	return _alg;
-};
-
-Probl::Device* Probl::dev(){
-	return _dev;
+	coeff.clear();	
 };
 
 std::vector<double>& Probl::get_data_phi_lumo(){
