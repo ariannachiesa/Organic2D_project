@@ -4,8 +4,8 @@
   "Advanced Programming for Scientific Computing"
 */
 
-/*! \file test1_mesh.cpp
-  \brief Test 1: mesh creation
+/*! \file test2_mesh.cpp
+  \brief Test 2: mesh creation
 */
 
 #include "probl.h"
@@ -17,14 +17,15 @@ int main(int argc, char** argv){
 	clock_t tstart_probl;
 	tstart_probl = clock();
 	
-	/// n. refinement cycles : 0
-	/// the mesh is constituted only by a row of quadrants along the y-axis
-	Probl P(0);
+	/// n. refinement cycles : 1
+	/// the mesh is constituted only by two rows of quadrants along the y-axis
+	Probl P(1);	
 
 	tstart_probl = clock() - tstart_probl;
 	std::cout<<"Construction class Probl run time: "<<tstart_probl<<" , ("<<((float)tstart_probl)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
-
+	
 	int	nnodes = P._msh.num_global_nodes();
+	std::cout<<"nnodes = "<<nnodes<<std::endl;
 	std::vector<double>	Vguess(nnodes, P._PhiB);
 	
 	/// Export nodal field f to a octbin.gz file for visualization.
