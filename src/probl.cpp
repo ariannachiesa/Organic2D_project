@@ -497,31 +497,25 @@ std::vector<double> Probl::get_data_n(){
 	return _data_n;
 };
 
-Probl::NLPoisson::NLPoisson(Probl& P, std::vector<double>& phi0){
-	
-	int	nnodes = P._msh.num_global_nodes(),
-		nelements = P._msh.num_global_quadrants(),
-		pmaxit = P._pmaxit,
+void
+Probl::NLPoisson(std::vector<double>& phi0)
+{	
+	int	nnodes = _msh.num_global_nodes(),
+		nelements = _msh.num_global_quadrants(),
 		iter;
-	
-	double	eps_ins = P._eps_ins,
-			eps_semic = P._eps_semic,
-			q = P._q,
-			ptoll = P._ptoll;
 			
 	std::vector<double>	phiout(nnodes,0.0),
 						nout(nnodes,0.0),
-						resnrm(pmaxit,0.0);
+						resnrm(_pmaxit,0.0);
 
-    std::vector<int>	alldnodes = P._alldnodes,
-						intnodes(nnodes,0);
+    std::vector<int>	intnodes(nnodes,0);
     
 	bool b;
 	int k = 0;
     for (auto i=0; i<nnodes; i++){
         b = false;
-        for (unsigned j=0; j<alldnodes.size(); j++){
-            if(i==alldnodes[j]){
+        for (unsigned j=0; j<_alldnodes.size(); j++){
+            if(i==_alldnodes[j]){
                 b = true;
             }
         }
@@ -535,13 +529,12 @@ Probl::NLPoisson::NLPoisson(Probl& P, std::vector<double>& phi0){
 	
 
 	///Assemble system matrices.
-    std::vector<double> epsilon(nelements,eps_semic);
-	std::vector<int>	insulator = P._insulator;
+    std::vector<double> epsilon(nelements,_eps_semic);
 	
-	if(P._ins){
-        for(unsigned i=0; i<insulator.size(); i++){
-            if(insulator[i]==1){
-                epsilon[i] = eps_ins;
+	if(_ins){
+        for(unsigned i=0; i<_insulator.size(); i++){
+            if(_insulator[i]==1){
+                epsilon[i] = _eps_ins;
             }
         }
     }
@@ -557,15 +550,15 @@ Probl::NLPoisson::NLPoisson(Probl& P, std::vector<double>& phi0){
 					
     std::vector<double>	psi(nnodes,0.0),
 						dphi(intnodes.size(),0.0),
-						delta(insulator.size(),0.0),
+						delta(_insulator.size(),0.0),
 						zeta(nnodes,1.0);
 
-	tmesh*	msh = &P._msh;
+	tmesh*	msh = &_msh;
 	
     bim2a_advection_diffusion (*msh, epsilon, psi, A);
 	
-    for (unsigned i=0; i<insulator.size(); i++){
-        if(insulator[i]==0){
+    for (unsigned i=0; i<_insulator.size(); i++){
+        if(_insulator[i]==0){
             delta[i] = 1;
         }
     }
@@ -585,11 +578,11 @@ Probl::NLPoisson::NLPoisson(Probl& P, std::vector<double>& phi0){
 	phi = phi0;
 	phiout = phi0;
 
-    for (iter=1; iter<=pmaxit; iter++){
+    for (iter=1; iter<=_pmaxit; iter++){
 
         phiout = phi;	// updating phiout with phi
 
-        ///org_gaussian_charge_n(phiout, P.mat(), P.cnst(), P.quad(), rho,drho);
+        org_gaussian_charge_n(phiout, P, rho,drho);
 		
 		res1 = A*phiout;
         res2 = M*rho;
@@ -634,8 +627,8 @@ Probl::NLPoisson::NLPoisson(Probl& P, std::vector<double>& phi0){
 			for(J = jac[ intnodes[i] ].begin(); J != jac[ intnodes[i] ].end(); ++J){
 				alld = false;
 				// controllo se J è pari a uno degli indici di elementi di bordo
-				for(unsigned k=0; k<alldnodes.size(); k++){
-					if( jac.col_idx(J) == alldnodes[k] ){
+				for(unsigned k=0; k<_alldnodes.size(); k++){
+					if( jac.col_idx(J) == _alldnodes[k] ){
 						alld = true;
 						break;
 					}
@@ -643,7 +636,7 @@ Probl::NLPoisson::NLPoisson(Probl& P, std::vector<double>& phi0){
 				// se sì --> vado avanti (J++)
 				// se no --> inserisco in Jac
 				if( !alld ){
-					j = jac.col_idx(J) - alldnodes.size()/2;
+					j = jac.col_idx(J) - _alldnodes.size()/2;
 					Jac[i][j] = jac[intnodes[i]][jac.col_idx(J)];
 				}
 			}
@@ -681,7 +674,7 @@ Probl::NLPoisson::NLPoisson(Probl& P, std::vector<double>& phi0){
 			phi[intnodes[i]] += dphi[i];
         }
 		
-        if(resnrm[iter-1] < ptoll){
+        if(resnrm[iter-1] < _ptoll){
 			std::cout<<"NL-Poisson: resnrm < ptoll"<<std::endl;
             break;
         }
@@ -690,18 +683,16 @@ Probl::NLPoisson::NLPoisson(Probl& P, std::vector<double>& phi0){
 
     phiout = phi;	// updating phiout with phi
 	
-	/// Post-processing.
-	std::vector<int>	scnodes = P._scnodes;
-	
+	/// Post-processing.	
 	std::vector<double>	rhon(phiout.size(),0.0),
                         drhon_dV(phiout.size(),0.0);
     
-	org_gaussian_charge_n( phiout, P.mat(), P.cnst(), P.quad(), rhon, drhon_dV);
+	org_gaussian_charge_n( phiout, rhon, drhon_dV);
 	drhon_dV.clear();
 	
-    for(unsigned i=0; i<scnodes.size(); i++){
-        if(scnodes[i]==1){
-			nout[i] = - rhon[i]/q;
+    for(unsigned i=0; i<_scnodes.size(); i++){
+        if(_scnodes[i]==1){
+			nout[i] = - rhon[i]/_q;
         }
     }
 	rhon.clear();

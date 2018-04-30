@@ -6,6 +6,7 @@
 #define PROBL_H
 
 #include "bim_sparse.h"
+//#include "functions.h"
 #include "mumps_class.h"
 #include "quad_operators.h"
 #include "sandia_rules.hpp"
@@ -109,20 +110,12 @@ class Probl
 	
 	tmesh	_msh;
 	
-	class NLPoisson
-	{
-		protected:
-		Probl* _p;
-		
-		public:
-		std::vector<double> Vin;		/**< Initial guess for the potential */
-		std::vector<double> nin;		/**< Initial guess for the electron density */
-		std::vector<double> res;		/**< residual vector */
-		int niter;						/**< n. iterations required to compute the initial guess */
-	
-		NLPoisson() = delete;
-		NLPoisson(Probl& P, std::vector<double>& phi0);	// constructor
-	};
+	/// class NLPoisson
+	std::vector<double> Vin;		/**< Initial guess for the potential */
+	std::vector<double> nin;		/**< Initial guess for the electron density */
+	std::vector<double> res;		/**< residual vector */
+	int niter;						/**< n. iterations required to compute the initial guess */
+
 	
     //Probl() = delete;				
 	Probl(	int maxcycle,
@@ -145,6 +138,8 @@ class Probl
 				double toll, double dt0, double dtcut, double dtmax, double dtmin, double maxdtincr);
 	void Device(double Vshift, double Csb, double t_semic, double t_ins, double L, bool ins, 
 				std::array<int,2>& pins, std::array<int,2>& contacts, double section, double Vdrain, int maxcycle);
+	
+	void NLPoisson(std::vector<double>& phi0);
 	
 	std::vector<double>& get_data_phi_lumo();
 	std::vector<double> get_data_n();
