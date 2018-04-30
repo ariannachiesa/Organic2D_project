@@ -1,15 +1,18 @@
 % Vguess visualization
 
 tx = unique(msh.p(1,:));
-ty = unique(msh.p(2,:));
-
 tz = msh.f(:)';
 
-%n = ceil(length(tz)/length(xx));
 n = length(tx);
 
-rows = length(tx);
-cols = length(tz)/length(tx);
+cont = 1;
+for i = 1:n:length(msh.p(2,:))
+  ty(cont) = msh.p(2,i);
+  cont++;
+end
+
+rows = length(tz)/length(tx);
+cols = length(tx);
 
 zz = zeros(rows,cols);
 
@@ -25,4 +28,5 @@ figure(1)
 mesh (tx, ty, zz);
 
 figure(2)
+[xx,yy] = meshgrid(tx,ty);
 plot(xx,yy);

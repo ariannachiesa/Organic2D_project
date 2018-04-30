@@ -23,6 +23,12 @@ int main(int argc, char** argv){
 
 	tstart_probl = clock() - tstart_probl;
 	std::cout<<"Construction class Probl run time: "<<tstart_probl<<" , ("<<((float)tstart_probl)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
+
+	int	nnodes = P._msh.num_global_nodes();
+	std::vector<double>	Vguess(nnodes, P._PhiB);
+	
+	/// Export nodal field f to a octbin.gz file for visualization.
+	P._msh.octbin_export ("Vguess_visualization", Vguess);
 	
 	std::cout<<"End of program"<<std::endl;
 	
