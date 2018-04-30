@@ -496,3 +496,233 @@ std::vector<double>& Probl::get_data_phi_lumo(){
 std::vector<double> Probl::get_data_n(){
 	return _data_n;
 };
+
+Probl::NLPoisson::NLPoisson(Probl& P, std::vector<double>& phi0){
+	
+	int	nnodes = P._msh.num_global_nodes(),
+		nelements = P._msh.num_global_quadrants(),
+		pmaxit = P._pmaxit,
+		iter;
+	
+	double	eps_ins = P._eps_ins,
+			eps_semic = P._eps_semic,
+			q = P._q,
+			ptoll = P._ptoll;
+			
+	std::vector<double>	phiout(nnodes,0.0),
+						nout(nnodes,0.0),
+						resnrm(pmaxit,0.0);
+
+    std::vector<int>	alldnodes = P._alldnodes,
+						intnodes(nnodes,0);
+    
+	bool b;
+	int k = 0;
+    for (auto i=0; i<nnodes; i++){
+        b = false;
+        for (unsigned j=0; j<alldnodes.size(); j++){
+            if(i==alldnodes[j]){
+                b = true;
+            }
+        }
+        if(b==false){ 
+			intnodes[k] = i;
+			k++;
+        }
+    }
+	intnodes.resize(k);
+    std::sort(intnodes.begin(), intnodes.end());
+	
+
+	///Assemble system matrices.
+    std::vector<double> epsilon(nelements,eps_semic);
+	std::vector<int>	insulator = P._insulator;
+	
+	if(P._ins){
+        for(unsigned i=0; i<insulator.size(); i++){
+            if(insulator[i]==1){
+                epsilon[i] = eps_ins;
+            }
+        }
+    }
+	
+    sparse_matrix   A,
+                    M,
+					jac,
+					diag,
+					Jac;
+	A.resize(nnodes);
+    M.resize(nnodes);
+	jac.resize(nnodes);
+					
+    std::vector<double>	psi(nnodes,0.0),
+						dphi(intnodes.size(),0.0),
+						delta(insulator.size(),0.0),
+						zeta(nnodes,1.0);
+
+	tmesh*	msh = &P._msh;
+	
+    bim2a_advection_diffusion (*msh, epsilon, psi, A);
+	
+    for (unsigned i=0; i<insulator.size(); i++){
+        if(insulator[i]==0){
+            delta[i] = 1;
+        }
+    }
+	
+	bim2a_reaction (*msh, delta, zeta, M);
+
+	
+	/// Newton's algorithm.
+    std::vector<double> phi(phi0.size(),0.0),
+                        rho(phiout.size(),0.0),
+                        drho(phiout.size(),0.0),
+                        res(nnodes,0.0),
+                        res1(nnodes,0.0),
+                        res2(nnodes,0.0);
+	std::vector<int>	ij;
+
+	phi = phi0;
+	phiout = phi0;
+
+    for (iter=1; iter<=pmaxit; iter++){
+
+        phiout = phi;	// updating phiout with phi
+
+        ///org_gaussian_charge_n(phiout, P.mat(), P.cnst(), P.quad(), rho,drho);
+		
+		res1 = A*phiout;
+        res2 = M*rho;
+				
+		if(res1.size() != res2.size()){
+			std::cout<<"error: nlpoisson, dimensions mismatch"<<std::endl;
+			break;
+		}
+        for(unsigned i=0; i<res1.size(); i++){
+            res[i] = res1[i]-res2[i] ;
+        }
+		res1.clear();
+		res2.clear();
+		
+		diag.resize(drho.size());
+		for(unsigned i=0; i<drho.size(); i++){
+					diag[i][i] = drho[i];
+		}
+		
+		if(diag.cols() != (unsigned)nnodes && diag.rows() != (unsigned)nnodes){
+			std::cout<<"error: nlpoisson, dimensions mismatch (M and diag matrices)"<<std::endl;
+			break;
+		}
+
+		jac = A;
+		for(int i=0; i<nnodes; i++){
+			jac[i][i] -= M[i][i]*diag[i][i];
+		}
+
+		Jac.resize(intnodes.size());
+
+		/// Assembling rhs term: res(intnodes)
+		for(unsigned i=0; i<intnodes.size(); i++){
+				dphi[i] = res[intnodes[i]];
+		}
+		
+		/// Assembling matrix: jac(intnodes,intnodes)
+		sparse_matrix::col_iterator J;
+		int j;
+		bool alld;
+		for(unsigned i=0; i<intnodes.size(); i++){
+			for(J = jac[ intnodes[i] ].begin(); J != jac[ intnodes[i] ].end(); ++J){
+				alld = false;
+				// controllo se J è pari a uno degli indici di elementi di bordo
+				for(unsigned k=0; k<alldnodes.size(); k++){
+					if( jac.col_idx(J) == alldnodes[k] ){
+						alld = true;
+						break;
+					}
+				}
+				// se sì --> vado avanti (J++)
+				// se no --> inserisco in Jac
+				if( !alld ){
+					j = jac.col_idx(J) - alldnodes.size()/2;
+					Jac[i][j] = jac[intnodes[i]][jac.col_idx(J)];
+				}
+			}
+		}
+		
+		mumps mumps_solver;
+      
+		std::vector<double> vals(nnodes,0);
+		std::vector<int> 	irow(nnodes,0),
+							jcol(nnodes,0);
+	  
+		Jac.aij(vals, irow, jcol, mumps_solver.get_index_base ());
+	  
+		mumps_solver.set_lhs_structure (Jac.rows(), irow, jcol);
+		
+		mumps_solver.analyze ();
+		mumps_solver.set_lhs_data (vals);
+      
+		mumps_solver.factorize ();
+
+		mumps_solver.set_rhs (dphi);
+      
+		mumps_solver.solve ();
+		mumps_solver.cleanup ();
+	
+		for(unsigned i=0; i<dphi.size(); i++){
+			dphi[i] *= (-1);
+		}
+		
+		double norm;
+		bim2a_norm (*msh,dphi,norm,Inf);
+		resnrm[iter-1] = norm;
+
+        for (unsigned i=0; i<intnodes.size(); i++){
+			phi[intnodes[i]] += dphi[i];
+        }
+		
+        if(resnrm[iter-1] < ptoll){
+			std::cout<<"NL-Poisson: resnrm < ptoll"<<std::endl;
+            break;
+        }
+
+    }
+
+    phiout = phi;	// updating phiout with phi
+	
+	/// Post-processing.
+	std::vector<int>	scnodes = P._scnodes;
+	
+	std::vector<double>	rhon(phiout.size(),0.0),
+                        drhon_dV(phiout.size(),0.0);
+    
+	org_gaussian_charge_n( phiout, P.mat(), P.cnst(), P.quad(), rhon, drhon_dV);
+	drhon_dV.clear();
+	
+    for(unsigned i=0; i<scnodes.size(); i++){
+        if(scnodes[i]==1){
+			nout[i] = - rhon[i]/q;
+        }
+    }
+	rhon.clear();
+	
+	Vin = phiout;									
+	nin = nout;									
+	niter = iter;
+	
+	resnrm.resize(iter);
+	res = resnrm;
+	
+/*	for(unsigned i=0; i<_nin.size(); i++){
+		std::cout<<"Vin = "<<_Vin[i]<<std::endl;
+	}
+	for(unsigned i=0; i<_nin.size(); i++){
+		std::cout<<"nin = "<<_nin[i]<<std::endl;
+	}
+	for(unsigned i=0; i<_res.size(); i++){
+		std::cout<<"res = "<<_res[i]<<std::endl;
+	}
+
+		std::cout<<"niter = "<<_niter<<std::endl;
+*/
+};

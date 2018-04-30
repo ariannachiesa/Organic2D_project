@@ -5,6 +5,9 @@
 #ifndef PROBL_H
 #define PROBL_H
 
+#include "bim_sparse.h"
+#include "mumps_class.h"
+#include "quad_operators.h"
 #include "sandia_rules.hpp"
 #include "tmesh.h"
 
@@ -105,7 +108,22 @@ class Probl
 	std::vector< std::vector<int> > _dnodes;	/**< vector with gate nodes + vector with bulk nodes */
 	
 	tmesh	_msh;
+	
+	class NLPoisson
+	{
+		protected:
+		Probl* _p;
 		
+		public:
+		std::vector<double> Vin;		/**< Initial guess for the potential */
+		std::vector<double> nin;		/**< Initial guess for the electron density */
+		std::vector<double> res;		/**< residual vector */
+		int niter;						/**< n. iterations required to compute the initial guess */
+	
+		NLPoisson() = delete;
+		NLPoisson(Probl& P, std::vector<double>& phi0);	// constructor
+	};
+	
     //Probl() = delete;				
 	Probl(	int maxcycle,
 			double T0 = 300,	// Constants
