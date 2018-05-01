@@ -582,7 +582,7 @@ Probl::NLPoisson(std::vector<double>& phi0)
 
         phiout = phi;	// updating phiout with phi
 
-        org_gaussian_charge_n(phiout, P, rho,drho);
+        org_gaussian_charge_n(phiout,rho,drho);
 		
 		res1 = A*phiout;
         res2 = M*rho;
@@ -716,4 +716,93 @@ Probl::NLPoisson(std::vector<double>& phi0)
 
 		std::cout<<"niter = "<<_niter<<std::endl;
 */
+};
+
+void
+Probl::org_gaussian_charge_n(std::vector<double>& V, std::vector<double>& rhon, std::vector<double>& drhon_dV)
+{
+    std::vector<double> n = n_approx(V);
+	
+	rhon = n;
+    for(unsigned i=0; i<n.size(); i++){
+		rhon[i] *= -_q;
+    }
+
+    std::vector<double> dn_dV = dn_dV_approx(V);
+	
+	drhon_dV = dn_dV;
+    for(unsigned i=0; i<dn_dV.size(); i++){
+		drhon_dV[i] *= -_q;
+    }
+};
+
+std::vector<double>
+Probl::n_approx(std::vector<double>& V)
+{
+    std::vector<double> coeff(V.size(),0),
+						n(V.size(),0);
+    double	kT = _Kb * _T0,
+			denom;
+	
+    for(unsigned i=0; i<_gx.size(); i++){
+        for(unsigned j=0; j<V.size(); j++){		
+            coeff[j] = (sqrt(2) * _sigman * _gx[i] - _q * V[j]) / kT ;
+            denom = 1+exp(coeff[j]);
+            n[j] += _N0 / sqrt(M_PI) * _gw[i] / denom;
+        }
+    }
+	coeff.clear();		
+	return n;
+};
+
+std::vector<double>
+Probl::dn_dV_approx(std::vector<double>& V)
+{
+    std::vector<double> coeff(V.size(),0.0),
+						dn_dV(V.size(),0.0);
+						
+    double	kT = _Kb * _T0,
+			denom;
+
+    for(unsigned i=0; i<_gx.size(); i++){
+        for(unsigned j=0; j<V.size(); j++){
+            coeff[j] = (sqrt(2) * _sigman * _gx[i] - _q * V[j]) / kT ;
+            denom = 1+exp(coeff[j]);
+            dn_dV[j] += - _q * _N0 / _sigman * sqrt(2/M_PI) * _gw[i]*_gx[i] / denom;
+		}
+    }
+	coeff.clear();
+	return dn_dV;
+};
+
+void
+Probl::bim2a_norm (tmesh& msh, const std::vector<double>& v, double& norm, norm_type type)
+{
+  if (type == Inf)
+    {
+      norm = 0.0;
+      for (unsigned int i = 0; i < v.size (); ++i)
+        {
+          double temp = std::fabs (v[i]);
+          if (norm < temp)
+            norm = temp;
+        }
+    }
+  else if (type == L2 || type == H1)
+    {
+      norm = 0.0;
+      std::vector<double> ecoeff (msh.num_local_quadrants (), 1.0);
+      std::vector<double> ncoeff (msh.num_local_nodes (), 1.0);
+	  std::vector<double> psi (msh.num_local_nodes (),0);
+      sparse_matrix M;
+	  M.resize(msh.num_local_nodes ());
+      bim2a_reaction (msh, ecoeff, ncoeff, M);
+      if (type == H1)
+        bim2a_advection_diffusion (msh, ecoeff, psi, M);
+      std::vector<double> temp;
+      temp = M * v;
+      for (unsigned int i = 0; i < v.size (); ++i)
+        norm += v[i] * temp[i];
+      norm = sqrt (norm);
+    }
 };
