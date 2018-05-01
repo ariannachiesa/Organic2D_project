@@ -114,16 +114,15 @@ class Probl
 	std::vector<double> nin;		/**< Initial guess for the electron density */
 	std::vector<double> res;		/**< residual vector */
 	int niter;						/**< n. iterations required to compute the initial guess */
-	
-    //Probl() = delete;				
+		
 	Probl(	int maxcycle,
-			double T0 = 300,	// Constants
-			double PhiB = 0.54, double sigman = 2.6, double mu0n = 4.29110133911508e-6,		// Material
-			int nq = 101,		// Quad
+			double T0 = 300,																												// Constants
+			double PhiB = 0.54, double sigman = 2.6, double mu0n = 4.29110133911508e-6,														// Material
+			int nq = 101,																													// Quad
 			int pmaxit = 1000, int maxit = 5, int maxit_mnewton = 30, int nsteps_check = 3, double maxnpincr = 1e-3, double ptoll = 1e-10, 
-			double toll = 1e-4, double dt0 = 1e-10, double dtcut = 0.25, double dtmax = 1, double dtmin = 1e-12, double maxdtincr = 2,	// Algor
+			double toll = 1e-4, double dt0 = 1e-10, double dtcut = 0.25, double dtmax = 1, double dtmin = 1e-12, double maxdtincr = 2,		// Algor
 			double Vshift = 1.79738, double Csb = 1.16183675549126e-11, double t_semic = 3.49436549222355e-8, double t_ins = 4.41e-7, 
-			double L = 1e-5, bool ins = true,		// Device
+			double L = 1e-5, bool ins = true,																								// Device
 			std::array<int,2> pins = {1, 0}, std::array<int,2> contacts = {0, 1}, double section = 0.00000081, double Vdrain = 5);
 			// constructor
 
@@ -139,6 +138,9 @@ class Probl
 				
 	void NLPoisson(	std::vector<double>& phi0);
 	
+	/// It saves NLPoisson output
+	void saveNLP(std::vector<double>& V, std::vector<double>& n, double niter, std::vector<double>& resnrm, const char* FileName);
+	
 	void org_gaussian_charge_n( std::vector<double>& V, std::vector<double>& rhon, std::vector<double>& drhon_dV);
 							
 	std::vector<double> n_approx(  std::vector<double>& V);
@@ -147,9 +149,11 @@ class Probl
 	/// Compute the (Inf,L2,H1) norm of a piecewise linear function.
 	void bim2a_norm (tmesh& msh, const std::vector<double>& v, double& norm, norm_type type);
 	
+	/// get methods
 	std::vector<double>& get_data_phi_lumo();
 	std::vector<double> get_data_n();
 	
+	/// set methods
 	void set_T0(double T0);
 	
 	void set_PhiB(double PhiB);

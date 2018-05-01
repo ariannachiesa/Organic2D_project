@@ -229,7 +229,7 @@ Probl::Device(	double Vshift, double Csb, double t_semic, double t_ins, double L
 	
 	std::vector<int>	row1, row2;
 	
-		const int	nNodes = 801;
+		const int	nNodes = 401;
 		std::cout<<"Nnodes = "<<nNodes<<std::endl;
 
 		// Define mesh.
@@ -563,7 +563,7 @@ Probl::NLPoisson(std::vector<double>& phi0)
         }
     }
 	
-	bim2a_reaction (*msh, delta, zeta, M);
+	//bim2a_reaction (*msh, delta, zeta, M);	linear Poisson --> Laplacian , no reaction matrix
 
 	
 	/// Newton's algorithm.
@@ -608,9 +608,19 @@ Probl::NLPoisson(std::vector<double>& phi0)
 		}
 
 		jac = A;
+		sparse_matrix::col_iterator J1, J2;
 		for(int i=0; i<nnodes; i++){
-			jac[i][i] -= M[i][i]*diag[i][i];
+			for(J1 = M[i].begin(); J1 != M[i].end(); ++J1){
+				J2 = diag[i].begin();
+				if( M.col_idx(J1) == diag.col_idx(J2)){
+					jac[i][M.col_idx(J1)] -= M[i][M.col_idx(J1)] * diag[i][diag.col_idx(J2)];
+				}
+			}
 		}
+		
+		//for(int i=0; i<nnodes; i++){
+		//	jac[i][i] -= M[i][i]*diag[i][i];
+		//}
 
 		Jac.resize(intnodes.size());
 
@@ -716,6 +726,35 @@ Probl::NLPoisson(std::vector<double>& phi0)
 
 		std::cout<<"niter = "<<_niter<<std::endl;
 */
+};
+
+void
+Probl::saveNLP(std::vector<double>& V, std::vector<double>& n, double niter, std::vector<double>& resnrm, const char* FileName)
+{
+  ColumnVector oct_V (V.size (), 0.0);
+  ColumnVector oct_n (n.size (), 0.0);
+  ColumnVector oct_res (resnrm.size (), 0.0);
+
+  std::copy_n (V.begin (), V.size (), oct_V.fortran_vec ());
+  std::copy_n (n.begin (), n.size (), oct_n.fortran_vec ());
+  std::copy_n (resnrm.begin (), resnrm.size (), oct_res.fortran_vec ());
+  
+  octave_scalar_map the_map;
+  the_map.assign ("niter", niter);
+  the_map.assign ("V", oct_V);
+  the_map.assign ("n", oct_n);
+  the_map.assign ("res", oct_res);
+  
+  octave_io_mode m = gz_write_mode;
+  
+  // // Define filename.
+  // char FileName[255] = "";
+  // sprintf(FileName,"NLP_output.gz");
+  
+  // Save to filename.
+  assert (octave_io_open (FileName, m, &m) == 0);
+  assert (octave_save ("NLP", octave_value (the_map)) == 0);
+  assert (octave_io_close () == 0);
 };
 
 void

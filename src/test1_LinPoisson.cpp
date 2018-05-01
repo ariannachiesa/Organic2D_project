@@ -4,8 +4,8 @@
   "Advanced Programming for Scientific Computing"
 */
 
-/*! \file test2_mesh.cpp
-  \brief Test 2: mesh creation
+/*! \file test1_LinPoisson.cpp
+  \brief Test 1: Linear Poisson
 */
 
 #include "probl.h"
@@ -14,7 +14,7 @@ int main(int argc, char** argv){
 	
 	MPI_Init(&argc,&argv);
 	
-	clock_t tstart_probl;
+	clock_t tstart_probl, tstart_nlp;
 	tstart_probl = clock();
 	
 	/// n. refinement cycles : 1
@@ -29,6 +29,13 @@ int main(int argc, char** argv){
 	
 	/// Export nodal field Vguess to a octbin.gz file for visualization.
 	P._msh.octbin_export ("Vguess_visualization", Vguess);
+	
+	/// Solve Linear Poisson
+	tstart_nlp = clock();
+	P.NLPoisson(Vguess);
+	P.saveNLP(P.Vin, P.nin, P.niter, P.res, "LinPoisson_output.gz");
+	tstart_nlp = clock() - tstart_nlp;
+	std::cout<<"NLPoisson run time: "<<tstart_nlp<<" , ("<<((float)tstart_nlp)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
 	
 	std::cout<<"End of program"<<std::endl;
 	

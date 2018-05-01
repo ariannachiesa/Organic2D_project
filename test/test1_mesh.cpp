@@ -27,7 +27,7 @@ int main(int argc, char** argv){
 	int	nnodes = P._msh.num_global_nodes();
 	std::vector<double>	Vguess(nnodes, P._PhiB);
 	
-	/// Export nodal field f to a octbin.gz file for visualization.
+	/// Export nodal field Vguess to a octbin.gz file for visualization.
 	P._msh.octbin_export ("Vguess_visualization", Vguess);
 	
 	std::cout<<"End of program"<<std::endl;
