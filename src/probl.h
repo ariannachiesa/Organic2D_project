@@ -136,15 +136,15 @@ class Probl
 	void Device(double Vshift, double Csb, double t_semic, double t_ins, double L, bool ins, 
 				std::array<int,2>& pins, std::array<int,2>& contacts, double section, double Vdrain, int maxcycle);
 				
-	void NLPoisson(	std::vector<double>& phi0);
+	void LinearPoisson(	std::vector<double>& phi0);
 	
-	/// It saves NLPoisson output
-	void saveNLP(std::vector<double>& V, std::vector<double>& n, double niter, std::vector<double>& resnrm, const char* FileName);
+	/// It saves Poisson output
+	void savePoisson(std::vector<double>& V, std::vector<double>& n, double niter, std::vector<double>& resnrm, const char* FileName);
 	
-	void org_gaussian_charge_n( std::vector<double>& V, std::vector<double>& rhon, std::vector<double>& drhon_dV);
+	// void org_gaussian_charge_n( std::vector<double>& V, std::vector<double>& rhon, std::vector<double>& drhon_dV);
 							
-	std::vector<double> n_approx(  std::vector<double>& V);
-	std::vector<double> dn_dV_approx(  std::vector<double>& V);
+	// std::vector<double> n_approx(  std::vector<double>& V);
+	// std::vector<double> dn_dV_approx(  std::vector<double>& V);
 
 	/// Compute the (Inf,L2,H1) norm of a piecewise linear function.
 	void bim2a_norm (tmesh& msh, const std::vector<double>& v, double& norm, norm_type type);
