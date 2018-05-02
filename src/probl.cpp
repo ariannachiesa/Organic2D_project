@@ -325,18 +325,18 @@ Probl::Device(	double Vshift, double Csb, double t_semic, double t_ins, double L
 				indexE = quadrant->e(i);			// index of the boundary which the i-th vertex of the quadrant lies on (in current tree)
 				indexT = quadrant->get_tree_idx ();	// index of the current tree
 
-				if( (indexE == 0) && (indexT == 0)){
+				if( (indexE == 2) && (indexT == 0)){
 					_alldnodes.push_back( quadrant->gt(i) );
 					row1.push_back( quadrant->gt(i) );
 				}
-				if( (indexE == 1) && (indexT == (nNodes-2)) ){
+				if( (indexE == 3) && (indexT == (nNodes-2)) ){
 					_alldnodes.push_back( quadrant->gt(i) );
 					row2.push_back( quadrant->gt(i) );
 				}
 			}
 		}
 	
-	std::vector<int>::iterator it1, it2, it3;
+	 std::vector<int>::iterator it1, it2, it3;
 		
 	std::sort(_alldnodes.begin(),_alldnodes.end());
 	it1 = std::unique (_alldnodes.begin(), _alldnodes.end());
@@ -549,6 +549,7 @@ Probl::LinearPoisson(std::vector<double>& phi0)
 					
     std::vector<double>	psi(nnodes,0.0),
 						dphi(intnodes.size(),0.0),
+						//dphi(nnodes,0.0),
 						delta(_insulator.size(),0.0);
 
 	tmesh*	msh = &_msh;
@@ -565,20 +566,10 @@ Probl::LinearPoisson(std::vector<double>& phi0)
     std::vector<double> phi(phi0.size(),0.0),
                         res(nnodes,0.0);
 	std::vector<int>	ij;
-
+	
 	phi = phi0;
 	phiout = phi0;
 	
-	// /// BCs Dirichlet : phi(t_semic) = PhiB ; phi(t_ins) = Vshift;
-	// for(unsigned i=0; i<_alldnodes.size(); i++){
-		// if(i<_alldnodes.size()/2){
-			// phi[_alldnodes[i]] = _PhiB;
-		// }
-		// else{
-			// phi[_alldnodes[i]] = 0;
-		// }
-	// }
-
     for (iter=1; iter<=_pmaxit; iter++){
 
         phiout = phi;	// updating phiout with phi
@@ -586,6 +577,25 @@ Probl::LinearPoisson(std::vector<double>& phi0)
 		res = A*phiout;
 
 		jac = A;
+		
+		/// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vshift;
+		sparse_matrix::col_iterator J;
+		 for(J = jac[0].begin(); J != jac[0].end(); ++J){
+			jac[0][jac.col_idx(J)] = 0;
+		 }
+		for(J = jac[nnodes-1].begin(); J != jac[nnodes-1].end(); ++J){
+			jac[nnodes-1][jac.col_idx(J)] = 0;
+		}
+		for(unsigned i=0; i<_alldnodes.size(); i++){
+			if( i < _alldnodes.size()/2 ){
+				phi[_alldnodes[i]] = _PhiB;
+				jac[0][_alldnodes[i]] = 1;
+			}
+			else{
+				phi[_alldnodes[i]] = _Vshift;
+				jac[nnodes-1][_alldnodes[i]] = 1;				
+			}
+		}
 
 		Jac.resize(intnodes.size());
 
@@ -595,7 +605,6 @@ Probl::LinearPoisson(std::vector<double>& phi0)
 		}
 		
 		/// Assembling matrix: jac(intnodes,intnodes)
-		sparse_matrix::col_iterator J;
 		int j;
 		bool alld;
 		for(unsigned i=0; i<intnodes.size(); i++){
@@ -668,7 +677,7 @@ Probl::LinearPoisson(std::vector<double>& phi0)
     }
 	rhon.clear();
 	
-	Vin = phiout;									
+	Vin = phiout;
 	nin = nout;									
 	niter = iter;
 	
