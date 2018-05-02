@@ -229,7 +229,7 @@ Probl::Device(	double Vshift, double Csb, double t_semic, double t_ins, double L
 	
 	std::vector<int>	row1, row2;
 	
-		const int	nNodes = 401;
+		const int	nNodes = 801;
 		std::cout<<"Nnodes = "<<nNodes<<std::endl;
 
 		// Define mesh.
@@ -329,7 +329,7 @@ Probl::Device(	double Vshift, double Csb, double t_semic, double t_ins, double L
 					_alldnodes.push_back( quadrant->gt(i) );
 					row1.push_back( quadrant->gt(i) );
 				}
-				if( (indexE == 1) && (indexT == (nNodes-2)) ){		/// dovrebbe comunque essere giusto (controllare)	
+				if( (indexE == 1) && (indexT == (nNodes-2)) ){
 					_alldnodes.push_back( quadrant->gt(i) );
 					row2.push_back( quadrant->gt(i) );
 				}
@@ -568,6 +568,16 @@ Probl::LinearPoisson(std::vector<double>& phi0)
 
 	phi = phi0;
 	phiout = phi0;
+	
+	// /// BCs Dirichlet : phi(t_semic) = PhiB ; phi(t_ins) = Vshift;
+	// for(unsigned i=0; i<_alldnodes.size(); i++){
+		// if(i<_alldnodes.size()/2){
+			// phi[_alldnodes[i]] = _PhiB;
+		// }
+		// else{
+			// phi[_alldnodes[i]] = 0;
+		// }
+	// }
 
     for (iter=1; iter<=_pmaxit; iter++){
 
@@ -640,7 +650,7 @@ Probl::LinearPoisson(std::vector<double>& phi0)
         }
 		
         if(resnrm[iter-1] < _ptoll){
-			std::cout<<"NL-Poisson: resnrm < ptoll"<<std::endl;
+			std::cout<<"Poisson: resnrm < ptoll"<<std::endl;
             break;
         }
 
