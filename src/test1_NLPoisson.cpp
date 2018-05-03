@@ -4,8 +4,8 @@
   "Advanced Programming for Scientific Computing"
 */
 
-/*! \file test1_LinPoisson.cpp
-  \brief Test 1: Linear Poisson
+/*! \file test1_NLPoisson.cpp
+  \brief Test 1: Non Linear Poisson
 */
 
 #include "probl.h"
@@ -30,12 +30,12 @@ int main(int argc, char** argv){
 	/// Export nodal field Vguess to a octbin.gz file for visualization.
 	P._msh.octbin_export ("Vguess_visualization", Vguess);
 	
-	/// Solve Linear Poisson
+	/// Solve Non Linear Poisson
 	tstart_p = clock();
-	P.LinearPoisson(Vguess);
-	P.savePoisson(P.Vin, P.nin, P.niter, P.res, "LinPoisson_output.gz");
+	P.Poisson(Vguess,true);
+	P.savePoisson(P.Vin, P.nin, P.niter, P.resnrm, "NLPoisson_output.gz");
 	tstart_p = clock() - tstart_p;
-	std::cout<<"Linear Poisson run time: "<<tstart_p<<" , ("<<((float)tstart_p)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
+	std::cout<<"NLPoisson run time: "<<tstart_p<<" , ("<<((float)tstart_p)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
 	
 	std::cout<<"End of program"<<std::endl;
 	

@@ -229,7 +229,7 @@ Probl::Device(	double Vshift, double Csb, double t_semic, double t_ins, double L
 	
 	std::vector<int>	row1, row2;
 	
-		const int	nNodes = 801;
+		const int	nNodes = 401;
 		std::cout<<"Nnodes = "<<nNodes<<std::endl;
 
 		// Define mesh.
@@ -498,7 +498,7 @@ std::vector<double> Probl::get_data_n(){
 };
 
 void
-Probl::LinearPoisson(std::vector<double>& phi0)
+Probl::Poisson(std::vector<double>& phi0, bool NL)
 {	
 	int	nnodes = _msh.num_global_nodes(),
 		nelements = _msh.num_global_quadrants(),
@@ -507,7 +507,7 @@ Probl::LinearPoisson(std::vector<double>& phi0)
 	
 	std::vector<double>	phiout(nnodes,0.0),
 						nout(nnodes,0.0),
-						resnrm(_pmaxit,0.0);
+						resn(_pmaxit,0.0);
 
     std::vector<int>	intnodes(nnodes,0);
     
@@ -541,29 +541,39 @@ Probl::LinearPoisson(std::vector<double>& phi0)
     }
 	
     sparse_matrix   A,
+					M,
 					jac,
 					diag,
 					Jac;
 	A.resize(nnodes);
+	M.resize(nnodes);
 	jac.resize(nnodes);
 					
     std::vector<double>	psi(nnodes,0.0),
-						dphi(intnodes.size(),0.0),
-						//dphi(nnodes,0.0),
-						delta(_insulator.size(),0.0);
+						dphi(intnodes.size(),0.0);
 
 	tmesh*	msh = &_msh;
 	
     bim2a_advection_diffusion (*msh, epsilon, psi, A);
 	
-    for (unsigned i=0; i<_insulator.size(); i++){
-        if(_insulator[i]==0){
-            delta[i] = 1;
-        }
-    }
+	if(NL){
+		std::vector<double>	delta(_insulator.size(),0.0),
+							zeta(nnodes,1.0);
+		
+		for (unsigned i=0; i<_insulator.size(); i++){
+			if(_insulator[i]==0){
+				delta[i] = 1;
+			}
+		}
+		bim2a_reaction (*msh, delta, zeta, M);
+	}
 
 	/// Newton's algorithm.
     std::vector<double> phi(phi0.size(),0.0),
+						rho(phiout.size(),0.0),
+                        drho(phiout.size(),0.0),
+						res1(nnodes,0.0),
+                        res2(nnodes,0.0),
                         res(nnodes,0.0);
 	std::vector<int>	ij;
 	
@@ -574,9 +584,38 @@ Probl::LinearPoisson(std::vector<double>& phi0)
 
         phiout = phi;	// updating phiout with phi
 		
-		res = A*phiout;
-
-		jac = A;
+		if(NL){
+			org_gaussian_charge_n(phiout, rho,drho);
+		
+			diag.resize(drho.size());
+			for(unsigned i=0; i<drho.size(); i++){
+				diag[i][i] = drho[i];
+			}
+		
+			res1 = A*phiout;
+			res2 = M*rho;
+				
+			for(unsigned i=0; i<res1.size(); i++){
+				res[i] = res1[i]-res2[i] ;
+			}
+			res1.clear();
+			res2.clear();
+			
+			jac = A;
+			sparse_matrix::col_iterator J1, J2;
+			for(int i=0; i<nnodes; i++){
+				J2 = diag[i].begin();
+				for(J1 = M[i].begin(); J1 != M[i].end(); ++J1){
+					if( diag.col_idx(J2) == M.col_idx(J1) ){
+						jac[i][M.col_idx(J1)] -= M[i][M.col_idx(J1)]*diag[i][M.col_idx(J1)];
+					}
+				}
+			}
+		}
+		else{
+			res = A*phiout;
+			jac = A;
+		}
 		
 		/// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vshift;
 		sparse_matrix::col_iterator J;
@@ -652,13 +691,13 @@ Probl::LinearPoisson(std::vector<double>& phi0)
 		
 		double norm;
 		bim2a_norm (*msh,dphi,norm,Inf);
-		resnrm[iter-1] = norm;
+		resn[iter-1] = norm;
 
         for (unsigned i=0; i<intnodes.size(); i++){
 			phi[intnodes[i]] += dphi[i];
         }
 		
-        if(resnrm[iter-1] < _ptoll){
+        if(resn[iter-1] < _ptoll){
 			std::cout<<"Poisson: resnrm < ptoll"<<std::endl;
             break;
         }
@@ -668,21 +707,40 @@ Probl::LinearPoisson(std::vector<double>& phi0)
     phiout = phi;	// updating phiout with phi
 	
 	/// Post-processing.	
-	std::vector<double>	rhon(phiout.size(),_q/area);
-	
-    for(unsigned i=0; i<_scnodes.size(); i++){
-        if(_scnodes[i]==1){
-			nout[i] = - rhon[i]/_q;
-        }
-    }
-	rhon.clear();
+	if(NL){
+		std::vector<double>	rhon(phiout.size(),0.0),
+							drhon_dV(phiout.size(),0.0);
+    
+		org_gaussian_charge_n(phiout, rhon, drhon_dV);
+		drhon_dV.clear();
+		
+		for(unsigned i=0; i<_scnodes.size(); i++){
+			if(_scnodes[i]==1){
+				nout[i] = - rhon[i]/_q;
+			}
+		}
+		rhon.clear();
+	}
+	else{
+		std::vector<double>	rhon(phiout.size(),_q/area);
+		for(unsigned i=0; i<_scnodes.size(); i++){
+			if(_scnodes[i]==1){
+				nout[i] = - rhon[i]/_q;
+			}
+		}
+		rhon.clear();
+	}
 	
 	Vin = phiout;
 	nin = nout;									
 	niter = iter;
+	std::cout<<"iter = "<<niter<<std::endl;
 	
-	resnrm.resize(iter);
-	res = resnrm;
+	resn.resize(iter);
+	resnrm = resn;
+	for(unsigned i=0; i<resnrm.size(); i++){
+		std::cout<<"resnrm = "<<resnrm[i]<<std::endl;
+	}
 };
 
 void
@@ -710,62 +768,62 @@ Probl::savePoisson(std::vector<double>& V, std::vector<double>& n, double niter,
   assert (octave_io_close () == 0);
 };
 
-// void
-// Probl::org_gaussian_charge_n(std::vector<double>& V, std::vector<double>& rhon, std::vector<double>& drhon_dV)
-// {
-    // std::vector<double> n = n_approx(V);
+void
+Probl::org_gaussian_charge_n(std::vector<double>& V, std::vector<double>& rhon, std::vector<double>& drhon_dV)
+{
+    std::vector<double> n = n_approx(V);
 	
-	// rhon = n;
-    // for(unsigned i=0; i<n.size(); i++){
-		// rhon[i] *= -_q;
-    // }
+	rhon = n;
+    for(unsigned i=0; i<n.size(); i++){
+		rhon[i] *= -_q;
+    }
 
-    // std::vector<double> dn_dV = dn_dV_approx(V);
+    std::vector<double> dn_dV = dn_dV_approx(V);
 	
-	// drhon_dV = dn_dV;
-    // for(unsigned i=0; i<dn_dV.size(); i++){
-		// drhon_dV[i] *= -_q;
-    // }
-// };
+	drhon_dV = dn_dV;
+    for(unsigned i=0; i<dn_dV.size(); i++){
+		drhon_dV[i] *= -_q;
+    }
+};
 
-// std::vector<double>
-// Probl::n_approx(std::vector<double>& V)
-// {
-    // std::vector<double> coeff(V.size(),0),
-						// n(V.size(),0);
-    // double	kT = _Kb * _T0,
-			// denom;
+std::vector<double>
+Probl::n_approx(std::vector<double>& V)
+{
+    std::vector<double> coeff(V.size(),0),
+						n(V.size(),0);
+    double	kT = _Kb * _T0,
+			denom;
 	
-    // for(unsigned i=0; i<_gx.size(); i++){
-        // for(unsigned j=0; j<V.size(); j++){		
-            // coeff[j] = (sqrt(2) * _sigman * _gx[i] - _q * V[j]) / kT ;
-            // denom = 1+exp(coeff[j]);
-            // n[j] += _N0 / sqrt(M_PI) * _gw[i] / denom;
-        // }
-    // }
-	// coeff.clear();		
-	// return n;
-// };
+    for(unsigned i=0; i<_gx.size(); i++){
+        for(unsigned j=0; j<V.size(); j++){		
+            coeff[j] = (sqrt(2) * _sigman * _gx[i] - _q * V[j]) / kT ;
+            denom = 1+exp(coeff[j]);
+            n[j] += _N0 / sqrt(M_PI) * _gw[i] / denom;
+        }
+    }
+	coeff.clear();		
+	return n;
+};
 
-// std::vector<double>
-// Probl::dn_dV_approx(std::vector<double>& V)
-// {
-    // std::vector<double> coeff(V.size(),0.0),
-						// dn_dV(V.size(),0.0);
+std::vector<double>
+Probl::dn_dV_approx(std::vector<double>& V)
+{
+    std::vector<double> coeff(V.size(),0.0),
+						dn_dV(V.size(),0.0);
 						
-    // double	kT = _Kb * _T0,
-			// denom;
+    double	kT = _Kb * _T0,
+			denom;
 
-    // for(unsigned i=0; i<_gx.size(); i++){
-        // for(unsigned j=0; j<V.size(); j++){
-            // coeff[j] = (sqrt(2) * _sigman * _gx[i] - _q * V[j]) / kT ;
-            // denom = 1+exp(coeff[j]);
-            // dn_dV[j] += - _q * _N0 / _sigman * sqrt(2/M_PI) * _gw[i]*_gx[i] / denom;
-		// }
-    // }
-	// coeff.clear();
-	// return dn_dV;
-// };
+    for(unsigned i=0; i<_gx.size(); i++){
+        for(unsigned j=0; j<V.size(); j++){
+            coeff[j] = (sqrt(2) * _sigman * _gx[i] - _q * V[j]) / kT ;
+            denom = 1+exp(coeff[j]);
+            dn_dV[j] += - _q * _N0 / _sigman * sqrt(2/M_PI) * _gw[i]*_gx[i] / denom;
+		}
+    }
+	coeff.clear();
+	return dn_dV;
+};
 
 void
 Probl::bim2a_norm (tmesh& msh, const std::vector<double>& v, double& norm, norm_type type)
