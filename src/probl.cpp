@@ -734,13 +734,9 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 	Vin = phiout;
 	nin = nout;									
 	niter = iter;
-	std::cout<<"iter = "<<niter<<std::endl;
 	
 	resn.resize(iter);
 	resnrm = resn;
-	for(unsigned i=0; i<resnrm.size(); i++){
-		std::cout<<"resnrm = "<<resnrm[i]<<std::endl;
-	}
 };
 
 void
