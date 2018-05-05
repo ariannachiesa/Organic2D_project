@@ -94,6 +94,7 @@ class Probl
 	double _Efield;								/**< device source-drain electric field [V / m] */
 	
 	double _Vshift;								/**< [V] shift potential sensed at the gate terminal */
+	double _VG;									/**< [V] voltage applied at the gate terminal */
 	double _Csb;								/**< [F] value of the capacitor of the external control circuit */
 	double _t_semic;							/**< [m] thickness of semiconductor, along y-axis */
 	double _t_ins;
@@ -180,44 +181,5 @@ class Probl
 	void set_section(double section);
 	
 };
-
-	// /// class NLPoisson
-	// class NLPoisson : public Probl
-	// {
-		// std::vector<double> _Vin;		/**< Initial guess for the potential */
-		// std::vector<double> _nin;		/**< Initial guess for the electron density */
-		// std::vector<double> _res;		/**< residual vector */
-		// int _niter;						/**< n. iterations required to compute the initial guess */
-		
-		// public:
-		// NLPoisson() = delete;
-		// NLPoisson(	std::vector<double>& phi0,
-					// int maxcycle,
-			// double T0 = 300,	// Constants
-			// double PhiB = 0.54, double sigman = 2.6, double mu0n = 4.29110133911508e-6,		// Material
-			// int nq = 101,		// Quad
-			// int pmaxit = 1000, int maxit = 5, int maxit_mnewton = 30, int nsteps_check = 3, double maxnpincr = 1e-3, double ptoll = 1e-10, 
-			// double toll = 1e-4, double dt0 = 1e-10, double dtcut = 0.25, double dtmax = 1, double dtmin = 1e-12, double maxdtincr = 2,	// Algor
-			// double Vshift = 1.79738, double Csb = 1.16183675549126e-11, double t_semic = 3.49436549222355e-8, double t_ins = 4.41e-7, 
-			// double L = 1e-5, bool ins = true,		// Device
-			// std::array<int,2> pins = {1, 0}, std::array<int,2> contacts = {0, 1}, double section = 0.00000081, double Vdrain = 5);//: Probl(int maxcycle);
-			// // constructor
-		
-		// // ///	Computes the density of charge n and its derivative w.r.t the electric potential
-		// // ///	by approximating them with Gauss-Hermite quadrature formula
-		// // void 
-		// // org_gaussian_charge_n( std::vector<double>& V,
-								// // std::vector<double>& rhon, std::vector<double>& drhon_dV);
-							
-		// // std::vector<double>
-		// // n_approx(  std::vector<double>& V, Probl& P);
-
-		// // std::vector<double> 
-		// // dn_dV_approx(  std::vector<double>& V, Probl& P);
-
-		// // /// Compute the (Inf,L2,H1) norm of a piecewise linear function.
-		// // void
-		// // bim2a_norm (tmesh& msh, const std::vector<double>& v, double& norm, norm_type type);
-	// };
 
 #endif /* PROBL_H */

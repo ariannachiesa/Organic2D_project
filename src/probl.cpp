@@ -221,6 +221,7 @@ Probl::Device(	double Vshift, double Csb, double t_semic, double t_ins, double L
 		_t_ins = 0;
 	}
 
+	_VG = 0;
 	_Vshift = Vshift;
 	_Csb = Csb;
 	_t_semic = t_semic;
@@ -617,24 +618,24 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 			jac = A;
 		}
 		
-		// /// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vshift;
+		/// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
 		 sparse_matrix::col_iterator J;
-		 // for(J = jac[0].begin(); J != jac[0].end(); ++J){
-			// jac[0][jac.col_idx(J)] = 0;
-		 // }
-		// for(J = jac[nnodes-1].begin(); J != jac[nnodes-1].end(); ++J){
-			// jac[nnodes-1][jac.col_idx(J)] = 0;
-		// }
-		// for(unsigned i=0; i<_alldnodes.size(); i++){
-			// if( i < _alldnodes.size()/2 ){
-				// phi[_alldnodes[i]] = _PhiB;
-				// jac[0][_alldnodes[i]] = 1;
-			// }
-			// else{
-				// phi[_alldnodes[i]] = _Vshift;
-				// jac[nnodes-1][_alldnodes[i]] = 1;				
-			// }
-		// }
+		 for(J = jac[0].begin(); J != jac[0].end(); ++J){
+			jac[0][jac.col_idx(J)] = 0;
+		 }
+		for(J = jac[nnodes-1].begin(); J != jac[nnodes-1].end(); ++J){
+			jac[nnodes-1][jac.col_idx(J)] = 0;
+		}
+		for(unsigned i=0; i<_alldnodes.size(); i++){
+			if( i < _alldnodes.size()/2 ){
+				phi[_alldnodes[i]] = _PhiB;
+				jac[0][_alldnodes[i]] = 1;
+			}
+			else{
+				phi[_alldnodes[i]] = Vg + _Vshift;
+				jac[nnodes-1][_alldnodes[i]] = 1;				
+			}
+		}
 
 		Jac.resize(intnodes.size());
 
