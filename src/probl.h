@@ -142,6 +142,10 @@ class Probl
 	/// It saves Poisson output
 	void savePoisson(std::vector<double>& V, std::vector<double>& n, double niter, std::vector<double>& resnrm, const char* FileName);
 	
+	/// methods for CV curve
+	void CVcurve (std::vector<double>& phi0, double Vgstart, double Vgend, double dVg, const char* FileName);
+	void saveCV(std::vector<double>& C, std::vector<double>& Vg, const char* FileName);
+	
 	void org_gaussian_charge_n( std::vector<double>& V, std::vector<double>& rhon, std::vector<double>& drhon_dV);
 							
 	std::vector<double> n_approx(  std::vector<double>& V);

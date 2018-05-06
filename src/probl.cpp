@@ -230,7 +230,7 @@ Probl::Device(	double Vshift, double Csb, double t_semic, double t_ins, double L
 	
 	std::vector<int>	row1, row2;
 	
-		const int	nNodes = 401;
+		const int	nNodes = 801;
 		std::cout<<"Nnodes = "<<nNodes<<std::endl;
 
 		// Define mesh.
@@ -632,7 +632,7 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 				jac[0][_alldnodes[i]] = 1;
 			}
 			else{
-				phi[_alldnodes[i]] = Vg + _Vshift;
+				phi[_alldnodes[i]] = _VG + _Vshift;
 				jac[nnodes-1][_alldnodes[i]] = 1;				
 			}
 		}
@@ -852,4 +852,63 @@ Probl::bim2a_norm (tmesh& msh, const std::vector<double>& v, double& norm, norm_
         norm += v[i] * temp[i];
       norm = sqrt (norm);
     }
+};
+
+
+/// CV curve con Vgate da -30 a 30 [V] con dVgate = 0.1
+void
+Probl::CVcurve (std::vector<double>& phi0, double Vgstart, double Vgend, double dVg, const char* FileName)
+{
+	double	range = std::abs(Vgend - Vgstart) / dVg,
+			size = ceil(_alldnodes.size()/2)*range,
+			area = _L * std::abs(_t_ins - _t_semic);
+		
+	std::vector<double> Vguess = phi0,
+						Vg(range,0.0),
+						dphi(phi0.size(),0.0),
+						dQ(ceil(_alldnodes.size()/2),0.0),	// dQ ha dimensioni pari al numero dei nodi con ordinata t_ins
+						C(size,0.0);						// C ha dimensioni pari al numero dei nodi con ordinata t_ins * 
+															// il numero di campioni nel range [Vgstart,Vgend]
+	_VG = Vgstart;
+	for(auto i=0; i<range; i++){
+		std::cout<<"i = "<<i<<std::endl;
+		Vg[i] = _VG;
+		Poisson(Vguess,true);
+		//P.savePoisson(P.Vin, P.nin, P.niter, P.resnrm, "NLPoisson_output.gz");
+	
+		// for(unsigned j=0; j<dphi.size(); j++){
+			// dphi[j] = Vin[j] - Vguess[j];		// calcolo la variazione di phi
+		// }
+		dphi = Vin;
+	
+		for(unsigned j=0; j<_alldnodes.size()/2; j++){
+			dQ[j] = dphi[ _alldnodes[j+_alldnodes.size()/2] ];
+			C[(i*2)+j] = area*dQ[j]/dVg;
+		}
+		_VG = _VG + dVg;
+	}
+
+	saveCV(C,Vg,FileName);
+}
+
+
+void
+Probl::saveCV(std::vector<double>& C, std::vector<double>& Vg, const char* FileName)
+{
+  ColumnVector oct_C (C.size (), 0.0);
+  ColumnVector oct_V (Vg.size (), 0.0);
+
+  std::copy_n (C.begin (), C.size (), oct_C.fortran_vec ());
+  std::copy_n (Vg.begin (), Vg.size (), oct_V.fortran_vec ());
+  
+  octave_scalar_map the_map;
+  the_map.assign ("Vg", oct_V);
+  the_map.assign ("C", oct_C);
+  
+  octave_io_mode m = gz_write_mode;
+  
+  // Save to filename.
+  assert (octave_io_open (FileName, m, &m) == 0);
+  assert (octave_save ("CVcurve", octave_value (the_map)) == 0);
+  assert (octave_io_close () == 0);
 };

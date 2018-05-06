@@ -56,5 +56,9 @@ mesh (tx, ty, vv);
 figure(4)
 mesh (tx, ty, nn);
 
+for i = 1:iter
+  niter(i) = i;
+end
+
 figure(5)
-plot(iter,res);
+plot(niter,res,'-ob');
