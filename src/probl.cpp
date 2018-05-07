@@ -859,236 +859,236 @@ Probl::bim2a_norm (tmesh& msh, const std::vector<double>& v, double& norm, norm_
 void
 Probl::CVcurve (std::vector<double>& phi0, double Vgstart, double Vgend, double dVg, const char* FileName)
 {
-	double	range = std::abs(Vgend - Vgstart) / dVg,
-			size = ceil(_alldnodes.size()/2)*range,
-			area = _L * std::abs(_t_ins - _t_semic);
+	// double	range = std::abs(Vgend - Vgstart) / dVg,
+			// size = ceil(_alldnodes.size()/2)*range,
+			// area = _L * std::abs(_t_ins - _t_semic);
 			
-	int	nnodes = _msh.num_global_nodes(),
-		nelements = _msh.num_global_quadrants();
+	// int	nnodes = _msh.num_global_nodes(),
+		// nelements = _msh.num_global_quadrants();
 		
-	std::vector<double> Vguess = phi0,
-						Vg(range,0.0),
-						phiout(nnodes,0.0),
-						dphi(phi0.size(),0.0),
-						dQ(ceil(_alldnodes.size()/2),0.0),	// dQ ha dimensioni pari al numero dei nodi con ordinata t_ins
-						C(size,0.0);						// C ha dimensioni pari al numero dei nodi con ordinata t_ins * 
-															// il numero di campioni nel range [Vgstart,Vgend]
+	// std::vector<double> Vguess = phi0,
+						// Vg(range,0.0),
+						// phiout(nnodes,0.0),
+						// dphi(phi0.size(),0.0),
+						// dQ(ceil(_alldnodes.size()/2),0.0),	// dQ ha dimensioni pari al numero dei nodi con ordinata t_ins
+						// C(size,0.0);						// C ha dimensioni pari al numero dei nodi con ordinata t_ins * 
+															// // il numero di campioni nel range [Vgstart,Vgend]
 														
-	std::vector<int>	intnodes(nnodes,0);
-	bool b;
-	int k = 0;
-    for (auto i=0; i<nnodes; i++){
-        b = false;
-        for (unsigned j=0; j<_alldnodes.size(); j++){
-            if(i==_alldnodes[j]){
-                b = true;
-            }
-        }
-        if(b==false){ 
-			intnodes[k] = i;
-			k++;
-        }
-    }
-	intnodes.resize(k);
-    std::sort(intnodes.begin(), intnodes.end());
+	// std::vector<int>	intnodes(nnodes,0);
+	// bool b;
+	// int k = 0;
+    // for (auto i=0; i<nnodes; i++){
+        // b = false;
+        // for (unsigned j=0; j<_alldnodes.size(); j++){
+            // if(i==_alldnodes[j]){
+                // b = true;
+            // }
+        // }
+        // if(b==false){ 
+			// intnodes[k] = i;
+			// k++;
+        // }
+    // }
+	// intnodes.resize(k);
+    // std::sort(intnodes.begin(), intnodes.end());
 	
-	///Assemble system matrices.
-    std::vector<double> epsilon(nelements,_eps_semic),
-						delta(_insulator.size(),0.0),
-						zeta(nnodes,1.0),
-						phi(Vin.size(),0.0),
-						drho(Vin.size(),0.0),
-						res1(nnodes,0.0),
-                        res2(nnodes,0.0),
-                        res(nnodes,0.0);
+	// ///Assemble system matrices.
+    // std::vector<double> epsilon(nelements,_eps_semic),
+						// delta(_insulator.size(),0.0),
+						// zeta(nnodes,1.0),
+						// phi(Vin.size(),0.0),
+						// drho(Vin.size(),0.0),
+						// res1(nnodes,0.0),
+                        // res2(nnodes,0.0),
+                        // res(nnodes,0.0);
 	
-	if(_ins){
-        for(unsigned i=0; i<_insulator.size(); i++){
-            if(_insulator[i]==1){
-                epsilon[i] = _eps_ins;
-            }
-        }
-    }
+	// if(_ins){
+        // for(unsigned i=0; i<_insulator.size(); i++){
+            // if(_insulator[i]==1){
+                // epsilon[i] = _eps_ins;
+            // }
+        // }
+    // }
 
-	sparse_matrix   A,
-					M;
-	A.resize(nnodes);
-	M.resize(nnodes);
+	// sparse_matrix   A,
+					// M;
+	// A.resize(nnodes);
+	// M.resize(nnodes);
 	
-	tmesh*	msh = &_msh;
+	// tmesh*	msh = &_msh;
 	
-    bim2a_advection_diffusion (*msh, epsilon, psi, A);
+    // bim2a_advection_diffusion (*msh, epsilon, psi, A);
 		
-	for (unsigned i=0; i<_insulator.size(); i++){
-		if(_insulator[i]==0){
-			delta[i] = 1;
-		}
-	}
-	bim2a_reaction (*msh, delta, zeta, M);
-	
-	_VG = Vgstart;
-	for(auto i=0; i<range; i++){
-		std::cout<<"i = "<<i<<std::endl;
-		Vg[i] = _VG;
-		Poisson(Vguess,true);
-		//P.savePoisson(P.Vin, P.nin, P.niter, P.resnrm, "NLPoisson_output.gz");
-	
-	///////////////////////////////////////
-	
-    sparse_matrix   jac,
-					diag,
-					Jac;
-	jac.resize(nnodes);
-					
-    std::vector<double>	psi(nnodes,0.0),
-						dphi(intnodes.size(),0.0);
-
-
-	/// Newton's algorithm.
-	//std::vector<int>	ij;
-	
-	phi = Vin;
-	phiout = Vin;
-	
-    for (iter=1; iter<=_pmaxit; iter++){
-
-        phiout = phi;	// updating phiout with phi
-			
-		drho = dn_dV_approx(phiout);
-		for(unsigned i=0; i<drho.size(); i++){
-			drho[i] *= -_q;
-		}
-		
-		diag.resize(drho.size());
-		for(unsigned i=0; i<drho.size(); i++){
-			diag[i][i] = drho[i];
-		}
-		
-		res1 = A*phiout;
-		///res2 = M*rho;
-				
-		for(unsigned i=0; i<res1.size(); i++){
-			res[i] = res1[i]-res2[i] ;
-		}
-		res1.clear();
-		res2.clear();
-			
-		jac = A;
-		sparse_matrix::col_iterator J1, J2;
-		for(int i=0; i<nnodes; i++){
-			J2 = diag[i].begin();
-			for(J1 = M[i].begin(); J1 != M[i].end(); ++J1){
-				if( diag.col_idx(J2) == M.col_idx(J1) ){
-					jac[i][M.col_idx(J1)] -= M[i][M.col_idx(J1)]*diag[i][M.col_idx(J1)];
-				}
-			}
-		}
-
-		
-		/// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
-		 sparse_matrix::col_iterator J;
-		 for(J = jac[0].begin(); J != jac[0].end(); ++J){
-			jac[0][jac.col_idx(J)] = 0;
-		 }
-		for(J = jac[nnodes-1].begin(); J != jac[nnodes-1].end(); ++J){
-			jac[nnodes-1][jac.col_idx(J)] = 0;
-		}
-		for(unsigned i=0; i<_alldnodes.size(); i++){
-			if( i < _alldnodes.size()/2 ){
-				phi[_alldnodes[i]] = 0;
-				jac[0][_alldnodes[i]] = 1;
-			}
-			else{
-				phi[_alldnodes[i]] = 1;
-				jac[nnodes-1][_alldnodes[i]] = 1;				
-			}
-		}
-
-		Jac.resize(intnodes.size());
-
-		/// Assembling rhs term: res(intnodes)
-		for(unsigned i=0; i<intnodes.size(); i++){
-				dphi[i] = res[intnodes[i]];
-		}
-		
-		/// Assembling matrix: jac(intnodes,intnodes)
-		int j;
-		bool alld;
-		for(unsigned i=0; i<intnodes.size(); i++){
-			for(J = jac[ intnodes[i] ].begin(); J != jac[ intnodes[i] ].end(); ++J){
-				alld = false;
-				// controllo se J è pari a uno degli indici di elementi di bordo
-				for(unsigned k=0; k<_alldnodes.size(); k++){
-					if( jac.col_idx(J) == _alldnodes[k] ){
-						alld = true;
-						break;
-					}
-				}
-				// se sì --> vado avanti (J++)
-				// se no --> inserisco in Jac
-				if( !alld ){
-					j = jac.col_idx(J) - _alldnodes.size()/2;
-					Jac[i][j] = jac[intnodes[i]][jac.col_idx(J)];
-				}
-			}
-		}
-		
-		mumps mumps_solver;
-      
-		std::vector<double> vals(nnodes,0);
-		std::vector<int> 	irow(nnodes,0),
-							jcol(nnodes,0);
-	  
-		Jac.aij(vals, irow, jcol, mumps_solver.get_index_base ());
-	  
-		mumps_solver.set_lhs_structure (Jac.rows(), irow, jcol);
-		
-		mumps_solver.analyze ();
-		mumps_solver.set_lhs_data (vals);
-      
-		mumps_solver.factorize ();
-
-		mumps_solver.set_rhs (dphi);
-      
-		mumps_solver.solve ();
-		mumps_solver.cleanup ();
-	
-		for(unsigned i=0; i<dphi.size(); i++){
-			dphi[i] *= (-1);
-		}
-		
-		double norm;
-		bim2a_norm (*msh,dphi,norm,Inf);
-		resn[iter-1] = norm;
-
-        for (unsigned i=0; i<intnodes.size(); i++){
-			phi[intnodes[i]] += dphi[i];
-        }
-		
-        if(resn[iter-1] < _ptoll){
-			std::cout<<"Poisson: resnrm < ptoll"<<std::endl;
-            break;
-        }
-
-    }
-
-    phiout = phi;	// updating phiout with phi
-	dphi = phiout;
-
-	///////////////////////////////////////
-	
-		// for(unsigned j=0; j<dphi.size(); j++){
-			// dphi[j] = Vin[j] - Vguess[j];		// calcolo la variazione di phi
+	// for (unsigned i=0; i<_insulator.size(); i++){
+		// if(_insulator[i]==0){
+			// delta[i] = 1;
 		// }
+	// }
+	// bim2a_reaction (*msh, delta, zeta, M);
 	
-		for(unsigned j=0; j<_alldnodes.size()/2; j++){
-			dQ[j] = dphi[ _alldnodes[j+_alldnodes.size()/2] ];
-			C[(i*2)+j] = area*dQ[j]/dVg;
-		}
-		_VG = _VG + dVg;
-	}
+	// _VG = Vgstart;
+	// for(auto i=0; i<range; i++){
+		// std::cout<<"i = "<<i<<std::endl;
+		// Vg[i] = _VG;
+		// Poisson(Vguess,true);
+		// //P.savePoisson(P.Vin, P.nin, P.niter, P.resnrm, "NLPoisson_output.gz");
+	
+	// ///////////////////////////////////////
+	
+    // sparse_matrix   jac,
+					// diag,
+					// Jac;
+	// jac.resize(nnodes);
+					
+    // std::vector<double>	psi(nnodes,0.0),
+						// dphi(intnodes.size(),0.0);
 
-	saveCV(C,Vg,FileName);
+
+	// /// Newton's algorithm.
+	// //std::vector<int>	ij;
+	
+	// phi = Vin;
+	// phiout = Vin;
+	
+    // for (iter=1; iter<=_pmaxit; iter++){
+
+        // phiout = phi;	// updating phiout with phi
+			
+		// drho = dn_dV_approx(phiout);
+		// for(unsigned i=0; i<drho.size(); i++){
+			// drho[i] *= -_q;
+		// }
+		
+		// diag.resize(drho.size());
+		// for(unsigned i=0; i<drho.size(); i++){
+			// diag[i][i] = drho[i];
+		// }
+		
+		// res1 = A*phiout;
+		// ///res2 = M*rho;
+				
+		// for(unsigned i=0; i<res1.size(); i++){
+			// res[i] = res1[i]-res2[i] ;
+		// }
+		// res1.clear();
+		// res2.clear();
+			
+		// jac = A;
+		// sparse_matrix::col_iterator J1, J2;
+		// for(int i=0; i<nnodes; i++){
+			// J2 = diag[i].begin();
+			// for(J1 = M[i].begin(); J1 != M[i].end(); ++J1){
+				// if( diag.col_idx(J2) == M.col_idx(J1) ){
+					// jac[i][M.col_idx(J1)] -= M[i][M.col_idx(J1)]*diag[i][M.col_idx(J1)];
+				// }
+			// }
+		// }
+
+		
+		// /// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
+		 // sparse_matrix::col_iterator J;
+		 // for(J = jac[0].begin(); J != jac[0].end(); ++J){
+			// jac[0][jac.col_idx(J)] = 0;
+		 // }
+		// for(J = jac[nnodes-1].begin(); J != jac[nnodes-1].end(); ++J){
+			// jac[nnodes-1][jac.col_idx(J)] = 0;
+		// }
+		// for(unsigned i=0; i<_alldnodes.size(); i++){
+			// if( i < _alldnodes.size()/2 ){
+				// phi[_alldnodes[i]] = 0;
+				// jac[0][_alldnodes[i]] = 1;
+			// }
+			// else{
+				// phi[_alldnodes[i]] = 1;
+				// jac[nnodes-1][_alldnodes[i]] = 1;				
+			// }
+		// }
+
+		// Jac.resize(intnodes.size());
+
+		// /// Assembling rhs term: res(intnodes)
+		// for(unsigned i=0; i<intnodes.size(); i++){
+				// dphi[i] = res[intnodes[i]];
+		// }
+		
+		// /// Assembling matrix: jac(intnodes,intnodes)
+		// int j;
+		// bool alld;
+		// for(unsigned i=0; i<intnodes.size(); i++){
+			// for(J = jac[ intnodes[i] ].begin(); J != jac[ intnodes[i] ].end(); ++J){
+				// alld = false;
+				// // controllo se J è pari a uno degli indici di elementi di bordo
+				// for(unsigned k=0; k<_alldnodes.size(); k++){
+					// if( jac.col_idx(J) == _alldnodes[k] ){
+						// alld = true;
+						// break;
+					// }
+				// }
+				// // se sì --> vado avanti (J++)
+				// // se no --> inserisco in Jac
+				// if( !alld ){
+					// j = jac.col_idx(J) - _alldnodes.size()/2;
+					// Jac[i][j] = jac[intnodes[i]][jac.col_idx(J)];
+				// }
+			// }
+		// }
+		
+		// mumps mumps_solver;
+      
+		// std::vector<double> vals(nnodes,0);
+		// std::vector<int> 	irow(nnodes,0),
+							// jcol(nnodes,0);
+	  
+		// Jac.aij(vals, irow, jcol, mumps_solver.get_index_base ());
+	  
+		// mumps_solver.set_lhs_structure (Jac.rows(), irow, jcol);
+		
+		// mumps_solver.analyze ();
+		// mumps_solver.set_lhs_data (vals);
+      
+		// mumps_solver.factorize ();
+
+		// mumps_solver.set_rhs (dphi);
+      
+		// mumps_solver.solve ();
+		// mumps_solver.cleanup ();
+	
+		// for(unsigned i=0; i<dphi.size(); i++){
+			// dphi[i] *= (-1);
+		// }
+		
+		// double norm;
+		// bim2a_norm (*msh,dphi,norm,Inf);
+		// resn[iter-1] = norm;
+
+        // for (unsigned i=0; i<intnodes.size(); i++){
+			// phi[intnodes[i]] += dphi[i];
+        // }
+		
+        // if(resn[iter-1] < _ptoll){
+			// std::cout<<"Poisson: resnrm < ptoll"<<std::endl;
+            // break;
+        // }
+
+    // }
+
+    // phiout = phi;	// updating phiout with phi
+	// dphi = phiout;
+
+	// ///////////////////////////////////////
+	
+		// // for(unsigned j=0; j<dphi.size(); j++){
+			// // dphi[j] = Vin[j] - Vguess[j];		// calcolo la variazione di phi
+		// // }
+	
+		// for(unsigned j=0; j<_alldnodes.size()/2; j++){
+			// dQ[j] = dphi[ _alldnodes[j+_alldnodes.size()/2] ];
+			// C[(i*2)+j] = area*dQ[j]/dVg;
+		// }
+		// _VG = _VG + dVg;
+	// }
+
+	// saveCV(C,Vg,FileName);
 }
 
 
