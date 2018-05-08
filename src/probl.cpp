@@ -230,7 +230,7 @@ Probl::Device(	double Vshift, double Csb, double t_semic, double t_ins, double L
 	
 	std::vector<int>	row1, row2;
 	
-		const int	nNodes = 801;
+		const int	nNodes = 401;
 		std::cout<<"Nnodes = "<<nNodes<<std::endl;
 
 		// Define mesh.
@@ -498,6 +498,13 @@ std::vector<double> Probl::get_data_n(){
 	return _data_n;
 };
 
+
+double
+Dirichlet (double x,double w)
+{ 
+	return x + w; 
+};
+
 void
 Probl::Poisson(std::vector<double>& phi0, bool NL)
 {	
@@ -581,6 +588,15 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 	phi = phi0;
 	phiout = phi0;
 	
+	/// f(x, y).
+	//using func = std::function<double (double, double)>; 
+	func	Dirichlet;
+	std::tuple<int, int, func>	tupla1(0,2,Dirichlet),
+								tupla2(nnodes-2,3,Dirichlet);
+	dirichlet_bcs	bcs;
+	bcs.push_back(tupla1);
+	bcs.push_back(tupla2);
+	
     for (iter=1; iter<=_pmaxit; iter++){
 
         phiout = phi;	// updating phiout with phi
@@ -620,22 +636,22 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 		
 		/// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
 		 sparse_matrix::col_iterator J;
-		 for(J = jac[0].begin(); J != jac[0].end(); ++J){
-			jac[0][jac.col_idx(J)] = 0;
-		 }
-		for(J = jac[nnodes-1].begin(); J != jac[nnodes-1].end(); ++J){
-			jac[nnodes-1][jac.col_idx(J)] = 0;
-		}
-		for(unsigned i=0; i<_alldnodes.size(); i++){
-			if( i < _alldnodes.size()/2 ){
-				phi[_alldnodes[i]] = _PhiB;
-				jac[0][_alldnodes[i]] = 1;
-			}
-			else{
-				phi[_alldnodes[i]] = _VG + _Vshift;
-				jac[nnodes-1][_alldnodes[i]] = 1;				
-			}
-		}
+		 // for(J = jac[0].begin(); J != jac[0].end(); ++J){
+			// jac[0][jac.col_idx(J)] = 0;
+		 // }
+		// for(J = jac[nnodes-1].begin(); J != jac[nnodes-1].end(); ++J){
+			// jac[nnodes-1][jac.col_idx(J)] = 0;
+		// }
+		// for(unsigned i=0; i<_alldnodes.size(); i++){
+			// if( i < _alldnodes.size()/2 ){
+				// phi[_alldnodes[i]] = _PhiB;
+				// jac[0][_alldnodes[i]] = 1;
+			// }
+			// else{
+				// phi[_alldnodes[i]] = _VG + _Vshift;
+				// jac[nnodes-1][_alldnodes[i]] = 1;				
+			// }
+		// }
 
 		Jac.resize(intnodes.size());
 
@@ -685,6 +701,8 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
       
 		mumps_solver.solve ();
 		mumps_solver.cleanup ();
+	
+		saveJAC(Jac.rows(), Jac.cols(), vals);
 	
 		for(unsigned i=0; i<dphi.size(); i++){
 			dphi[i] *= (-1);
@@ -1110,5 +1128,30 @@ Probl::saveCV(std::vector<double>& C, std::vector<double>& Vg, const char* FileN
   // Save to filename.
   assert (octave_io_open (FileName, m, &m) == 0);
   assert (octave_save ("CVcurve", octave_value (the_map)) == 0);
+  assert (octave_io_close () == 0);
+};
+
+
+void
+Probl::saveJAC (int nrows, int ncols, std::vector<double>& vals)
+{
+  Matrix oct_jac (nrows, ncols, 0.0);
+  
+  std::copy_n (vals.begin (), vals.size (), oct_jac.fortran_vec ());
+  
+  octave_scalar_map the_map;
+  the_map.assign ("jac", oct_jac);
+  the_map.assign ("nrows", nrows);
+  the_map.assign ("ncols", ncols);
+  
+  octave_io_mode m = gz_write_mode;
+  
+    // Define filename.
+  char FileName[255] = "";
+  sprintf(FileName,"NEWT_jac.gz");
+  
+  // Save to filename.
+  assert (octave_io_open (FileName, m, &m) == 0);
+  assert (octave_save ("jac", octave_value (the_map)) == 0);
   assert (octave_io_close () == 0);
 };

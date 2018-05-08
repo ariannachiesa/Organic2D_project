@@ -8,10 +8,12 @@
 #include "bim_sparse.h"
 //#include "functions.h"
 #include "mumps_class.h"
+#include "octave_file_io.h"
 #include "quad_operators.h"
 #include "sandia_rules.hpp"
 #include "tmesh.h"
 
+#include<algorithm>
 #include<array>
 #include<vector>
 
@@ -141,6 +143,10 @@ class Probl
 	
 	/// It saves Poisson output
 	void savePoisson(std::vector<double>& V, std::vector<double>& n, double niter, std::vector<double>& resnrm, const char* FileName);
+	
+	//
+	void saveJAC (int nrows, int ncols, std::vector<double>& vals);
+	//
 	
 	/// methods for CV curve
 	void CVcurve (std::vector<double>& phi0, double Vgstart, double Vgend, double dVg, const char* FileName);

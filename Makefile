@@ -2,7 +2,7 @@ BUILD_DIR ?= ./build
 SRC_DIRS ?= ./src
 
 # Directory where Bim++ is installed.
-#BIMPP_PREFIX = ../bimpp
+#BIMPP_PREFIX = $(shell pwd)/../bimpp
 #BIMPP_PREFIX = ./bimpp_install
 BIMPP_PREFIX = /vagrant/bimpp_install
 
@@ -35,10 +35,20 @@ LDLIBS = -lbim -lbimio -lbimlis \
 -lopenblas -loctave -loctinterp \
 -lopenblas -lptscotcherr
 
-TARGET_EXEC ?= mis_main2D
+$(BUILD_DIR)/test1_mesh: $(OBJS) $(BUILD_DIR)/test/test1_mesh.cpp.o
+	$(CXX) $^ -o $@ $(LDFLAGS) $(LDLIBS)
+	
+$(BUILD_DIR)/test2_mesh: $(OBJS) $(BUILD_DIR)/test/test2_mesh.cpp.o
+	$(CXX) $^ -o $@ $(LDFLAGS) $(LDLIBS)
+	
+$(BUILD_DIR)/test3_mesh: $(OBJS) $(BUILD_DIR)/test/test3_mesh.cpp.o
+	$(CXX) $^ -o $@ $(LDFLAGS) $(LDLIBS)
 
-$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
-	$(CXX) $(OBJS) -o $@ $(LDFLAGS) $(LDLIBS)
+$(BUILD_DIR)/test1_LinPoisson: $(OBJS) $(BUILD_DIR)/test/test1_LinPoisson.cpp.o
+	$(CXX) $^ -o $@ $(LDFLAGS) $(LDLIBS)
+	
+$(BUILD_DIR)/test1_NLPoisson: $(OBJS) $(BUILD_DIR)/test/test1_NLPoisson.cpp.o
+	$(CXX) $^ -o $@ $(LDFLAGS) $(LDLIBS)
 
 $(BUILD_DIR)/%.cpp.o: %.cpp
 	$(MKDIR_P) $(dir $@)
