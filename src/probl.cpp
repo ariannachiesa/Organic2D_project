@@ -502,11 +502,13 @@ std::vector<double> Probl::get_data_n(){
 double
 Probl::DirichletBulk (double x,double y)
 { 
+	std::cout<<"Bulk"<<std::endl;
 	return _PhiB;
 };
 double
 Probl::DirichletGate (double x,double y)
 { 
+	std::cout<<"Gate"<<std::endl;
 	return _VG+_Vshift;
 };
 
@@ -594,8 +596,6 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 	phi = phi0;
 	phiout = phi0;
 	
-	func	DirichletBulk,
-			DirichletGate;
 	std::tuple<int, int, func>	tupla1(0,2,DirichletBulk),
 								tupla2(nnodes-2,3,DirichletGate);
 	dirichlet_bcs	bcs;
@@ -640,6 +640,7 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 		}
 		
 		/// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
+
 		bim2a_dirichlet_bc (*msh,bcs,jac,res);
 		
 		// sparse_matrix::col_iterator J;
@@ -664,6 +665,7 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 
 		/// Assembling rhs term: res(intnodes)
 		dphi = res;
+		
 		// for(unsigned i=0; i<intnodes.size(); i++){
 				// dphi[i] = res[intnodes[i]];
 		// }
