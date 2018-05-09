@@ -500,9 +500,14 @@ std::vector<double> Probl::get_data_n(){
 
 
 double
-Dirichlet (double x,double w)
+Probl::DirichletBulk (double x,double y)
 { 
-	return x + w; 
+	return _PhiB;
+};
+double
+Probl::DirichletGate (double x,double y)
+{ 
+	return _VG+_Vshift;
 };
 
 void
@@ -517,24 +522,24 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 						nout(nnodes,0.0),
 						resn(_pmaxit,0.0);
 
-    std::vector<int>	intnodes(nnodes,0);
+    // std::vector<int>	intnodes(nnodes,0);
     
-	bool b;
-	int k = 0;
-    for (auto i=0; i<nnodes; i++){
-        b = false;
-        for (unsigned j=0; j<_alldnodes.size(); j++){
-            if(i==_alldnodes[j]){
-                b = true;
-            }
-        }
-        if(b==false){ 
-			intnodes[k] = i;
-			k++;
-        }
-    }
-	intnodes.resize(k);
-    std::sort(intnodes.begin(), intnodes.end());
+	// bool b;
+	// int k = 0;
+    // for (auto i=0; i<nnodes; i++){
+        // b = false;
+        // for (unsigned j=0; j<_alldnodes.size(); j++){
+            // if(i==_alldnodes[j]){
+                // b = true;
+            // }
+        // }
+        // if(b==false){ 
+			// intnodes[k] = i;
+			// k++;
+        // }
+    // }
+	// intnodes.resize(k);
+    // std::sort(intnodes.begin(), intnodes.end());
 	
 
 	///Assemble system matrices.
@@ -558,7 +563,8 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 	jac.resize(nnodes);
 					
     std::vector<double>	psi(nnodes,0.0),
-						dphi(intnodes.size(),0.0);
+						//dphi(intnodes.size(),0.0);
+						dphi(nnodes,0.0);
 
 	tmesh*	msh = &_msh;
 	
@@ -588,11 +594,10 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 	phi = phi0;
 	phiout = phi0;
 	
-	/// f(x, y).
-	//using func = std::function<double (double, double)>; 
-	func	Dirichlet;
-	std::tuple<int, int, func>	tupla1(0,2,Dirichlet),
-								tupla2(nnodes-2,3,Dirichlet);
+	func	DirichletBulk,
+			DirichletGate;
+	std::tuple<int, int, func>	tupla1(0,2,DirichletBulk),
+								tupla2(nnodes-2,3,DirichletGate);
 	dirichlet_bcs	bcs;
 	bcs.push_back(tupla1);
 	bcs.push_back(tupla2);
@@ -635,7 +640,9 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 		}
 		
 		/// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
-		 sparse_matrix::col_iterator J;
+		bim2a_dirichlet_bc (*msh,bcs,jac,res);
+		
+		// sparse_matrix::col_iterator J;
 		 // for(J = jac[0].begin(); J != jac[0].end(); ++J){
 			// jac[0][jac.col_idx(J)] = 0;
 		 // }
@@ -653,34 +660,35 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 			// }
 		// }
 
-		Jac.resize(intnodes.size());
+		//Jac.resize(intnodes.size());
 
 		/// Assembling rhs term: res(intnodes)
-		for(unsigned i=0; i<intnodes.size(); i++){
-				dphi[i] = res[intnodes[i]];
-		}
+		dphi = res;
+		// for(unsigned i=0; i<intnodes.size(); i++){
+				// dphi[i] = res[intnodes[i]];
+		// }
 		
-		/// Assembling matrix: jac(intnodes,intnodes)
-		int j;
-		bool alld;
-		for(unsigned i=0; i<intnodes.size(); i++){
-			for(J = jac[ intnodes[i] ].begin(); J != jac[ intnodes[i] ].end(); ++J){
-				alld = false;
-				// controllo se J è pari a uno degli indici di elementi di bordo
-				for(unsigned k=0; k<_alldnodes.size(); k++){
-					if( jac.col_idx(J) == _alldnodes[k] ){
-						alld = true;
-						break;
-					}
-				}
-				// se sì --> vado avanti (J++)
-				// se no --> inserisco in Jac
-				if( !alld ){
-					j = jac.col_idx(J) - _alldnodes.size()/2;
-					Jac[i][j] = jac[intnodes[i]][jac.col_idx(J)];
-				}
-			}
-		}
+		// /// Assembling matrix: jac(intnodes,intnodes)
+		// int j;
+		// bool alld;
+		// for(unsigned i=0; i<intnodes.size(); i++){
+			// for(J = jac[ intnodes[i] ].begin(); J != jac[ intnodes[i] ].end(); ++J){
+				// alld = false;
+				// // controllo se J è pari a uno degli indici di elementi di bordo
+				// for(unsigned k=0; k<_alldnodes.size(); k++){
+					// if( jac.col_idx(J) == _alldnodes[k] ){
+						// alld = true;
+						// break;
+					// }
+				// }
+				// // se sì --> vado avanti (J++)
+				// // se no --> inserisco in Jac
+				// if( !alld ){
+					// j = jac.col_idx(J) - _alldnodes.size()/2;
+					// Jac[i][j] = jac[intnodes[i]][jac.col_idx(J)];
+				// }
+			// }
+		// }
 		
 		mumps mumps_solver;
       
@@ -688,9 +696,9 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 		std::vector<int> 	irow(nnodes,0),
 							jcol(nnodes,0);
 	  
-		Jac.aij(vals, irow, jcol, mumps_solver.get_index_base ());
+		jac.aij(vals, irow, jcol, mumps_solver.get_index_base ());
 	  
-		mumps_solver.set_lhs_structure (Jac.rows(), irow, jcol);
+		mumps_solver.set_lhs_structure (jac.rows(), irow, jcol);
 		
 		mumps_solver.analyze ();
 		mumps_solver.set_lhs_data (vals);
@@ -702,7 +710,7 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 		mumps_solver.solve ();
 		mumps_solver.cleanup ();
 	
-		saveJAC(Jac.rows(), Jac.cols(), vals);
+		//saveJAC(jac.rows(), jac.cols(), vals);
 	
 		for(unsigned i=0; i<dphi.size(); i++){
 			dphi[i] *= (-1);
@@ -712,8 +720,11 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 		bim2a_norm (*msh,dphi,norm,Inf);
 		resn[iter-1] = norm;
 
-        for (unsigned i=0; i<intnodes.size(); i++){
-			phi[intnodes[i]] += dphi[i];
+        // for (unsigned i=0; i<intnodes.size(); i++){
+			// phi[intnodes[i]] += dphi[i];
+        // }
+		for (unsigned i=0; i<phi.size(); i++){
+			phi[i] += dphi[i];
         }
 		
         if(resn[iter-1] < _ptoll){

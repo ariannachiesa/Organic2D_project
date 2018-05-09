@@ -141,6 +141,10 @@ class Probl
 				
 	void Poisson(std::vector<double>& phi0, bool NL);
 	
+	/// BCs
+	double DirichletBulk (double x,double y);
+	double DirichletGate (double x,double y);
+	
 	/// It saves Poisson output
 	void savePoisson(std::vector<double>& V, std::vector<double>& n, double niter, std::vector<double>& resnrm, const char* FileName);
 	

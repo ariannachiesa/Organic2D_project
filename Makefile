@@ -1,6 +1,8 @@
 BUILD_DIR ?= ./build
 SRC_DIRS ?= ./src
 
+all: $(BUILD_DIR)/test1_mesh $(BUILD_DIR)/test2_mesh $(BUILD_DIR)/test3_mesh $(BUILD_DIR)/test1_LinPoisson $(BUILD_DIR)/test1_NLPoisson
+
 # Directory where Bim++ is installed.
 #BIMPP_PREFIX = $(shell pwd)/../bimpp
 #BIMPP_PREFIX = ./bimpp_install
