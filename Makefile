@@ -19,7 +19,7 @@ mkP4estLib = /vagrant/p4est/lib
 CPPFLAGS = -I./src/ -I$(BIMPP_PREFIX)/include \
 -I$(mkP4estInc) -I$(mkOctaveInc) -I$(mkOctaveInc)/octave -I${mkMumpsInc}
 
-CXXFLAGS = -Wall -std=c++11
+CXXFLAGS = -Wall -std=c++14
 CXX = mpic++
 
 LIBS = $(BIMPP_PREFIX)/lib ${mkOpenblasLib} \

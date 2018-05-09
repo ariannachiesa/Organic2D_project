@@ -327,11 +327,11 @@ Probl::Device(	double Vshift, double Csb, double t_semic, double t_ins, double L
 				indexT = quadrant->get_tree_idx ();	// index of the current tree
 
 				if( (indexE == 2) && (indexT == 0)){
-					_alldnodes.push_back( quadrant->gt(i) );
+					//_alldnodes.push_back( quadrant->gt(i) );
 					row1.push_back( quadrant->gt(i) );
 				}
 				if( (indexE == 3) && (indexT == (nNodes-2)) ){
-					_alldnodes.push_back( quadrant->gt(i) );
+					//_alldnodes.push_back( quadrant->gt(i) );
 					row2.push_back( quadrant->gt(i) );
 				}
 			}
@@ -339,9 +339,9 @@ Probl::Device(	double Vshift, double Csb, double t_semic, double t_ins, double L
 	
 	 std::vector<int>::iterator it1, it2, it3;
 		
-	std::sort(_alldnodes.begin(),_alldnodes.end());
-	it1 = std::unique (_alldnodes.begin(), _alldnodes.end());
-	_alldnodes.resize( std::distance(_alldnodes.begin(),it1) );
+	// std::sort(_alldnodes.begin(),_alldnodes.end());
+	// it1 = std::unique (_alldnodes.begin(), _alldnodes.end());
+	// _alldnodes.resize( std::distance(_alldnodes.begin(),it1) );
 	
 	std::sort (row1.begin(), row1.end());				// row1 = vector of the nodes on boundary 0 of the semiconductor
 	
@@ -499,19 +499,6 @@ std::vector<double> Probl::get_data_n(){
 };
 
 
-double
-Probl::DirichletBulk (double x,double y)
-{ 
-	std::cout<<"Bulk"<<std::endl;
-	return _PhiB;
-};
-double
-Probl::DirichletGate (double x,double y)
-{ 
-	std::cout<<"Gate"<<std::endl;
-	return _VG+_Vshift;
-};
-
 void
 Probl::Poisson(std::vector<double>& phi0, bool NL)
 {	
@@ -523,26 +510,6 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 	std::vector<double>	phiout(nnodes,0.0),
 						nout(nnodes,0.0),
 						resn(_pmaxit,0.0);
-
-    // std::vector<int>	intnodes(nnodes,0);
-    
-	// bool b;
-	// int k = 0;
-    // for (auto i=0; i<nnodes; i++){
-        // b = false;
-        // for (unsigned j=0; j<_alldnodes.size(); j++){
-            // if(i==_alldnodes[j]){
-                // b = true;
-            // }
-        // }
-        // if(b==false){ 
-			// intnodes[k] = i;
-			// k++;
-        // }
-    // }
-	// intnodes.resize(k);
-    // std::sort(intnodes.begin(), intnodes.end());
-	
 
 	///Assemble system matrices.
     std::vector<double> epsilon(nelements,_eps_semic);
@@ -558,14 +525,12 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
     sparse_matrix   A,
 					M,
 					jac,
-					diag,
-					Jac;
+					diag;
 	A.resize(nnodes);
 	M.resize(nnodes);
 	jac.resize(nnodes);
 					
     std::vector<double>	psi(nnodes,0.0),
-						//dphi(intnodes.size(),0.0);
 						dphi(nnodes,0.0);
 
 	tmesh*	msh = &_msh;
@@ -596,8 +561,8 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 	phi = phi0;
 	phiout = phi0;
 	
-	std::tuple<int, int, func>	tupla1(0,2,DirichletBulk),
-								tupla2(nnodes-2,3,DirichletGate);
+	std::tuple<int, int, func>	tupla1(0,2,[&](double x, double y){return _PhiB;}),
+								tupla2(nnodes-2,3,[&](double x, double y){return 0.0;});
 	dirichlet_bcs	bcs;
 	bcs.push_back(tupla1);
 	bcs.push_back(tupla2);
@@ -624,14 +589,8 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 			res2.clear();
 			
 			jac = A;
-			sparse_matrix::col_iterator J1, J2;
 			for(int i=0; i<nnodes; i++){
-				J2 = diag[i].begin();
-				for(J1 = M[i].begin(); J1 != M[i].end(); ++J1){
-					if( diag.col_idx(J2) == M.col_idx(J1) ){
-						jac[i][M.col_idx(J1)] -= M[i][M.col_idx(J1)]*diag[i][M.col_idx(J1)];
-					}
-				}
+				jac[i][i] -= M[i][i]*diag[i][i];
 			}
 		}
 		else{
@@ -639,58 +598,15 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 			jac = A;
 		}
 		
-		/// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
-
-		bim2a_dirichlet_bc (*msh,bcs,jac,res);
+		std::cout<<"jac rows= "<<jac.rows()<<std::endl;
+		std::cout<<"jac cols= "<<jac.cols()<<std::endl;
 		
-		// sparse_matrix::col_iterator J;
-		 // for(J = jac[0].begin(); J != jac[0].end(); ++J){
-			// jac[0][jac.col_idx(J)] = 0;
-		 // }
-		// for(J = jac[nnodes-1].begin(); J != jac[nnodes-1].end(); ++J){
-			// jac[nnodes-1][jac.col_idx(J)] = 0;
-		// }
-		// for(unsigned i=0; i<_alldnodes.size(); i++){
-			// if( i < _alldnodes.size()/2 ){
-				// phi[_alldnodes[i]] = _PhiB;
-				// jac[0][_alldnodes[i]] = 1;
-			// }
-			// else{
-				// phi[_alldnodes[i]] = _VG + _Vshift;
-				// jac[nnodes-1][_alldnodes[i]] = 1;				
-			// }
-		// }
+		/// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
+		bim2a_dirichlet_bc (*msh,bcs,jac,res);
 
-		//Jac.resize(intnodes.size());
 
 		/// Assembling rhs term: res(intnodes)
 		dphi = res;
-		
-		// for(unsigned i=0; i<intnodes.size(); i++){
-				// dphi[i] = res[intnodes[i]];
-		// }
-		
-		// /// Assembling matrix: jac(intnodes,intnodes)
-		// int j;
-		// bool alld;
-		// for(unsigned i=0; i<intnodes.size(); i++){
-			// for(J = jac[ intnodes[i] ].begin(); J != jac[ intnodes[i] ].end(); ++J){
-				// alld = false;
-				// // controllo se J è pari a uno degli indici di elementi di bordo
-				// for(unsigned k=0; k<_alldnodes.size(); k++){
-					// if( jac.col_idx(J) == _alldnodes[k] ){
-						// alld = true;
-						// break;
-					// }
-				// }
-				// // se sì --> vado avanti (J++)
-				// // se no --> inserisco in Jac
-				// if( !alld ){
-					// j = jac.col_idx(J) - _alldnodes.size()/2;
-					// Jac[i][j] = jac[intnodes[i]][jac.col_idx(J)];
-				// }
-			// }
-		// }
 		
 		mumps mumps_solver;
       
@@ -722,9 +638,6 @@ Probl::Poisson(std::vector<double>& phi0, bool NL)
 		bim2a_norm (*msh,dphi,norm,Inf);
 		resn[iter-1] = norm;
 
-        // for (unsigned i=0; i<intnodes.size(); i++){
-			// phi[intnodes[i]] += dphi[i];
-        // }
 		for (unsigned i=0; i<phi.size(); i++){
 			phi[i] += dphi[i];
         }
