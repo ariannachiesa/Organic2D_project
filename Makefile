@@ -1,7 +1,7 @@
 BUILD_DIR ?= ./build
 SRC_DIRS ?= ./src
 
-all: $(BUILD_DIR)/test1_mesh $(BUILD_DIR)/test2_mesh $(BUILD_DIR)/test3_mesh $(BUILD_DIR)/test1_LinPoisson $(BUILD_DIR)/test1_NLPoisson
+all: $(BUILD_DIR)/test1_mesh $(BUILD_DIR)/test2_mesh $(BUILD_DIR)/test3_mesh $(BUILD_DIR)/test1_LinPoisson
 
 # Directory where Bim++ is installed.
 #BIMPP_PREFIX = $(shell pwd)/../bimpp
@@ -48,9 +48,7 @@ $(BUILD_DIR)/test3_mesh: $(OBJS) $(BUILD_DIR)/test/test3_mesh.cpp.o
 
 $(BUILD_DIR)/test1_LinPoisson: $(OBJS) $(BUILD_DIR)/test/test1_LinPoisson.cpp.o
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LDLIBS)
-	
-$(BUILD_DIR)/test1_NLPoisson: $(OBJS) $(BUILD_DIR)/test/test1_NLPoisson.cpp.o
-	$(CXX) $^ -o $@ $(LDFLAGS) $(LDLIBS)
+
 
 $(BUILD_DIR)/%.cpp.o: %.cpp
 	$(MKDIR_P) $(dir $@)

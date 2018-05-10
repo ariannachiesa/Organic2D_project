@@ -6,7 +6,6 @@
 #define PROBL_H
 
 #include "bim_sparse.h"
-//#include "functions.h"
 #include "mumps_class.h"
 #include "octave_file_io.h"
 #include "quad_operators.h"
@@ -139,27 +138,13 @@ class Probl
 	void Device(double Vshift, double Csb, double t_semic, double t_ins, double L, bool ins, 
 				std::array<int,2>& pins, std::array<int,2>& contacts, double section, double Vdrain, int maxcycle);
 				
-	void Poisson(std::vector<double>& phi0, bool NL);
+	void LinearPoisson(std::vector<double>& phi0);
 	
-	// /// BCs
-	// double DirichletBulk (double x,double y);
-	// double DirichletGate (double x,double y);
 	
 	/// It saves Poisson output
 	void savePoisson(std::vector<double>& V, std::vector<double>& n, double niter, std::vector<double>& resnrm, const char* FileName);
 	
-	//
-	void saveJAC (int nrows, int ncols, std::vector<double>& vals);
-	//
-	
-	/// methods for CV curve
-	void CVcurve (std::vector<double>& phi0, double Vgstart, double Vgend, double dVg, const char* FileName);
-	void saveCV(std::vector<double>& C, std::vector<double>& Vg, const char* FileName);
-	
-	void org_gaussian_charge_n( std::vector<double>& V, std::vector<double>& rhon, std::vector<double>& drhon_dV);
-							
-	std::vector<double> n_approx(  std::vector<double>& V);
-	std::vector<double> dn_dV_approx(  std::vector<double>& V);
+	void saveMat (int nrows, int ncols, std::vector<double>& vals);
 
 	/// Compute the (Inf,L2,H1) norm of a piecewise linear function.
 	void bim2a_norm (tmesh& msh, const std::vector<double>& v, double& norm, norm_type type);
