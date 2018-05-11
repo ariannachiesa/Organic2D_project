@@ -12,18 +12,20 @@ Build and execution of the program:
 
 1. folder 'src' with the source files
 
-2. Makefile
+2. folder 'test' with the main of the tests
 
-3. file input: the data set named "input_data.csv"
+3. Makefile
 
-4. libraries Bim++ and p4est must be installed.
+4. file input: the data set named "input_data.csv"
 
-N.B. everything must be placed in a root folder, (2) and (3) outside the 'src' folder.
+5. libraries Bim++ and p4est must be installed.
+
+N.B. everything must be placed in a root folder, (3) and (4) outside the 'src' or 'test' folders.
 
 
 	How to build the code:
 
-1. 'cd' to the directory containing the root folder where (1), (2) and (3) are.
+1. 'cd' to the directory containing the root folder where (1), (2), (3) and (4) are.
 
 2. Type 'make' to compile.
 
@@ -32,10 +34,10 @@ N.B. Now a 'build' folder should have been created in the root folder.
 
 	How to execute the code:
 	
-1. place the data set (3) in the new folder 'build'.
+1. place the data set (4) in the new folder 'build'.
   
 2. 'cd' to the 'build' directory.
   
-3. type './mis_main2D' to execute.
+3. type './name_of_test' to execute.
 
 N.B. output files will be created in the 'build' folder.
