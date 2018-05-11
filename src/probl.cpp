@@ -507,7 +507,8 @@ Probl::LinearPoisson(std::vector<double>& phi0){
 						res(nnodes,0.0),
 						rho(phiout.size(),0.0),
 						epsilon(nelements,_eps_semic),
-						ecoeff(nelements,0.0),
+						ecoeff(nelements,1.0),
+						ncoeff(nnodes,0.0),
 						psi(nnodes,0.0);
 						
 	sparse_matrix   jac;
@@ -527,15 +528,14 @@ Probl::LinearPoisson(std::vector<double>& phi0){
 	std::cout<<"jac cols= "<<jac.cols()<<std::endl;
 	
 	std::tuple<int, int, func>	tupla1(0,2,[&](double x, double y){return _PhiB;}),
-								tupla2(nnodes-2,3,[&](double x, double y){return _VG+_Vshift;});
+								tupla2(nnodes-2,3,[&](double x, double y){return 0;});
 	dirichlet_bcs	bcs;
 	bcs.push_back(tupla1);
 	bcs.push_back(tupla2);
 	
-	phiout = phi0;	// updating phiout with phi
+	phiout = phi0;	// updating phiout with phi0 (Vguess)
 	
-	//res = jac*phiout;
-	bim2a_rhs (_msh,ecoeff,phiout,res);
+	res = jac*phiout;
 	
 	/// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
 	bim2a_dirichlet_bc (_msh,bcs,jac,res);
@@ -563,18 +563,19 @@ Probl::LinearPoisson(std::vector<double>& phi0){
 	mumps_solver.solve ();
 	mumps_solver.cleanup ();
 	
-	//saveJAC(jac.rows(), jac.cols(), vals);
-	
-	for(unsigned i=0; i<dphi.size(); i++){
-		dphi[i] *= (-1);
-	}
+	//for(unsigned i=0; i<dphi.size(); i++){
+		//dphi[i] *= (-1);
+		//std::cout<<"dphi dopo = "<<dphi[i]<<std::endl;
+	//}
 	
 	double norm;
 	bim2a_norm (_msh,dphi,norm,Inf);
 	
-	for (unsigned i=0; i<phiout.size(); i++){
-		phiout[i] += dphi[i];
-	}
+	phiout = dphi;
+	//for (unsigned i=0; i<phiout.size(); i++){
+	//	phiout[i] += dphi[i];
+	//	std::cout<<"phiout dopo = "<<phiout[i]<<std::endl;
+	//}
 	
 	/// Post-processing.	
 	std::vector<double>	rhon(phiout.size(),_q/area);
