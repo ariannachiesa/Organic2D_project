@@ -524,11 +524,22 @@ Probl::LinearPoisson(std::vector<double>& phi0){
     }
 	
 	bim2a_advection_diffusion (_msh, epsilon, psi, jac);
-	std::cout<<"jac rows= "<<jac.rows()<<std::endl;
-	std::cout<<"jac cols= "<<jac.cols()<<std::endl;
+	
+	p4est_locidx_t	indexT = 0;
+	for (auto quadrant = _msh.begin_quadrant_sweep ();
+		quadrant != _msh.end_quadrant_sweep ();
+		++quadrant)
+	{
+		for(int i=0; i<4; i++){
+			if(indexT < quadrant->get_tree_idx ()){
+				indexT = quadrant->get_tree_idx ();	// index of the current tree
+			}
+		}
+	}
 	
 	std::tuple<int, int, func>	tupla1(0,2,[&](double x, double y){return _PhiB;}),
-								tupla2(nnodes-2,3,[&](double x, double y){return 0;});
+								tupla2(indexT,3,[&](double x, double y){return _VG+_Vshift;});
+
 	dirichlet_bcs	bcs;
 	bcs.push_back(tupla1);
 	bcs.push_back(tupla2);
@@ -587,7 +598,147 @@ Probl::LinearPoisson(std::vector<double>& phi0){
 	rhon.clear();
 	
 	Vin = phiout;
-	nin = nout;									
+	nin = nout;
+	niter = 1;
+};
+
+
+void
+Probl::NonLinearPoisson(std::vector<double>& phi0){
+
+	int	nnodes = _msh.num_global_nodes(),
+		nelements = _msh.num_global_quadrants(),
+		iter;
+
+	std::vector<double>	phiout(nnodes,0.0),
+						phi(nnodes,0.0),
+						dphi(nnodes,0.0),
+						res(nnodes,0.0),
+						res1(nnodes,0.0),
+						res2(nnodes,0.0),
+						rho(phiout.size(),0.0),
+						drho(phiout.size(),0.0),
+						nout(nnodes,0.0),
+						epsilon(nelements,_eps_semic),
+						ecoeff(nelements,0.0),
+						ncoeff(nnodes,1.0),
+						psi(nnodes,0.0);
+						
+	sparse_matrix   jac, A, M, diag;
+	
+	jac.resize(nnodes);
+	A.resize(nnodes);
+	M.resize(nnodes);
+	resnrm.resize(_pmaxit);
+	
+	///Assemble system matrices.	
+	if(_ins){
+        for(unsigned i=0; i<_insulator.size(); i++){
+            if(_insulator[i]==1){
+                epsilon[i] = _eps_ins;
+            }
+        }
+    }
+	bim2a_advection_diffusion (_msh, epsilon, psi, A);
+	
+	for (unsigned i=0; i<_insulator.size(); i++){
+		if(_insulator[i]==0){
+			ecoeff[i] = 1;
+		}
+	}
+	bim2a_advection_diffusion (_msh, ecoeff, ncoeff, M);
+	
+	std::tuple<int, int, func>	tupla1(0,2,[&](double x, double y){return _PhiB;}),
+								tupla2(nnodes-2,3,[&](double x, double y){return 0;});
+	dirichlet_bcs	bcs;
+	bcs.push_back(tupla1);
+	bcs.push_back(tupla2);
+
+	phi = phi0;
+	phiout = phi0;
+	
+	//for(iter=1; iter<=_pmaxit; iter++){
+	iter = 1;
+		phiout = phi;
+		
+		org_gaussian_charge_n(phiout, rho,drho);
+		
+		res1 = A*phiout;
+		res2 = M*rho;
+		for(unsigned i=0; i<res.size(); i++){
+			res[i] = res1[i] - res2[i];
+		}
+		res1.clear();
+		res2.clear();
+		
+		jac = A;
+		for(int i=0; i<nnodes; i++){
+			jac[i][i] -= M[i][i]*drho[i];
+		}
+		
+		/// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
+		//bim2a_dirichlet_bc (_msh,bcs,jac,res);
+		
+		/// Assembling rhs term:
+		dphi = res;
+		
+	for(unsigned i=0; i<phiout.size(); i++){
+		std::cout<<"dphi prima = "<<dphi[i]<<std::endl;
+	}
+		
+		mumps mumps_solver;
+      
+		std::vector<double> vals(nnodes,0);
+		std::vector<int> 	irow(nnodes,0),
+							jcol(nnodes,0);
+	  
+		jac.aij(vals, irow, jcol, mumps_solver.get_index_base ());
+	  
+		mumps_solver.set_lhs_structure (jac.rows(), irow, jcol);
+		
+		mumps_solver.analyze ();
+		mumps_solver.set_lhs_data (vals);
+      
+		mumps_solver.factorize ();
+
+		mumps_solver.set_rhs (dphi);
+      
+		mumps_solver.solve ();
+		mumps_solver.cleanup ();
+		
+		phi = dphi;
+		
+		double norm;
+		bim2a_norm (_msh,dphi,norm,Inf);
+		resnrm[iter-1] = norm;
+		
+	//	if(resnrm[iter-1]<_ptoll){
+	//		std::cout<<"Poisson: resnrm < ptoll"<<std::endl;
+     //       break;
+	//	}
+	//}
+	
+	phiout = phi;
+	for(unsigned i=0; i<phiout.size(); i++){
+		std::cout<<"dphi dopo = "<<dphi[i]<<std::endl;
+	}
+	
+	/// Post-processing.
+	
+	org_gaussian_charge_n(phiout, rho,drho);
+	drho.clear();
+
+	for(unsigned i=0; i<_scnodes.size(); i++){
+		if(_scnodes[i]==1){
+			nout[i] = - rho[i]/_q;
+		}
+	}
+	rho.clear();
+	
+	Vin = phiout;
+	nin = nout;
+	niter = iter;
+	resnrm.resize(iter);
 };
 
 
@@ -672,4 +823,62 @@ Probl::saveMat (int nrows, int ncols, std::vector<double>& vals)
   assert (octave_io_open (FileName, m, &m) == 0);
   assert (octave_save ("jac", octave_value (the_map)) == 0);
   assert (octave_io_close () == 0);
+};
+
+
+void
+Probl::org_gaussian_charge_n(std::vector<double>& V, std::vector<double>& rhon, std::vector<double>& drhon_dV)
+{
+    std::vector<double> n = n_approx(V);
+	
+	rhon = n;
+    for(unsigned i=0; i<n.size(); i++){
+		rhon[i] *= -_q;
+    }
+
+    std::vector<double> dn_dV = dn_dV_approx(V);
+	
+	drhon_dV = dn_dV;
+    for(unsigned i=0; i<dn_dV.size(); i++){
+		drhon_dV[i] *= -_q;
+    }
+};
+
+std::vector<double>
+Probl::n_approx(std::vector<double>& V)
+{
+    std::vector<double> coeff(V.size(),0),
+						n(V.size(),0);
+    double	kT = _Kb * _T0,
+			denom;
+	
+    for(unsigned i=0; i<_gx.size(); i++){
+        for(unsigned j=0; j<V.size(); j++){		
+            coeff[j] = (sqrt(2) * _sigman * _gx[i] - _q * V[j]) / kT ;
+            denom = 1+exp(coeff[j]);
+            n[j] += _N0 / sqrt(M_PI) * _gw[i] / denom;
+        }
+    }
+	coeff.clear();		
+	return n;
+};
+
+std::vector<double>
+Probl::dn_dV_approx(std::vector<double>& V)
+{
+    std::vector<double> coeff(V.size(),0.0),
+						dn_dV(V.size(),0.0);
+						
+    double	kT = _Kb * _T0,
+			denom;
+
+    for(unsigned i=0; i<_gx.size(); i++){
+        for(unsigned j=0; j<V.size(); j++){
+            coeff[j] = (sqrt(2) * _sigman * _gx[i] - _q * V[j]) / kT ;
+            denom = 1+exp(coeff[j]);
+            dn_dV[j] += - _q * _N0 / _sigman * sqrt(2/M_PI) * _gw[i]*_gx[i] / denom;
+		}
+    }
+	coeff.clear();
+	return dn_dV;
 };

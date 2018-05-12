@@ -45,20 +45,38 @@ end
 
 figure(1)
 mesh (tx, ty, zz);
+title('Initial Guess for Poisson problem');
+xlabel('[m]')
+ylabel('[m]')
+zlabel('potential [V]')
 
 figure(2)
 [xx,yy] = meshgrid(tx,ty);
 plot(xx,yy);
+title('Scheme of the mesh');
+xlabel('number of refinements along x-dimension')
 
 figure(3)
 mesh (tx, ty, vv);
+title('Output potential of Poisson problem');
+xlabel('[m]')
+ylabel('[m]')
+zlabel('potential [V]')
 
 figure(4)
 mesh (tx, ty, nn);
+title('Output electron density of Poisson problem');
+xlabel('[m]')
+ylabel('[m]')
+zlabel('n [m^-^2]')
 
-for i = 1:iter
-  niter(i) = i;
-end
+if(iter ~= 1)
+  for i = 1:iter
+    niter(i) = i;
+  end
 
-figure(5)
-plot(niter,res,'-ob');
+  figure(5)
+  xlabel('Number of iterations')
+  ylabel('Residual norm')
+  plot(niter,res,'-ob');
+endif

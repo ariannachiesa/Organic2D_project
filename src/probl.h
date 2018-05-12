@@ -139,11 +139,15 @@ class Probl
 				std::array<int,2>& pins, std::array<int,2>& contacts, double section, double Vdrain, int maxcycle);
 				
 	void LinearPoisson(std::vector<double>& phi0);
+	void NonLinearPoisson(std::vector<double>& phi0);
 	
+	void org_gaussian_charge_n( std::vector<double>& V, std::vector<double>& rhon, std::vector<double>& drhon_dV);
+							
+	std::vector<double> n_approx(  std::vector<double>& V);
+	std::vector<double> dn_dV_approx(  std::vector<double>& V);
 	
-	/// It saves Poisson output
+	/// save methods
 	void savePoisson(std::vector<double>& V, std::vector<double>& n, double niter, std::vector<double>& resnrm, const char* FileName);
-	
 	void saveMat (int nrows, int ncols, std::vector<double>& vals);
 
 	/// Compute the (Inf,L2,H1) norm of a piecewise linear function.
