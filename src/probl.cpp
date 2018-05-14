@@ -545,7 +545,7 @@ Probl::LinearPoisson(std::vector<double>& phi0){
 	bcs.push_back(tupla2);
 	
 	phiout = phi0;	// updating phiout with phi0 (Vguess)
-	
+
 	res = jac*phiout;
 	
 	/// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
@@ -574,19 +574,7 @@ Probl::LinearPoisson(std::vector<double>& phi0){
 	mumps_solver.solve ();
 	mumps_solver.cleanup ();
 	
-	//for(unsigned i=0; i<dphi.size(); i++){
-		//dphi[i] *= (-1);
-		//std::cout<<"dphi dopo = "<<dphi[i]<<std::endl;
-	//}
-	
-	double norm;
-	bim2a_norm (_msh,dphi,norm,Inf);
-	
 	phiout = dphi;
-	//for (unsigned i=0; i<phiout.size(); i++){
-	//	phiout[i] += dphi[i];
-	//	std::cout<<"phiout dopo = "<<phiout[i]<<std::endl;
-	//}
 	
 	/// Post-processing.	
 	std::vector<double>	rhon(phiout.size(),_q/area);
@@ -624,7 +612,7 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 						ncoeff(nnodes,1.0),
 						psi(nnodes,0.0);
 						
-	sparse_matrix   jac, A, M, diag;
+	sparse_matrix   jac, A, M;
 	
 	jac.resize(nnodes);
 	A.resize(nnodes);
@@ -646,19 +634,30 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 			ecoeff[i] = 1;
 		}
 	}
-	bim2a_advection_diffusion (_msh, ecoeff, ncoeff, M);
+	bim2a_reaction (_msh, ecoeff, ncoeff, M);	
 	
+	p4est_locidx_t	indexT = 0;
+	for (auto quadrant = _msh.begin_quadrant_sweep ();
+		quadrant != _msh.end_quadrant_sweep ();
+		++quadrant)
+	{
+		for(int i=0; i<4; i++){
+			if(indexT < quadrant->get_tree_idx ()){
+				indexT = quadrant->get_tree_idx ();	// index of the current tree
+			}
+		}
+	}
 	std::tuple<int, int, func>	tupla1(0,2,[&](double x, double y){return _PhiB;}),
-								tupla2(nnodes-2,3,[&](double x, double y){return 0;});
+								tupla2(indexT,3,[&](double x, double y){return _VG+_Vshift;});
 	dirichlet_bcs	bcs;
 	bcs.push_back(tupla1);
 	bcs.push_back(tupla2);
-
+	
 	phi = phi0;
 	phiout = phi0;
 	
-	//for(iter=1; iter<=_pmaxit; iter++){
-	iter = 1;
+	for(iter=1; iter<=_pmaxit; iter++){
+	
 		phiout = phi;
 		
 		org_gaussian_charge_n(phiout, rho,drho);
@@ -675,16 +674,13 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 		for(int i=0; i<nnodes; i++){
 			jac[i][i] -= M[i][i]*drho[i];
 		}
+
 		
 		/// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
-		//bim2a_dirichlet_bc (_msh,bcs,jac,res);
-		
+		bim2a_dirichlet_bc (_msh,bcs,jac,res);
+	
 		/// Assembling rhs term:
-		dphi = res;
-		
-	for(unsigned i=0; i<phiout.size(); i++){
-		std::cout<<"dphi prima = "<<dphi[i]<<std::endl;
-	}
+		phi = res;
 		
 		mumps mumps_solver;
       
@@ -701,27 +697,31 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
       
 		mumps_solver.factorize ();
 
-		mumps_solver.set_rhs (dphi);
+		mumps_solver.set_rhs (phi);
       
 		mumps_solver.solve ();
 		mumps_solver.cleanup ();
 		
-		phi = dphi;
+		for(unsigned i=0; i<phi.size(); i++){
+			//std::cout<<"phi = "<<phi[i]<<std::endl;
+			dphi[i] = phi[i] - phiout[i];
+		}
 		
 		double norm;
 		bim2a_norm (_msh,dphi,norm,Inf);
 		resnrm[iter-1] = norm;
+		std::cout<<"norm = "<<norm<<std::endl;
 		
-	//	if(resnrm[iter-1]<_ptoll){
-	//		std::cout<<"Poisson: resnrm < ptoll"<<std::endl;
-     //       break;
-	//	}
-	//}
+		if(resnrm[iter-1]<_ptoll){
+			std::cout<<"Poisson: resnrm < ptoll"<<std::endl;
+            break;
+		}
+	}
 	
 	phiout = phi;
-	for(unsigned i=0; i<phiout.size(); i++){
-		std::cout<<"dphi dopo = "<<dphi[i]<<std::endl;
-	}
+	// for(unsigned i=0; i<phiout.size(); i++){
+		// std::cout<<"phiout dopo = "<<phiout[i]<<std::endl;
+	// }
 	
 	/// Post-processing.
 	

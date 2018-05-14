@@ -7,6 +7,7 @@
 
 #include "bim_sparse.h"
 #include "mumps_class.h"
+#include "nonlinear_solver.h"
 #include "octave_file_io.h"
 #include "quad_operators.h"
 #include "sandia_rules.hpp"
