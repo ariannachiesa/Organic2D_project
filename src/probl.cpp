@@ -541,34 +541,34 @@ Probl::LinearPoisson(std::vector<double>& phi0){
 	
 	std::tuple<int, int, func>	tupla1(0,2,[&](double x, double y)
 											{	
-												int index;
-												for(auto quadrant = _msh.begin_quadrant_sweep ();
-													quadrant != _msh.end_quadrant_sweep ();
-													++quadrant)
-												{
-													for(int i=0; i<4; i++){
-														if( (quadrant->p(0,i) == x) && (quadrant->p(1,i) == y) ){
-															index = quadrant->gt(i);
-														}
-													}
-												}
-												return _PhiB-phiout[index];
+												// int index;
+												// for(auto quadrant = _msh.begin_quadrant_sweep ();
+													// quadrant != _msh.end_quadrant_sweep ();
+													// ++quadrant)
+												// {
+													// for(int i=0; i<4; i++){
+														// if( (quadrant->p(0,i) == x) && (quadrant->p(1,i) == y) ){
+															// index = quadrant->gt(i);
+														// }
+													// }
+												// }
+												return 0;
 											});
 											
 	std::tuple<int, int, func>	tupla2(indexT,3,[&](double x, double y)
 												{
-												int index;
-												for(auto quadrant = _msh.begin_quadrant_sweep ();
-													quadrant != _msh.end_quadrant_sweep ();
-													++quadrant)
-												{
-													for(int i=0; i<4; i++){
-														if( (quadrant->p(0,i) == x) && (quadrant->p(1,i) == y) ){
-															index = quadrant->gt(i);
-														}
-													}
-												}
-												return _VG+_Vshift-phiout[index];
+												// int index;
+												// for(auto quadrant = _msh.begin_quadrant_sweep ();
+													// quadrant != _msh.end_quadrant_sweep ();
+													// ++quadrant)
+												// {
+													// for(int i=0; i<4; i++){
+														// if( (quadrant->p(0,i) == x) && (quadrant->p(1,i) == y) ){
+															// index = quadrant->gt(i);
+														// }
+													// }
+												// }
+												return 0;
 												});
 	
 	dirichlet_bcs	bcs;
@@ -605,7 +605,8 @@ Probl::LinearPoisson(std::vector<double>& phi0){
 	
 	for(unsigned i=0; i<phiout.size(); i++){
 		phiout[i] += dphi[i];
-		//std::cout<<"phiout = "<<phiout[i]<<std::endl;
+		std::cout<<"phiout = "<<phiout[i]<<std::endl;
+		//std::cout<<"dphi = "<<dphi[i]<<std::endl;
 	}
 	
 	/// Post-processing.	
