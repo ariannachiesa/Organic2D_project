@@ -525,6 +525,8 @@ Probl::LinearPoisson(std::vector<double>& phi0){
 	
 	bim2a_advection_diffusion (_msh, epsilon, psi, jac);
 	
+	phiout = phi0;	// updating phiout with phi0 (Vguess)
+	
 	p4est_locidx_t	indexT = 0;
 	for (auto quadrant = _msh.begin_quadrant_sweep ();
 		quadrant != _msh.end_quadrant_sweep ();
@@ -537,14 +539,41 @@ Probl::LinearPoisson(std::vector<double>& phi0){
 		}
 	}
 	
-	std::tuple<int, int, func>	tupla1(0,2,[&](double x, double y){return _PhiB;}),
-								tupla2(indexT,3,[&](double x, double y){return _VG+_Vshift;});
-
+	std::tuple<int, int, func>	tupla1(0,2,[&](double x, double y)
+											{	
+												int index;
+												for(auto quadrant = _msh.begin_quadrant_sweep ();
+													quadrant != _msh.end_quadrant_sweep ();
+													++quadrant)
+												{
+													for(int i=0; i<4; i++){
+														if( (quadrant->p(0,i) == x) && (quadrant->p(1,i) == y) ){
+															index = quadrant->gt(i);
+														}
+													}
+												}
+												return _PhiB-phiout[index];
+											});
+											
+	std::tuple<int, int, func>	tupla2(indexT,3,[&](double x, double y)
+												{
+												int index;
+												for(auto quadrant = _msh.begin_quadrant_sweep ();
+													quadrant != _msh.end_quadrant_sweep ();
+													++quadrant)
+												{
+													for(int i=0; i<4; i++){
+														if( (quadrant->p(0,i) == x) && (quadrant->p(1,i) == y) ){
+															index = quadrant->gt(i);
+														}
+													}
+												}
+												return _VG+_Vshift-phiout[index];
+												});
+	
 	dirichlet_bcs	bcs;
 	bcs.push_back(tupla1);
 	bcs.push_back(tupla2);
-	
-	phiout = phi0;	// updating phiout with phi0 (Vguess)
 
 	res = jac*phiout;
 	
@@ -574,7 +603,10 @@ Probl::LinearPoisson(std::vector<double>& phi0){
 	mumps_solver.solve ();
 	mumps_solver.cleanup ();
 	
-	phiout = dphi;
+	for(unsigned i=0; i<phiout.size(); i++){
+		phiout[i] += dphi[i];
+		//std::cout<<"phiout = "<<phiout[i]<<std::endl;
+	}
 	
 	/// Post-processing.	
 	std::vector<double>	rhon(phiout.size(),_q/area);
