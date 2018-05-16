@@ -680,8 +680,35 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 			}
 		}
 	}
-	std::tuple<int, int, func>	tupla1(0,2,[&](double x, double y){return _PhiB;}),
-								tupla2(indexT,3,[&](double x, double y){return _VG+_Vshift;});
+	std::tuple<int, int, func>	tupla1(0,2,[&](double x, double y)
+											{
+												// int index;
+												// for(auto quadrant = _msh.begin_quadrant_sweep ();
+													// quadrant != _msh.end_quadrant_sweep ();
+													// ++quadrant)
+												// {
+													// for(int i=0; i<4; i++){
+														// if( (quadrant->p(0,i) == x) && (quadrant->p(1,i) == y) ){
+															// index = quadrant->gt(i);
+														// }
+													// }
+												// }
+											return 0;}),
+								tupla2(indexT,3,[&](double x, double y)
+												{
+												// int index;
+												// for(auto quadrant = _msh.begin_quadrant_sweep ();
+													// quadrant != _msh.end_quadrant_sweep ();
+													// ++quadrant)
+												// {
+													// for(int i=0; i<4; i++){
+														// if( (quadrant->p(0,i) == x) && (quadrant->p(1,i) == y) ){
+															// index = quadrant->gt(i);
+														// }
+													// }
+												// }
+												return 0;});
+												
 	dirichlet_bcs	bcs;
 	bcs.push_back(tupla1);
 	bcs.push_back(tupla2);
@@ -713,7 +740,7 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 		bim2a_dirichlet_bc (_msh,bcs,jac,res);
 	
 		/// Assembling rhs term:
-		phi = res;
+		dphi = res;
 		
 		mumps mumps_solver;
       
@@ -730,14 +757,15 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
       
 		mumps_solver.factorize ();
 
-		mumps_solver.set_rhs (phi);
+		mumps_solver.set_rhs (dphi);
       
 		mumps_solver.solve ();
 		mumps_solver.cleanup ();
 		
 		for(unsigned i=0; i<phi.size(); i++){
 			//std::cout<<"phi = "<<phi[i]<<std::endl;
-			dphi[i] = phi[i] - phiout[i];
+			dphi[i] *= (-1);
+			phi[i] += dphi[i];
 		}
 		
 		double norm;
@@ -752,9 +780,9 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 	}
 	
 	phiout = phi;
-	// for(unsigned i=0; i<phiout.size(); i++){
-		// std::cout<<"phiout dopo = "<<phiout[i]<<std::endl;
-	// }
+	 for(unsigned i=0; i<phiout.size(); i++){
+		std::cout<<"phiout dopo = "<<phiout[i]<<std::endl;
+	 }
 	
 	/// Post-processing.
 	
