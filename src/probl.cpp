@@ -539,39 +539,10 @@ Probl::LinearPoisson(std::vector<double>& phi0){
 		}
 	}
 	
-	std::tuple<int, int, func>	tupla1(0,2,[&](double x, double y)
-											{	
-												// int index;
-												// for(auto quadrant = _msh.begin_quadrant_sweep ();
-													// quadrant != _msh.end_quadrant_sweep ();
-													// ++quadrant)
-												// {
-													// for(int i=0; i<4; i++){
-														// if( (quadrant->p(0,i) == x) && (quadrant->p(1,i) == y) ){
-															// index = quadrant->gt(i);
-														// }
-													// }
-												// }
-												return 0;
-											});
-											
-	std::tuple<int, int, func>	tupla2(indexT,3,[&](double x, double y)
-												{
-												// int index;
-												// for(auto quadrant = _msh.begin_quadrant_sweep ();
-													// quadrant != _msh.end_quadrant_sweep ();
-													// ++quadrant)
-												// {
-													// for(int i=0; i<4; i++){
-														// if( (quadrant->p(0,i) == x) && (quadrant->p(1,i) == y) ){
-															// index = quadrant->gt(i);
-														// }
-													// }
-												// }
-												return 0;
-												});
-	
-	dirichlet_bcs	bcs;
+	std::tuple<int, int, func_quad>	tupla1(0,2,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _Vshift-phiout[quad->gt(i)];}),
+									tupla2(indexT,3,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _Vshift-phiout[quad->gt(i)];});
+												
+	dirichlet_bcs_quad	bcs;
 	bcs.push_back(tupla1);
 	bcs.push_back(tupla2);
 
@@ -669,7 +640,7 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 	}
 	bim2a_reaction (_msh, ecoeff, ncoeff, M);	
 	
-	p4est_locidx_t	indexT = 0;
+	p4est_gloidx_t	indexT = 0;
 	for (auto quadrant = _msh.begin_quadrant_sweep ();
 		quadrant != _msh.end_quadrant_sweep ();
 		++quadrant)
@@ -680,36 +651,12 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 			}
 		}
 	}
-	std::tuple<int, int, func>	tupla1(0,2,[&](double x, double y)
-											{
-												// int index;
-												// for(auto quadrant = _msh.begin_quadrant_sweep ();
-													// quadrant != _msh.end_quadrant_sweep ();
-													// ++quadrant)
-												// {
-													// for(int i=0; i<4; i++){
-														// if( (quadrant->p(0,i) == x) && (quadrant->p(1,i) == y) ){
-															// index = quadrant->gt(i);
-														// }
-													// }
-												// }
-											return 0;}),
-								tupla2(indexT,3,[&](double x, double y)
-												{
-												// int index;
-												// for(auto quadrant = _msh.begin_quadrant_sweep ();
-													// quadrant != _msh.end_quadrant_sweep ();
-													// ++quadrant)
-												// {
-													// for(int i=0; i<4; i++){
-														// if( (quadrant->p(0,i) == x) && (quadrant->p(1,i) == y) ){
-															// index = quadrant->gt(i);
-														// }
-													// }
-												// }
-												return 0;});
+
+
+	std::tuple<int, int, func_quad>	tupla1(0,2,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _Vshift-phiout[quad->gt(i)];}),
+									tupla2(indexT,3,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _Vshift-phiout[quad->gt(i)];});
 												
-	dirichlet_bcs	bcs;
+	dirichlet_bcs_quad	bcs;
 	bcs.push_back(tupla1);
 	bcs.push_back(tupla2);
 	
@@ -763,9 +710,9 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 		mumps_solver.cleanup ();
 		
 		for(unsigned i=0; i<phi.size(); i++){
-			//std::cout<<"phi = "<<phi[i]<<std::endl;
 			dphi[i] *= (-1);
 			phi[i] += dphi[i];
+			//std::cout<<"phi = "<<phi[i]<<std::endl;
 		}
 		
 		double norm;
