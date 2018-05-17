@@ -494,25 +494,19 @@ std::vector<double> Probl::get_data_n(){
 
 
 void
-Probl::LinearPoisson(std::vector<double>& phi0){
+Probl::Laplace(){
 	
 	int	nnodes = _msh.num_global_nodes(),
 		nelements = _msh.num_global_quadrants();
-		
-	double area = _L * std::abs(_t_ins - _t_semic);
 	
 	std::vector<double>	phiout(nnodes,0.0),
 						nout(nnodes,0.0),
-						dphi(nnodes,0.0),
-						res(nnodes,0.0),
-						rho(phiout.size(),0.0),
+						f(nnodes,0.0),
 						epsilon(nelements,_eps_semic),
-						ecoeff(nelements,1.0),
-						ncoeff(nnodes,0.0),
 						psi(nnodes,0.0);
 						
-	sparse_matrix   jac;
-	jac.resize(nnodes);
+	sparse_matrix   A;
+	A.resize(nnodes);
 	
 	///Assemble system matrices.	
 	if(_ins){
@@ -523,9 +517,7 @@ Probl::LinearPoisson(std::vector<double>& phi0){
         }
     }
 	
-	bim2a_advection_diffusion (_msh, epsilon, psi, jac);
-	
-	phiout = phi0;	// updating phiout with phi0 (Vguess)
+	bim2a_advection_diffusion (_msh, epsilon, psi, A);
 	
 	p4est_locidx_t	indexT = 0;
 	for (auto quadrant = _msh.begin_quadrant_sweep ();
@@ -539,20 +531,126 @@ Probl::LinearPoisson(std::vector<double>& phi0){
 		}
 	}
 	
-	std::tuple<int, int, func_quad>	tupla1(0,2,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _Vshift-phiout[quad->gt(i)];}),
-									tupla2(indexT,3,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _Vshift-phiout[quad->gt(i)];});
+	std::tuple<int, int, func_quad>	tupla1(0,2,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _PhiB;}),
+									tupla2(indexT,3,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _Vshift;});
+												
+	dirichlet_bcs_quad	bcs;
+	bcs.push_back(tupla1);
+	bcs.push_back(tupla2);
+	
+	/// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
+	bim2a_dirichlet_bc (_msh,bcs,A,f);
+	
+	/// Assembling rhs term:
+	phiout = f;
+	
+	mumps mumps_solver;
+      
+	std::vector<double> vals(nnodes,0.0);
+	std::vector<int> 	irow(nnodes,0),
+						jcol(nnodes,0);
+	  
+	A.aij(vals, irow, jcol, mumps_solver.get_index_base ());
+	  
+	mumps_solver.set_lhs_structure (A.rows(), irow, jcol);
+		
+	mumps_solver.analyze ();
+	mumps_solver.set_lhs_data (vals);
+      
+	mumps_solver.factorize ();
+
+	mumps_solver.set_rhs (phiout);
+      
+	mumps_solver.solve ();
+	mumps_solver.cleanup ();
+	
+	//for(unsigned i=0; i<phiout.size(); i++){
+	//	std::cout<<"phiout = "<<phiout[i]<<std::endl;
+	//}
+	
+	/// Post-processing.	
+	Vin = phiout;
+	nin = nout;
+	niter = 1;
+};
+
+
+void
+Probl::LinearPoisson(){
+	
+	int	nnodes = _msh.num_global_nodes(),
+		nelements = _msh.num_global_quadrants();
+		
+	double	areaS = _L * std::abs(_t_semic),
+			Nd = 1e+19;
+	
+	std::vector<double>	phiout(nnodes,0.0),
+						nout(nnodes,0.0),
+						f(nnodes,0.0),
+						rho(nnodes,_q/areaS*Nd),
+						epsilon(nelements,_eps_semic),
+						ecoeff(nelements,0.0),
+						ncoeff(nnodes,1.0),
+						psi(nnodes,0.0);
+						
+	sparse_matrix   jac, A, M;
+	jac.resize(nnodes);
+	A.resize(nnodes);
+	M.resize(nnodes);
+	
+	///Assemble system matrices.	
+	if(_ins){
+        for(unsigned i=0; i<_insulator.size(); i++){
+            if(_insulator[i]==1){
+                epsilon[i] = _eps_ins;
+            }
+        }
+    }
+	
+	bim2a_advection_diffusion (_msh, epsilon, psi, A);
+	
+	for (unsigned i=0; i<_insulator.size(); i++){
+		if(_insulator[i]==0){
+			ecoeff[i] = 1;
+		}
+	}
+	bim2a_reaction (_msh, ecoeff, ncoeff, M);
+	
+	p4est_locidx_t	indexT = 0;
+	for (auto quadrant = _msh.begin_quadrant_sweep ();
+		quadrant != _msh.end_quadrant_sweep ();
+		++quadrant)
+	{
+		for(int i=0; i<4; i++){
+			if(indexT < quadrant->get_tree_idx ()){
+				indexT = quadrant->get_tree_idx ();	// index of the current tree
+			}
+		}
+	}
+	
+	std::tuple<int, int, func_quad>	tupla1(0,2,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _PhiB;}),
+									tupla2(indexT,3,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _Vshift;});
 												
 	dirichlet_bcs_quad	bcs;
 	bcs.push_back(tupla1);
 	bcs.push_back(tupla2);
 
-	res = jac*phiout;
+	for(unsigned i=0; i<_scnodes.size(); i++){
+		if(_scnodes[i] == 0){
+			rho[i] = 0;
+		}
+	}
+	
+	f = M*rho;
+	for(unsigned i=0; i<f.size(); i++){
+		f[i] *= (-1);
+	}
 	
 	/// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
-	bim2a_dirichlet_bc (_msh,bcs,jac,res);
+	bim2a_dirichlet_bc (_msh,bcs,A,f);
 	
 	/// Assembling rhs term:
-	dphi = res;
+	phiout = f;
 	
 	mumps mumps_solver;
       
@@ -560,34 +658,30 @@ Probl::LinearPoisson(std::vector<double>& phi0){
 	std::vector<int> 	irow(nnodes,0),
 						jcol(nnodes,0);
 	  
-	jac.aij(vals, irow, jcol, mumps_solver.get_index_base ());
+	A.aij(vals, irow, jcol, mumps_solver.get_index_base ());
 	  
-	mumps_solver.set_lhs_structure (jac.rows(), irow, jcol);
+	mumps_solver.set_lhs_structure (A.rows(), irow, jcol);
 		
 	mumps_solver.analyze ();
 	mumps_solver.set_lhs_data (vals);
       
 	mumps_solver.factorize ();
 
-	mumps_solver.set_rhs (dphi);
+	mumps_solver.set_rhs (phiout);
       
 	mumps_solver.solve ();
 	mumps_solver.cleanup ();
 	
-	for(unsigned i=0; i<phiout.size(); i++){
-		phiout[i] += dphi[i];
-		std::cout<<"phiout = "<<phiout[i]<<std::endl;
-		//std::cout<<"dphi = "<<dphi[i]<<std::endl;
-	}
+	//for(unsigned i=0; i<phiout.size(); i++){
+	//	std::cout<<"phiout = "<<phiout[i]<<std::endl;
+	//}
 	
 	/// Post-processing.	
-	std::vector<double>	rhon(phiout.size(),_q/area);
 	for(unsigned i=0; i<_scnodes.size(); i++){
 		if(_scnodes[i]==1){
-			nout[i] = - rhon[i]/_q;
+			nout[i] = - rho[i]/_q;
 		}
 	}
-	rhon.clear();
 	
 	Vin = phiout;
 	nin = nout;

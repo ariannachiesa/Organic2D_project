@@ -139,7 +139,8 @@ class Probl
 	void Device(double Vshift, double Csb, double t_semic, double t_ins, double L, bool ins, 
 				std::array<int,2>& pins, std::array<int,2>& contacts, double section, double Vdrain, int maxcycle);
 				
-	void LinearPoisson(std::vector<double>& phi0);
+	void Laplace();
+	void LinearPoisson();
 	void NonLinearPoisson(std::vector<double>& phi0);
 	
 	void org_gaussian_charge_n( std::vector<double>& V, std::vector<double>& rhon, std::vector<double>& drhon_dV);

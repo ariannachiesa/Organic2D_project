@@ -4,8 +4,8 @@
   "Advanced Programming for Scientific Computing"
 */
 
-/*! \file test1_LinPoisson.cpp
-  \brief Test 1: Linear Poisson
+/*! \file test_Laplace.cpp
+  \brief Test: Laplace
 */
 
 #include "probl.h"
@@ -24,18 +24,12 @@ int main(int argc, char** argv){
 	tstart_probl = clock() - tstart_probl;
 	std::cout<<"Construction class Probl run time: "<<tstart_probl<<" , ("<<((float)tstart_probl)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
 	
-	int	nnodes = P._msh.num_global_nodes();
-	std::vector<double>	Vguess(nnodes, P._PhiB);
-	
-	/// Export nodal field Vguess to a octbin.gz file for visualization.
-	P._msh.octbin_export ("Vguess_visualization", Vguess);
-	
-	/// Solve Linear Poisson
+	/// Solve Laplace
 	tstart_p = clock();
-	P.LinearPoisson(Vguess);
-	P.savePoisson(P.Vin, P.nin, P.niter, P.resnrm, "LinPoisson_output.gz");
+	P.Laplace();
+	P.savePoisson(P.Vin, P.nin, P.niter, P.resnrm, "Laplace_output.gz");
 	tstart_p = clock() - tstart_p;
-	std::cout<<"Linear Poisson run time: "<<tstart_p<<" , ("<<((float)tstart_p)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
+	std::cout<<"Laplace run time: "<<tstart_p<<" , ("<<((float)tstart_p)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
 	
 	std::cout<<"End of program"<<std::endl;
 	
