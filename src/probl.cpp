@@ -746,9 +746,9 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 		}
 	}
 
-
-	std::tuple<int, int, func_quad>	tupla1(0,2,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _Vshift-phiout[quad->gt(i)];}),
-									tupla2(indexT,3,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _Vshift-phiout[quad->gt(i)];});
+	double	Vshift = _Vshift;
+	std::tuple<int, int, func_quad>	tupla1(0,2,[](tmesh::quadrant_iterator quad, tmesh::idx_t i){return 0.0;}),
+									tupla2(indexT,3,[&Vshift,&phiout](tmesh::quadrant_iterator quad, tmesh::idx_t i){return (Vshift-phiout[quad->gt(i)]);});
 												
 	dirichlet_bcs_quad	bcs;
 	bcs.push_back(tupla1);
@@ -766,7 +766,7 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 		res1 = A*phiout;
 		res2 = M*rho;
 		for(unsigned i=0; i<res.size(); i++){
-			res[i] = res1[i] - res2[i];
+			res[i] = res2[i] - res1[i];
 		}
 		res1.clear();
 		res2.clear();
@@ -804,9 +804,7 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 		mumps_solver.cleanup ();
 		
 		for(unsigned i=0; i<phi.size(); i++){
-			dphi[i] *= (-1);
 			phi[i] += dphi[i];
-			//std::cout<<"phi = "<<phi[i]<<std::endl;
 		}
 		
 		double norm;
@@ -821,9 +819,9 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 	}
 	
 	phiout = phi;
-	 for(unsigned i=0; i<phiout.size(); i++){
-		std::cout<<"phiout dopo = "<<phiout[i]<<std::endl;
-	 }
+	// for(unsigned i=0; i<phiout.size(); i++){
+		// std::cout<<"phiout = "<<phiout[i]<<std::endl;
+	// }
 	
 	/// Post-processing.
 	

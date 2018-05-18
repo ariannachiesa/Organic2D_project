@@ -78,5 +78,5 @@ if(iter ~= 1)
   figure(5)
   xlabel('Number of iterations')
   ylabel('Residual norm')
-  plot(niter,res,'-ob');
+  plot(niter,res,'-ob','LineWidth',3,'MarkerFaceColor','b');
 endif
