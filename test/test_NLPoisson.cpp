@@ -4,8 +4,8 @@
   "Advanced Programming for Scientific Computing"
 */
 
-/*! \file test1_NLPoisson.cpp
-  \brief Test 1: Non Linear Poisson
+/*! \file test_NLPoisson.cpp
+  \brief Test: Non Linear Poisson
 */
 
 #include "probl.h"
