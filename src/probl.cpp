@@ -752,9 +752,11 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 		}
 	}
 
-	double	Vshift = _Vshift;
+	double	Vshift = _Vshift,
+			Vg = _VG;
 	std::tuple<int, int, func_quad>	tupla1(0,2,[](tmesh::quadrant_iterator quad, tmesh::idx_t i){return 0.0;}),
-									tupla2(indexT,3,[&Vshift,&phiout](tmesh::quadrant_iterator quad, tmesh::idx_t i){return (Vshift-phiout[quad->gt(i)]);});
+									tupla2(indexT,3,[&Vg,&Vshift,&phiout](tmesh::quadrant_iterator quad, tmesh::idx_t i)
+													{return (Vg+Vshift-phiout[quad->gt(i)]);});
 												
 	dirichlet_bcs_quad	bcs;
 	bcs.push_back(tupla1);
