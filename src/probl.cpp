@@ -137,6 +137,12 @@ Probl::set_section(double section){
 	_section = section;
 };
 
+/// Method which sets voltage at the gate contact
+void
+Probl::set_VG(double Vg){
+	_VG = Vg;
+};
+
 void 
 Probl::Constants(double T0){
 	_Kb   = 1.380648813131e-23;

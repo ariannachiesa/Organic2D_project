@@ -184,6 +184,7 @@ class Probl
 	void set_Csb(double Csb);
 	void set_Vdrain(double Vdrain);
 	void set_section(double section);
+	void set_VG(double Vg);
 	
 };
 
