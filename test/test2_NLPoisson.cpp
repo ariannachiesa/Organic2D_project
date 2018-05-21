@@ -35,19 +35,27 @@ int main(int argc, char** argv){
 	tstart_p = clock();
 	
 	int	cont = 0;
-	double dV = 0.1;
-	char Nomefile[260];
+	double	dV = 0.1,
+			Vgstart = 0,
+			Vgend = 10,
+			length = std::abs(Vgend-Vgstart)/dV;
+	//char Nomefile[260];
+	std::vector<double>	C(length,0.0),
+						V(length,0.0);
 	
-	for(double Vg=-30; Vg<=30; Vg+=dV){
+	for(double Vg=Vgstart; Vg<=Vgend; Vg+=dV){
 		P.set_VG(Vg);
 		P.NonLinearPoisson(Vguess);
-		sprintf(Nomefile,"NLPoisson_output_%d.gz",cont);
-		P.savePoisson(P.Vin, P.nin, P.niter, P.resnrm, Nomefile);
+		//sprintf(Nomefile,"NLPoisson_output_%d.gz",cont);
+		//P.savePoisson(P.Vin, P.nin, P.niter, P.resnrm, Nomefile);
+		C[cont] = P.CV(P.Vin);
+		V[cont] = Vg;
 		cont++;
 	}
+	P.saveCV(C,V,"CV.gz");
 	
 	tstart_p = clock() - tstart_p;
-	std::cout<<"NLPoisson run time: "<<tstart_p<<" , ("<<((float)tstart_p)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
+	std::cout<<"CV run time: "<<tstart_p<<" , ("<<((float)tstart_p)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
 	
 	std::cout<<"End of program"<<std::endl;
 	
