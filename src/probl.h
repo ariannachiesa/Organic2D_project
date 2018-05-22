@@ -89,7 +89,7 @@ class Probl
 	///	which nodes are in the semiconductor and which in the insulator,
 	///	which elements are in the semiconductor and which in the insulator
 	///	and which are the boundary nodes
-	/// class	Device	
+	/// class	Device
 	bool _ins;									/**< true = (default) if insulator is present , false = if there's only semiconductor */
 	
 	double _section;							/**< device section [m^2] */
@@ -148,11 +148,8 @@ class Probl
 	std::vector<double> n_approx(  std::vector<double>& V);
 	std::vector<double> dn_dV_approx(  std::vector<double>& V);
 	
-	double CV(std::vector<double>& phi);
-	
 	/// save methods
 	void savePoisson(std::vector<double>& V, std::vector<double>& n, double niter, std::vector<double>& resnrm, const char* FileName);
-	void saveCV(std::vector<double>& C, std::vector<double>& V, const char* FileName);
 	void saveMat (int nrows, int ncols, std::vector<double>& vals);
 
 	/// Compute the (Inf,L2,H1) norm of a piecewise linear function.
