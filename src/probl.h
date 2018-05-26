@@ -101,6 +101,7 @@ class Probl
 	double _t_semic;							/**< [m] thickness of semiconductor, along y-axis */
 	double _t_ins;
 	double _L;
+	int _nTrees;
 
 	std::vector<int> _scnodes;					/**< vector of 1s and 0s; 1 = node in the semiconductor, 0 = node in the insulator */
 	std::vector<int> _insulator;				/**< vector of 1s and 0s; 0 = element in the semiconductor, 1 = element in the insulator */

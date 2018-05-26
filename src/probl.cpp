@@ -238,6 +238,8 @@ Probl::Device(	double Vshift, double Csb, double t_semic, double t_ins, double L
 	
 		const int	nNodes = 401;
 		std::cout<<"Nnodes = "<<nNodes<<std::endl;
+		
+		_nTrees = nNodes-1;
 
 		// Define mesh.
 		if(ins){	// if insulator is present: mesh with both the insulator and the semiconductor
@@ -320,7 +322,7 @@ Probl::Device(	double Vshift, double Csb, double t_semic, double t_ins, double L
 		}
 
 		_msh.vtk_export ("Refined Mesh");
-
+		
 		using idx_t = p4est_gloidx_t;
 		idx_t			indexE;
 		p4est_locidx_t	indexT;
@@ -525,18 +527,7 @@ Probl::Laplace(){
 	
 	bim2a_advection_diffusion (_msh, epsilon, psi, A);
 	
-	p4est_locidx_t	indexT = 0;
-	for (auto quadrant = _msh.begin_quadrant_sweep ();
-		quadrant != _msh.end_quadrant_sweep ();
-		++quadrant)
-	{
-		for(int i=0; i<4; i++){
-			if(indexT < quadrant->get_tree_idx ()){
-				indexT = quadrant->get_tree_idx ();	// index of the current tree
-			}
-		}
-	}
-	
+	int indexT = _nTrees-1;
 	std::tuple<int, int, func_quad>	tupla1(0,2,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _PhiB;}),
 									tupla2(indexT,3,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _Vshift;});
 												
@@ -570,10 +561,6 @@ Probl::Laplace(){
 	mumps_solver.solve ();
 	mumps_solver.cleanup ();
 	
-	//for(unsigned i=0; i<phiout.size(); i++){
-	//	std::cout<<"phiout = "<<phiout[i]<<std::endl;
-	//}
-	
 	/// Post-processing.	
 	Vin = phiout;
 	nin = nout;
@@ -599,8 +586,7 @@ Probl::LinearPoisson(){
 						ncoeff(nnodes,1.0),
 						psi(nnodes,0.0);
 						
-	sparse_matrix   jac, A, M;
-	jac.resize(nnodes);
+	sparse_matrix   A, M;
 	A.resize(nnodes);
 	M.resize(nnodes);
 	
@@ -622,18 +608,7 @@ Probl::LinearPoisson(){
 	}
 	bim2a_reaction (_msh, ecoeff, ncoeff, M);
 	
-	p4est_locidx_t	indexT = 0;
-	for (auto quadrant = _msh.begin_quadrant_sweep ();
-		quadrant != _msh.end_quadrant_sweep ();
-		++quadrant)
-	{
-		for(int i=0; i<4; i++){
-			if(indexT < quadrant->get_tree_idx ()){
-				indexT = quadrant->get_tree_idx ();	// index of the current tree
-			}
-		}
-	}
-	
+	int indexT = _nTrees-1;	
 	std::tuple<int, int, func_quad>	tupla1(0,2,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _PhiB;}),
 									tupla2(indexT,3,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _Vshift;});
 												
@@ -677,10 +652,6 @@ Probl::LinearPoisson(){
       
 	mumps_solver.solve ();
 	mumps_solver.cleanup ();
-	
-	//for(unsigned i=0; i<phiout.size(); i++){
-	//	std::cout<<"phiout = "<<phiout[i]<<std::endl;
-	//}
 	
 	/// Post-processing.	
 	for(unsigned i=0; i<_scnodes.size(); i++){
@@ -740,18 +711,7 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 	}
 	bim2a_reaction (_msh, ecoeff, ncoeff, M);	
 	
-	p4est_gloidx_t	indexT = 0;
-	for (auto quadrant = _msh.begin_quadrant_sweep ();
-		quadrant != _msh.end_quadrant_sweep ();
-		++quadrant)
-	{
-		for(int i=0; i<4; i++){
-			if(indexT < quadrant->get_tree_idx ()){
-				indexT = quadrant->get_tree_idx ();	// index of the current tree
-			}
-		}
-	}
-
+	int indexT = _nTrees-1;
 	double	Vshift = _Vshift,
 			Vg = _VG;
 	std::tuple<int, int, func_quad>	tupla1(0,2,[](tmesh::quadrant_iterator quad, tmesh::idx_t i){return 0.0;}),
@@ -827,9 +787,6 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 	}
 	
 	phiout = phi;
-	// for(unsigned i=0; i<phiout.size(); i++){
-		// std::cout<<"phiout = "<<phiout[i]<<std::endl;
-	// }
 	
 	/// Post-processing.
 	

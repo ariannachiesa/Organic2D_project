@@ -16,7 +16,7 @@ int main(int argc, char** argv){
 	
 	clock_t tstart_probl;
 	tstart_probl = clock();
-	
+
 	/// n. refinement cycles : 0
 	/// the mesh is constituted only by a row of quadrants along the y-axis
 	Probl P(0);
