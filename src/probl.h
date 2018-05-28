@@ -162,10 +162,13 @@ class Probl
 	/// set methods
 	void set_T0(double T0);
 	
+	void set_eps_ins_r(double eps_ins_r);
+	void set_eps_ins(double eps_ins);
 	void set_PhiB(double PhiB);
 	void set_sigman(double sigman);
 	void set_sigmankT(double sigmankT);
 	void set_mu0n(double mu0n);
+	void set_ni(double ni);
 	
 	void set_pmaxit(int pmaxit);
 	void set_maxit(int maxit);

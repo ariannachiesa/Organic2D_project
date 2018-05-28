@@ -16,6 +16,18 @@ Probl::set_T0(double T0){
 	_sigman_kT = _sigman / (_Kb * _T0);
 };
 
+/// Method which sets eps_ins_r
+void 
+Probl::set_eps_ins_r(double eps_ins_r){
+	_eps_ins_r = eps_ins_r;
+};
+
+/// Method which sets eps_ins
+void 
+Probl::set_eps_ins(double eps_ins){
+	_eps_ins = eps_ins;
+};
+
 /// Method which sets PhiB
 void 
 Probl::set_PhiB(double PhiB){
@@ -38,6 +50,12 @@ Probl::set_sigmankT(double sigmankT){
 void 
 Probl::set_mu0n(double mu0n){
 	_mu0n = mu0n;
+};
+
+/// Method which sets ni
+void 
+Probl::set_ni(double ni){
+	_ni = ni;
 };
 
 /// Method which sets pmaxit
