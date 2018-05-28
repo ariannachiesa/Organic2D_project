@@ -8,6 +8,7 @@
   \brief Test: Non Linear Poisson + Drift-Diffusion
 */
 
+#include "bcs_circuit.h"
 #include "csvread.h"
 #include "interp1.h"
 #include "probl.h"
