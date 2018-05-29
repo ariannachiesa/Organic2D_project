@@ -161,6 +161,16 @@ Probl::set_VG(double Vg){
 	_VG = Vg;
 };
 
+tmesh::idx_t
+Probl::get_msh_nodes(){
+	return _msh.num_global_nodes();
+};
+
+tmesh::idx_t
+Probl::get_msh_elem(){
+	return _msh.num_global_quadrants();
+};
+
 void 
 Probl::Constants(double T0){
 	_Kb   = 1.380648813131e-23;

@@ -11,6 +11,7 @@
 #include "bcs_circuit.h"
 #include "csvread.h"
 #include "interp1.h"
+#include "newton.h"
 #include "probl.h"
 
 #include <iostream>
@@ -156,6 +157,9 @@ int main(int argc, char** argv){
 		tstart_simul = clock() - tstart_simul;
         std::cout<<"Simulation run time: "<<tstart_simul<<" , ("<<((float)tstart_simul)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
 	}
+
+	tstart_loop = clock() - tstart_loop;
+    std::cout<<"Loop run time: "<<tstart_loop<<" , ("<<((float)tstart_loop)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
 	
 	std::cout<<"End of program"<<std::endl;
 	

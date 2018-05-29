@@ -189,6 +189,8 @@ class Probl
 	void set_section(double section);
 	void set_VG(double Vg);
 	
+	tmesh::idx_t get_msh_nodes();
+	tmesh::idx_t get_msh_elem();
 };
 
 #endif /* PROBL_H */
