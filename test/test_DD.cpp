@@ -74,7 +74,7 @@ int main(int argc, char** argv){
 			N = 91;
 	int		j;
 	std::complex<double> complx(0.0,1.0);
-	std::vector<double>	frequency(N + CF.size(),0.0),
+	std::vector<double>	frequency((N-1) + CF.size(),0.0),
 						f(CF.size(),0.0),
 						eps_ins_r(CF.size(),0.0),
 						tspan,
@@ -105,8 +105,7 @@ int main(int argc, char** argv){
 	clock_t tstart_loop,
             tstart_simul;
 
-    tstart_loop = clock();
-	
+    tstart_loop = clock();	
 	for (unsigned i=0; i<frequency.size(); i++){
 	
 		freq = frequency[i];
@@ -135,8 +134,9 @@ int main(int argc, char** argv){
 		tspan.resize(N+3);
 		tspan[0] = tmin;	tspan[1] = -90;		tspan[2] = -50;
 		j = 3;
-		for(auto i=a; i<=b; i+=step){
-			tspan[j] = i ;
+		for(auto h=a; h<=b; h+=step){
+			tspan[j] = h ;
+			j++;
 		}		
 
 		/// Circuit boundary conditions and initial condition.
@@ -148,7 +148,7 @@ int main(int argc, char** argv){
 		tstart_simul = clock();
 		
 		/// Enforcing boundary conditions of the attached control circuit
-		// BCS_CIRC	bcs(Rg, Rb, amp, freq, voltage, Csb, Vshift, Fin);
+		BCS_CIRC	bcs(freq, P._VG, P._Csb, P._Vshift, Fin);
 		
 		/// Newton's algorithm
 		// Newton		newt(	P, Vin, nin, tspan, Fin, Iin, bcs, freq );
