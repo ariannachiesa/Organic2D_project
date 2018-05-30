@@ -72,6 +72,12 @@ class Newton{
 	DIV_MN_MSG (int tstep, int t, int Nstep, int mNstep, int field, std::vector<double>& incrhist, double incr, 
 				std::vector<double>& res, int nsteps_check);
 				
+	void
+	org_secs_state_predict (Probl& P, sparse_matrix& V, sparse_matrix& n, sparse_matrix& F, sparse_matrix& I, int& tstep, std::vector<double>& tout,
+							std::vector<double>& V0, std::vector<double>& n0, std::vector<double>& F0, std::vector<double>& I0);
+	void
+	diff (sparse_matrix& in, double a, double b, std::vector<double>& out);
+				
 	/// It saves Newton output at each time step
 	// void
 	// saveNEWT(	std::vector<double>& Vold, std::vector<double>& nold, std::vector<double>& Fold, std::vector<double>& Iold, double told, 

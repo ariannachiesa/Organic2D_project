@@ -147,9 +147,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 			}
 			bcs.assign(t, P._Csb, P._Vshift, F);	// ma quando sono alla prima iterazione ? passo una roba non inizializzata
 			
-			// org_secs_state_predict (P.dev(), P.mat(), P.cnst(), P.alg(), _V, _n, _F, _I, tstep, _tout, 
-									// // output
-									// V0, n0, F0, I0);
+			org_secs_state_predict (P, _V, _n, _F, _I, tstep, _tout, V0, n0, F0, I0);
 			V2 = V0;
 			n2 = n0;
 			F2 = F0;
