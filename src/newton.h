@@ -77,6 +77,13 @@ class Newton{
 							std::vector<double>& V0, std::vector<double>& n0, std::vector<double>& F0, std::vector<double>& I0);
 	void
 	diff (sparse_matrix& in, double a, double b, std::vector<double>& out);
+	
+	void
+	org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& n0, std::vector<double>& F0, std::vector<double>& I0,
+								std::vector<double>& dV, std::vector<double>& dn, std::vector<double>& dF, std::vector<double>& dI,
+								Probl& P,
+								std::vector<double>& V, std::vector<double>& n, std::vector<double>& F, std::vector<double>& I,
+								int& clamp, double& tauk);
 				
 	/// It saves Newton output at each time step
 	// void

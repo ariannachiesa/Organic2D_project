@@ -183,7 +183,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 				if (in == 1){
 				
 					whichone = 0;
-					// compute_residual_norm (resnrm[0],whichone,resall,_res, P.alg(),indexingV,indexingn,indexingF,indexingI);
+					compute_residual_norm (resnrm[0],whichone,resall,_res,indexingV,indexingn,indexingF,indexingI);
 					
 					//for(unsigned i=0; i<resall.size(); i++){
 					//	std::cout<<"resall = "<<resall[i]<<std::endl;
@@ -204,7 +204,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 				}
 
 				resall.resize(4);
-				// compute_residual_norm (resnrm[in-1],whichone,resall,_res, P.alg() ,indexingV,indexingn,indexingF,indexingI);
+				compute_residual_norm (resnrm[in-1],whichone,resall,_res,indexingV,indexingn,indexingF,indexingI);
 				
 				// org_secs2d_newton_jacobian(	P,	V2, n2, F2,	dt, bcs, indexingV, indexingn, indexingF, indexingI, _jac);
 				
@@ -268,9 +268,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 				delta.clear();
 				
 				V2.clear(); n2.clear(); F2.clear(); I2.clear();
-				// org_secs_safe_increment (   V1, n1, F1, I1, dV, dn, dF, dI, P.alg(), P.dev(), P.cnst(),
-												// // output
-												// V2, n2, F2, I2, clamp, tauk);
+				org_secs_safe_increment (V1, n1, F1, I1, dV, dn, dF, dI, P, V2, n2, F2, I2, clamp, tauk);
 												
 				if ((clamp <= 0) || (tauk <= 0)){
 					reject = true;
@@ -367,7 +365,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 														// dt, bcs, indexingV, indexingn, indexingF, indexingI);
 														
 					resall.resize(4);
-					// compute_residual_norm (resnrmk[imn-1], whichone, resall, _res, P.alg(), indexingV, indexingn, indexingF, indexingI);
+					compute_residual_norm (resnrmk[imn-1], whichone, resall, _res, indexingV, indexingn, indexingF, indexingI);
 				
 					/// Solve non linear system.
 					std::cout << "Solving linear system."<<std::endl;
@@ -397,9 +395,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 					}
 
 					V2.clear(); n2.clear(); F2.clear(); I2.clear();	  
-					// org_secs_safe_increment (	Vk, nk, Fk, Ik, dV, dn, dF, dI, P.alg(), P.dev(), P.cnst(),
-												// // output
-												// V2, n2, F2, I2, clamp, tauk);
+					org_secs_safe_increment (Vk, nk, Fk, Ik, dV, dn, dF, dI, P, V2, n2, F2, I2, clamp, tauk);
 					
 					if ((tauk <=0) || (clamp <= 0)){
 						reject = true;

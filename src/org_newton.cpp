@@ -228,6 +228,174 @@ Newton::compute_residual_norm (	double& resnrm, int& whichone, std::vector<doubl
 		}
 };
 
+void 
+Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& n0, std::vector<double>& F0, std::vector<double>& I0,
+									std::vector<double>& dV, std::vector<double>& dn, std::vector<double>& dF, std::vector<double>& dI,
+									Probl& P,
+									std::vector<double>& V, std::vector<double>& n, std::vector<double>& F, std::vector<double>& I,
+									int& clamp, double& tauk)
+{
+	double tk = 1;
+	std::vector<double>	Min, n0_2;
+	std::vector<int>	scnodes = P._scnodes,
+						clamping = P._clamping;
+	
+  
+	std::vector<int>  where(n0.size(),0);
+
+	if (n0.size() != dn.size()){
+		std::cout<<"error: org_secs_safe_increment, vectors with different size"<<std::endl;
+	}
+	for(unsigned i=0; i<n0.size(); i++){
+		if(n0[i]+dn[i] <= 0)
+			where[i] = 1;
+	}
+	int s = 0 , length = 0;
+	for(unsigned i=0; i<scnodes.size(); i++){
+		if(scnodes[i] == 1){
+			s++;
+			if(where[i] == 1){
+				length++;
+			}
+		}
+	}
+
+	if ( length == s){
+		Min.resize(length);
+		for(unsigned i=0; i<scnodes.size(); i++){
+			if(scnodes[i]==1){
+				if(where[i]==1){
+					Min[i] = n0[i]/std::abs(dn[i]);
+				}
+			}
+		}
+		tk = 0.9 * (*std::min_element(Min.begin(),Min.end()));
+		Min.clear();
+	}
+
+  clamp = 1;
+
+  if (P._clampOnOff){
+    // V
+
+    if (any(dV)){
+		clamp = std::fmin (1, clamping[0] / norm(dV,0));
+    }
+	
+
+    // n
+    std::vector<double> dn2(dn.size(),0),
+						dn3(dn.size(),0);
+    for(unsigned i=0; i<dn.size(); i++){
+        if(dn[i] > 0)
+            dn2[i] = 1;
+        else if(dn[i] < 0)
+            dn3[i] = 1;
+    }
+
+    if (any (dn2)){
+      for(unsigned i=0; i<dn.size(); i++){
+        dn2[i] = dn2[i]*(dn[i]/n0[i]);
+      }
+      clamp = std::fmin (clamp, (exp (clamping[1] / P._Vth) - 1) / norm (dn2,0) );
+    }
+
+    if (any (dn3)){
+      for(unsigned i=0; i<dn.size(); i++){
+        dn3[i] = dn3[i]*(dn[i]/n0[i]);
+      }
+      clamp = std::fmin (clamp, (1 - exp (-clamping[1]/P._Vth)) / norm (dn3, 0) );
+    }
+
+    // F
+    if (any(dF)){
+      clamp = std::fmin (clamp, clamping[2] / norm (dF, 0));
+    }
+
+    // I
+    if (any(dI)){
+      clamp = std::fmin (clamp, clamping[3] / norm (dI, 0));
+    }
+  }
+  else{
+    std::cout<<"No clamping applied"<<std::endl;
+  }
+  
+  tauk = tk;
+  tk = std::fmin (tauk, clamp);
+
+
+  if(V0.size() != dV.size()){
+    std::cout<<"error: org_secs_safe_increment, dimensions mismatch (V)"<<std::endl;
+  }
+  else{
+	V.resize(dV.size());
+    for(unsigned i=0; i<dV.size(); i++){
+        V[i] = (V0[i] + tk * dV[i]);
+    }
+  }
+
+  
+  if(n0.size() != dn.size()){
+    std::cout<<"error: org_secs_safe_increment, dimensions mismatch (n)"<<std::endl;
+  }
+  else{
+	n.resize(dn.size());
+    for(unsigned i=0; i<dn.size(); i++){
+        n[i] = (n0[i] + tk * dn[i]);
+    }
+  }
+
+  
+  if(F0.size() != dF.size()){
+    std::cout<<"error: org_secs_safe_increment, dimensions mismatch (F)"<<std::endl;
+  }
+  else{
+	F.resize(dF.size());
+    for(unsigned i=0; i<dF.size(); i++){
+        F[i] = (F0[i] + tk * dF[i]);
+    }
+  }
+
+  //I = I0 + tk * dI;
+  if(I0.size() != dI.size()){
+    std::cout<<"error: org_secs_safe_increment, dimensions mismatch (I)"<<std::endl;
+  }
+  else{
+	I.resize(dI.size());
+    for(unsigned i=0; i<dI.size(); i++){
+        I[i] = (I0[i] + tk * dI[i]);
+    }
+  }
+
+  if (tk <= 0){
+    std::cout<<"SECS: nonpositive-relax"<<std::endl;
+    std::cout<<"Relaxation parameter is too small: tau = "<<tk<<std::endl;
+    std::cout<<" reducing time step!"<<std::endl;
+  }
+
+  n0_2.resize(s);
+  int j=0;
+  for(unsigned i=0; i<scnodes.size(); i++){
+	if(scnodes[i]==1){
+		if(n[i] <= 0){
+            n0_2[j] = 1;
+			j++;
+        }
+		else{
+            n0_2[j] = 0;
+			j++;
+		}
+	}
+  }
+  
+  //if (any (n(_scnodes) <= 0))
+	if(any(n0_2)){
+		std::cout<<"error: org_secs_safe_increment, negative charge density"<<std::endl;
+		exit(EXIT_FAILURE);
+	}	
+};
+
 void
 Newton::CONV_MSG (int tstep, int Nstep, int mNstep, double t, std::string reason, int field, double incr, std::vector<double>& res)
 {
