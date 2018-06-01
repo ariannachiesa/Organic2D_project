@@ -52,11 +52,10 @@ class Newton{
 	compute_residual_norm (	double& resnrm, int& whichone, std::vector<double>& resall, std::vector<double>& res,
 							std::vector<int>& idxV, std::vector<int>& idxn, std::vector<int>& idxF, std::vector<int>& idxI);
 	
-	// void
-	// compute_variation (std::vector<double>& Va, std::vector<double>& na, std::vector<double>& Fa, std::vector<double>& Ia, 
-                        // std::vector<double>& Vb, std::vector<double>& nb, std::vector<double>& Fb, std::vector<double>& Ib,
-                        // Algor* alg, Device* dev, Material* mat, Constants* c, double clamping,
-                        // double& incrV, double& incrn, double& incrF, double& incrI);
+	void
+	compute_variation (	std::vector<double>& Va, std::vector<double>& na, std::vector<double>& Fa, std::vector<double>& Ia, 
+						std::vector<double>& Vb, std::vector<double>& nb, std::vector<double>& Fb, std::vector<double>& Ib, 
+						Probl& P, double clamping, double& incrV, double& incrn, double& incrF, double& incrI);
 	
 	void
 	CONV_MSG (int tstep, int Nstep, int mNstep, double t, std::string reason, int field, double incr, std::vector<double>& res);
@@ -84,6 +83,42 @@ class Newton{
 								Probl& P,
 								std::vector<double>& V, std::vector<double>& n, std::vector<double>& F, std::vector<double>& I,
 								int& clamp, double& tauk);
+								
+	void
+	org_physical_models2d (std::vector<double>& n, Probl& P, std::vector<double>& mobilityn, std::vector<double>& alphan, std::vector<double>& der_dalpha_n);
+	
+	std::vector<double>
+	org_secs_mobility_EGDM (double mu0, std::vector<double>& c, double C0, double sigma, Probl& P);
+	
+	void
+	org_gaussian_charge_n(std::vector<double>& V, Probl& P,std::vector<double>& rhon, std::vector<double>& drhon_dV);
+	
+	double
+	org_gaussian_charge_n(double V, Probl& P);
+	
+	double
+	n_approx(double V, Probl& P);
+	
+	std::vector<double> 
+	n_approx(std::vector<double>& V, Probl& P);
+	
+	std::vector<double>
+	dn_dV_approx(std::vector<double>& V, Probl& P);
+	
+	void
+	org_einstein_n (std::vector<double>& n,Probl& P,std::vector<double>& alphan, std::vector<double>& dalphan_dn);
+	
+	std::vector<double>
+	alphan_fun (std::vector<double>& phi, Probl& P);
+	
+	std::vector<double>
+	dn_dphi_approx (std::vector<double>& phi, Probl& P);
+	
+	std::vector<double>
+	d2n_dphi2_approx (std::vector<double>& phi, Probl& P);
+	
+	std::vector<double>
+	dalphan_dn_fun (std::vector<double>& phi, std::vector<double>& alphan, Probl& P);
 				
 	/// It saves Newton output at each time step
 	// void

@@ -4,6 +4,947 @@
 
 #include "newton.h"
 
+//////////
+
+/**
+ *	Compute residual vector, which is the output of the method
+ */
+std::vector<double>							
+Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vector<double>& n, std::vector<double>& F, std::vector<double>& I,		
+									std::vector<double>& V0, std::vector<double>& n0, std::vector<double>& F0, std::vector<double>& I0,	
+									double deltat, BCS_CIRC& bcs, std::vector<int>& indexingV, std::vector<int>& indexingn, std::vector<int>& indexingF, 
+									std::vector<int>& indexingI)
+{
+	int	nnodes = P.get_msh_nodes(),
+		nelements = P.get_msh_elem(),
+        ndofs,
+		j = 0;
+	double	eps_semic = P._eps_semic,
+			eps_ins = P._eps_ins,
+			q = P._q,
+			Vth = P._Vth,
+			Vshift = P._Vshift,
+			L = P._L,
+			tins = P._t_ins,
+			tsemic = P._t_semic,
+			section = P._section,
+			PhiB = P._PhiB,
+			s1, s2, s = 0;
+	unsigned int	numcontacts;
+	bool	ins = P._ins;
+	std::array<int,2>	pins = P._pins;
+	std::vector< std::vector<int> >	dnodes = P._dnodes;
+	std::vector<int> 	indexV(nnodes,0),
+						indexn(nnodes,0),
+						intdofsV,
+						intdofsn,
+						alldnodes = P._alldnodes,
+						Nn(nnodes,0),
+						intnodes(2*nnodes,0),
+						insulator = P._insulator,
+						scnodes = P._scnodes,
+						ppins(pins.size(),0);
+	std::vector<double>	epsilon(insulator.size(),eps_semic),
+						rowscaling = P._rowscaling,
+						res;
+	
+	std::vector<int>::iterator it;
+
+	// pins = P.dev()->get_pins();
+	// for(unsigned i=0; i<pins.size(); i++){
+		// ppins[i] = pins[i];
+	// }
+	
+	// it = std::unique (ppins.begin(), ppins.end());
+	// ppins.resize( std::distance(ppins.begin(),it) );
+	// assert ((ppins).size() == 2);
+	// ppins.clear();
+	
+	numcontacts = pins.size();
+	ndofs = 2 * nnodes + F.size() + numcontacts;
+
+	j=0;
+	for(int i=0; i<nnodes; i++){
+		it = std::find (alldnodes.begin(), alldnodes.end(), i);
+		if (it == alldnodes.end()){
+			intnodes[j] = i;
+			j++;
+		}
+	}
+	intnodes.resize(j);
+	std::sort(intnodes.begin(),intnodes.end());
+	
+	j=0;
+	for(int i=0; i<2*nnodes; i=i+2){
+		indexV[j] = i;
+		j++;
+	}
+
+	j=0;
+	for(int i=1; i<2*nnodes; i=i+2){
+		indexn[j] = i;
+		j++;
+	}
+
+	intdofsV.resize(intnodes.size());
+	intdofsn.resize(intnodes.size());
+	for(unsigned i=0; i<intnodes.size(); i++){
+		intdofsV[i] = indexingV[intnodes[i]];
+		intdofsn[i] = indexingn[intnodes[i]];
+	}
+		
+	
+	/// COMPUTING COEFFICIENTS
+	if(ins){
+		for(unsigned i=0; i<insulator.size(); i++){
+			if(insulator[i] == 1){
+				epsilon[i] = eps_ins;
+			}
+		}
+	}
+
+	///	COMPUTING FIRST ROW
+	sparse_matrix 	//MM,
+					M,
+					A11,
+					A12;
+					
+	M.resize(nnodes);
+	//MM.resize(nnodes);
+	A11.resize(nnodes);
+	A12.resize(nnodes);
+	
+	std::vector<double> eones(insulator.size(),1.0),
+						not_ins(insulator.size(),0.0),
+						ones(nnodes,1.0),
+						psi(nnodes,0.0);
+	
+	for(unsigned i=0; i<insulator.size(); i++){
+		if(insulator[i] == 0){
+			not_ins[i] = 1;
+		}
+	}
+
+
+	//bim2a_reaction (P._msh, not_ins, ones, MM);	
+	bim2a_reaction (P._msh, not_ins, ones, A12);
+	for(int i=0; i<nnodes; i++){
+		A12[i][i] *= q ;			
+	}
+
+	bim2a_reaction (P._msh, eones, ones, M);		
+
+	bim2a_advection_diffusion (P._msh, epsilon, psi, A11);		
+
+	//A12 = MM;
+	
+	///	Physical models.
+	std::vector<double>	mobn(nelements,0.0),
+						alphan(n.size(),0.0),
+						out(nelements,0.0);
+
+	org_physical_models2d(n, P, mobn, alphan, out);
+	out.clear();				/// fare l'overload del method!!!
+
+	
+	// ///	ASSEMBLING FIRST ROW
+	
+	// res.resize(ndofs);
+	// std::vector<double>	sum1(V.size(),0.0),
+						// sum2(n.size(),0.0);
+
+	// sum1 = A11*V;	
+	// sum2 = A12*n;
+	
+	// for(unsigned i=0; i<intnodes.size(); i++){
+		// res[intdofsV[i]] = sum1[ intnodes[i] ] + sum2[ intnodes[i] ];
+	// }
+
+	// ///	ENFORCING BCs ON FIRST ROW 
+	// std::vector<int>	ddofsV;
+	// std::vector<double>	Vv;
+	// sparse_matrix Mm;
+	
+	// for (unsigned i=0; i<numcontacts; i++){
+		// Mm.resize(dnodes[i].size());
+		// ddofsV.resize(dnodes[i].size());
+		// for(unsigned j=0; j<dnodes[i].size(); j++){
+			// ddofsV[j] = indexingV[dnodes[i][j]] ;
+		// }
+	
+		// if (i == 0){ // Metal/semic. interface.
+			// Vv.resize(dnodes[i].size());
+			// for(unsigned j=0; j<dnodes[i].size(); j++){
+				// Vv[j] = ( (V[dnodes[i][j]] - F[pins[i]]) - PhiB);
+				// for(unsigned k=0; k<dnodes[i].size(); k++){
+					// Mm[j][k] = M[ dnodes[i][j] ][ dnodes[i][k] ];
+				// }
+			// }
+			// for(unsigned j=0; j<ddofsV.size(); j++){
+				// s=0;
+				// for(unsigned k=0; k<ddofsV.size(); k++){
+					// s += Mm[j][k]*Vv[k];
+				// }
+				// res[ddofsV[j]] += s;
+			// }
+			// Vv.clear();
+		// }
+		// else{ // Gate contact.
+			// Vv.resize(dnodes[i].size());
+			// for(unsigned j=0; j<dnodes[i].size(); j++){
+				// Vv[j] = ( (V[dnodes[i][j]] - F[pins[i]]) - (PhiB + Vshift) );
+				// for(unsigned k=0; k<dnodes[i].size(); k++){
+					// Mm[j][k] = M[ dnodes[i][j] ][ dnodes[i][k] ];
+				// }
+			// }
+			// for(unsigned j=0; j<ddofsV.size(); j++){
+				// s=0;
+				// for(unsigned k=0; k<ddofsV.size(); k++){
+					// s += Mm[j][k]*Vv[k];
+				// }
+				// res[ddofsV[j]] += s;
+			// }
+			// Vv.clear();
+		// }	
+		// ddofsV.clear();
+	// }
+
+	
+	// ///	COMPUTING SECOND ROW
+	// sparse_matrix	A22,
+					// Aa;
+	// std::vector<double>	r22(nnodes,0.0),
+						// rhs(nnodes, 0.0),
+						// alpha(insulator.size(),0.0),
+						// a_el(insulator.size(),0.0),
+						// eta(scnodes.size(),0.0),
+						// beta(nnodes,0.0),
+						// gamma(scnodes.size(),1.0),
+						// mob_nodes(scnodes.size(),0.0);
+  
+	// A22.resize(nnodes);
+	// Aa.resize(nnodes);
+		
+	// for(unsigned i=0; i<insulator.size(); i++){
+		// if(insulator[i] == 0){
+			// alpha[i] = mobn[i]*Vth;
+		// }
+	// }
+
+
+	// int index;
+	// for (	auto quadrant = msh->begin_quadrant_sweep (); 
+			// quadrant != msh->end_quadrant_sweep (); 
+			// ++quadrant){
+		// for( int i=0; i<4; i++ ){
+			// index = quadrant->gt(i);
+			// if(scnodes[index] == 1){
+				// beta[index] = 	V[index]/Vth ;
+			// }
+		// }
+	// }
+
+	// bim2a_advection_diffusion (	*msh, alpha, beta, A22);
+	
+	// for(unsigned i=0; i<ones.size(); i++){
+		// ones[i] = ones[i]/deltat;
+	// }
+	
+	// bim2a_reaction (*msh, not_ins, ones, Aa);
+
+	// for(unsigned i=0; i<scnodes.size(); i++){
+		// if(scnodes[i] == 1){
+				// A22[i][i] += Aa[i][i];
+		// }
+	// }
+	
+	// r22 = A22 * n;
+
+	// bim2a_rhs (*msh, not_ins, ones, rhs);
+	
+	// // Avoid cancellation errors.
+	
+	// for(unsigned i=0; i<rhs.size(); i++){
+		// r22[i] -= rhs[i]*n0[i];	
+	// }
+	// rhs.clear();
+
+	
+	// ///	ASSEMBLING SECOND ROW
+	// for(unsigned i=0; i<intnodes.size(); i++){
+		// res[intdofsn[i]] = r22[intnodes[i]];
+	// }
+
+	
+	// ///	ENFORCING BCs ON SECOND ROW
+	// std::vector<double>	rho,
+						// drhodV,
+						// nn,
+						// v;
+	// std::vector<int> ddofsn;
+	// double p = 0;
+	// for(unsigned i=0; i<numcontacts; i++){
+		// ddofsn.resize(dnodes[i].size());
+		// for(unsigned j=0; j<dnodes[i].size(); j++){
+			// ddofsn[j] = indexingn[dnodes[i][j]] ;
+		// }
+		// if(i==0){	// Metal/semic. interface.
+			// Mm.resize(dnodes[i].size());
+			// v.resize(dnodes[i].size());
+			// nn.resize(dnodes[i].size());
+			// for(unsigned j=0; j<dnodes[i].size(); j++){
+				// v[j] = V[dnodes[i][j]] ;
+				// nn[j] = n[dnodes[i][j]] ;
+				// for(unsigned k=0; k<dnodes[i].size(); k++){
+					// Mm[j][k] = M[ dnodes[i][j] ][ dnodes[i][k] ];
+				// }
+			// }
+			// rho.resize(v.size());
+			// drhodV.resize(v.size());
+			// org_gaussian_charge_n (v, P.mat(), P.cnst(), P.quad(), rho, drhodV);
+			// for(unsigned j=0; j<rho.size(); j++){
+				// nn[j] = nn[j] + rho[j]/q;
+			// }
+			// for(unsigned j=0; j<ddofsn.size(); j++){
+				// s=0;
+				// for(unsigned k=0; k<ddofsn.size(); k++){
+					// p = Mm[j][k]*nn[k];
+					// s += p;
+				// }
+				// res[ddofsn[j]] += s;
+			// }
+		// }
+		// ddofsn.clear();
+		// v.clear();
+		// nn.clear();
+		// rho.clear();
+		// drhodV.size();
+	// }
+	
+	
+	// /// ADJUST FOR ZERO INSULATOR CHARGE
+	// std::vector<int>	insn(scnodes.size(),0);
+	// for(unsigned i=0; i<scnodes.size(); i++){
+		// if(scnodes[i] == 0){
+			// insn[i] = 1;
+		// }
+	// }
+	// for(unsigned j=0; j<insn.size(); j++){
+		// if(insn[j]==1){
+			// s=0;
+			// for(unsigned k=0; k<insn.size(); k++){
+				// if(insn[k] == 1){
+					// s += M[ j ][ k ]*n[k];
+				// }
+			// }
+			// res[indexingn[j]] =  s;
+		// }
+	// }
+
+	
+	// ///	ASSEMBLING THIRD ROW
+	// sparse_matrix	A;
+	
+	// std::vector<double>	diff(F.size(),0),
+						// aux(F.size(),0),
+						// C;
+	// std::vector<std::vector<double>>	r;
+						
+	// A.resize(4);
+	// bcs.get_A(A);
+	// C = bcs.get_C();
+	// bcs.get_r(r); 
+	
+	// for(unsigned i=0; i<F.size(); i++){
+		// diff[i] = (F[i]-F0[i])/deltat;
+	// }
+	// aux = A*diff;
+	// diff.clear();
+
+	// for(unsigned i=0; i<r[0].size(); i++){
+		// diff.resize(r[0].size());
+		// s = 0;
+		// for(unsigned j=0; j<I.size(); j++){
+			// s += r[j][i]*I[j];
+		// }
+		// diff[i] = s;
+	// }
+
+	// for(unsigned i=0; i<aux.size(); i++){
+		// aux[i] += diff[i];
+		// aux[i] += C[i];
+	// }
+	
+	// for(unsigned i=0; i<indexingF.size(); i++){
+		// res[indexingF[i]] = aux[i];
+	// }
+	// aux.clear();
+	// diff.clear();
+	// C.clear();
+
+	// ///	COMPUTING FOURTH ROW
+	// std::vector<int>	rr;
+	
+	// sum1.clear();
+	// sum1.resize(A11.rows());
+	
+	// sum2.clear();
+	// sum2.resize(A12.rows());
+	
+	// for(unsigned i=0; i<indexingI.size(); i++){
+		// res[indexingI[i]] = I[i];
+	// }
+	
+	// for(unsigned i=0; i<numcontacts; i++){
+		// rr.resize(dnodes[pins[i]].size());
+		// rr = dnodes[pins[i]];
+
+		// // Displacement current. 
+		// diff.clear();
+		// diff.resize(V.size());
+		// for(unsigned j=0; j<V.size(); j++){
+			// diff[j] = (V[j]-V0[j])/deltat;
+		// }
+		// for(unsigned j=0; j<rr.size(); j++){
+			// for(unsigned k=0; k<A11[rr[j]].size(); k++){
+				// sum1[k] += A11[rr[j]][k];
+			// }
+		// }
+		// s=0;
+		// for(unsigned j=0; j<V.size(); j++){
+			// s += section*sum1[j]*diff[j];
+		// }
+		// res[indexingI[i]] -= s;
+
+		// diff.clear();
+		// diff.resize(n.size());
+		// for(unsigned j=0; j<n.size(); j++){
+			// diff[j] = (n[j]-n0[j])/deltat;
+		// }
+		// for(unsigned j=0; j<rr.size(); j++){			
+			// for(unsigned k=0; k<A12[rr[j]].size(); k++){
+				// sum2[k] += A12[rr[j]][k];
+			// }
+		// }
+		// s=0;
+		// for(unsigned j=0; j<n.size(); j++){
+			// s += section*sum2[j]*diff[j];
+		// }
+		// res[indexingI[i]] -= s;
+
+		// // Electron current.
+		// s=0;
+		// for(unsigned j=0; j<rr.size(); j++){
+			// s += section * q * r22[rr[j]];
+		// }
+		// res[indexingI[i]] += s;
+	// }	
+	// rr.clear();
+	// sum1.clear();
+	// sum2.clear();
+	// diff.clear();
+	// r22.clear();
+	
+	// for(unsigned i=0; i<indexingV.size(); i++){
+		// res[indexingV[i]] /= rowscaling[0];
+	// }
+	// for(unsigned i=0; i<indexingn.size(); i++){
+		// res[indexingn[i]] /= rowscaling[1];
+	// }
+	// for(unsigned i=0; i<indexingF.size(); i++){
+		// res[indexingF[i]] /= rowscaling[2];
+	// }
+	// for(unsigned i=0; i<indexingI.size(); i++){
+		// res[indexingI[i]] /= rowscaling[3];
+	// }
+	
+	// return res;	
+ };
+
+void
+Newton::org_physical_models2d (	std::vector<double>& n, Probl& P,
+								// output
+								std::vector<double>& mobilityn, std::vector<double>& alphan, std::vector<double>& der_dalpha_n)
+ {
+	std::vector<double>	nm,
+						out;
+	int vpe = 4;	//3;
+	int nelements = P.get_msh_elem();
+	double	s = 0, j = 0, i;
+
+	nm.resize(nelements);
+    for (auto quadrant = P._msh.begin_quadrant_sweep (); quadrant != P._msh.end_quadrant_sweep (); ++quadrant){
+		s = 0;
+		for (int ii = 0; ii < 4; ++ii){
+			i= n[	quadrant->gt(ii) ];
+			s += 1/i;
+        }
+		nm[j] = (vpe/s);
+		j++;
+    }	
+
+	// Mobility model.
+	mobilityn = org_secs_mobility_EGDM (P._mu0n, nm, P._N0, P._sigman_kT, P);
+	
+	// Generalized Einstein relation.
+	out.resize(n.size());
+	org_einstein_n(n, P, alphan, out);	// output: alphan, Piece-wise linear.
+	out.clear();	
+	
+	// Generalized Einstein relation.
+    org_einstein_n (nm, P, out, der_dalpha_n); // output: der_dalpha_n, Element-wise constant.
+	out.clear();
+
+};
+
+std::vector<double> 
+Newton::org_secs_mobility_EGDM (double mu0, std::vector<double>& c, double C0, double sigma, Probl& P)
+{
+	for(unsigned i=0; i<c.size(); i++){
+		c[i] = std::min(c[i], 0.1 * C0);
+	}
+	int j = 0;
+	std::vector<double> data_n = P._data_n,
+						udata_n, udata_phi_lumo, out, mu;
+	std::vector<int>	ind;
+
+	std::vector<double>	phi_lumo(c.size(),0),
+						g1;
+
+	double	q, Vth, Kb, T0, Efield;
+	q = P._q;
+	Vth = P._Vth;
+	Kb = P._Kb;
+	T0 = P._T0;
+	Efield = P._Efield;
+
+	for(unsigned i=0; i<data_n.size(); i++){
+		data_n[i] *= (-1)/q;
+	}
+	if (udata_n.size()==0 || ind.size()==0 || udata_phi_lumo.size()==0){
+
+		udata_n = data_n;
+		std::vector<double>::iterator it;
+		it = std::unique (udata_n.begin(), udata_n.end());			///lento
+		udata_n.resize( std::distance(udata_n.begin(),it) );		///lento
+		std::sort(udata_n.begin(), udata_n.end());					///lento
+		j = 0;
+		ind.resize(udata_n.size());
+		for(unsigned i=udata_n.size()-1; i>0; i--){
+			if(i==1){
+				if(udata_n[i]!=udata_n[i-1]){
+					ind[j] = i;
+					ind[j+1] = 0;
+					j += 2;
+				}
+				else{
+					ind[j] = 0;
+					j++;
+				}
+			}
+			else{
+				if(udata_n[i]!=udata_n[i-1]){
+					ind[j] = i;
+					j++;
+				}
+			}
+		}
+		ind.resize(j);
+		std::sort(ind.begin(), ind.end());
+		
+		udata_phi_lumo.resize(ind.size());
+		for(unsigned i=0; i<ind.size(); i++){
+			udata_phi_lumo[i] = P.get_data_phi_lumo()[ ind[i] ] ;
+		}
+	}
+	for(unsigned i=0; i<c.size(); i++){
+		phi_lumo[i] = interp1( udata_n, udata_phi_lumo, c[i], true );
+	}
+	
+	int phi_lumo_ref = -2;
+	double n_ref;
+
+	n_ref = org_gaussian_charge_n( phi_lumo_ref, P.mat(), P.cnst(), P.quad());
+	n_ref = -n_ref/q;
+  
+	double g1_ref = exp (phi_lumo_ref / Vth + 0.5 * pow((sigma * Kb * T0),2)) / (n_ref / C0);
+
+	// Density enhancement factor.
+	g1.resize(phi_lumo.size());
+	for(unsigned i=0; i<phi_lumo.size(); i++){
+		if(phi_lumo.size() != c.size()){
+			std::cout<<"error: org_secs_mobility_EGDM, dimensions mismatch"<<std::endl;
+			break;
+		}
+		if(c[i] == 0){
+			g1[i] = 0;
+		}
+		else{
+			g1[i] = ( exp (phi_lumo[i] / Vth + 0.5 * pow((sigma * Kb * T0),2)) / (c[i] / C0) ) / g1_ref;
+		}
+	}
+
+	// Field enhancement factor.
+	double	g2;
+	mu.resize(g1.size());
+			
+	g2 = exp((0.44*(pow(sigma,1.5)-2.2))*(sqrt(1+0.8*pow(std::fmin(q*1/std::cbrt(C0)*Efield/(sigma*Kb*T0),2),2))-1));
+
+	mu = g1;
+	for(unsigned i=0; i<g1.size(); i++){
+		mu[i] *= mu0*g2;
+	}
+	g1.clear();
+	
+	return mu;
+};
+
+void
+Newton::org_gaussian_charge_n(	std::vector<double>& V, Probl& P,
+								// output
+								std::vector<double>& rhon, std::vector<double>& drhon_dV)
+{
+	double	q = P._q;
+    std::vector<double> n = n_approx(V,P);
+	
+	rhon = n;
+    for(unsigned i=0; i<n.size(); i++){
+		rhon[i] *= -q;
+    }
+
+    std::vector<double> dn_dV = dn_dV_approx(V,P);
+	
+	drhon_dV = dn_dV;
+    for(unsigned i=0; i<dn_dV.size(); i++){
+		drhon_dV[i] *= -q;
+    }
+};
+
+double
+Newton::org_gaussian_charge_n( double V, Probl& P)
+{
+	double	q = P._q,
+			n, rhon;
+    n = n_approx(V,P);
+    rhon = -q*n;
+	return rhon;
+};
+
+std::vector<double> 
+Newton::n_approx(std::vector<double>& V, Probl& P)
+{
+    std::vector<double> coeff(V.size(),0),
+						n(V.size(),0);
+    double	q = P._q,
+			kT = P._Kb*P._T0,
+			sigman = P._sigman,
+			N0 = P._N0,
+			denom;
+
+	std::vector<double>	gx = P._gx;
+	std::vector<double>	gw = P._gw;
+	
+    for(unsigned i=0; i<gx.size(); i++){
+        for(unsigned j=0; j<V.size(); j++){		
+            coeff[j] = (sqrt(2) * sigman * gx[i] - q * V[j]) / kT ;
+            denom = 1+exp(coeff[j]);
+            n[j] += N0 / sqrt(M_PI) * gw[i] / denom;
+        }
+    }
+	gx.clear();
+	gw.clear();
+	coeff.clear();	
+	
+	return n;
+};
+
+double
+Newton::n_approx( double V, Probl& P)
+{
+    double	coeff, n = 0, denom,
+			q = P._q,
+			kT = P._Kb*P._T0,
+			sigman = P._sigman,
+			N0 = P._N0;
+
+	std::vector<double>	gx = P._gx,
+						gw = P._gw;	
+
+    for(unsigned i=0; i<gx.size(); i++){
+            coeff = (sqrt(2) * sigman * gx[i] - q * V) / kT ;
+            denom = 1+exp(coeff);
+            n += N0 / sqrt(M_PI) * gw[i] / denom;
+    }
+	gx.clear();
+	gw.clear();
+	return n;
+};
+
+std::vector<double>
+Newton::dn_dV_approx(std::vector<double>& V, Probl& P)
+{
+    std::vector<double> coeff(V.size(),0),
+						dn_dV(V.size(),0);
+    double	kT = P._Kb*P._T0,
+					sigman = P._sigman,
+					N0 = P._N0,
+					q = P._q;
+	double	denom;
+	std::vector<double>	gx = P._gx;
+	std::vector<double>	gw = P._gw;
+
+    for(unsigned i=0; i<gx.size(); i++){
+        for(unsigned j=0; j<V.size(); j++){
+            coeff[j] = (sqrt(2) * sigman * gx[i] - q * V[j]) / kT ;
+            denom = 1+exp(coeff[j]);
+            dn_dV[j] += - q * N0 / sigman * sqrt(2/M_PI) * gw[i]*gx[i] / denom;
+		}
+    }
+	gx.clear();
+	gw.clear();
+	coeff.clear();
+	return dn_dV;
+};
+
+void
+Newton::org_einstein_n (std::vector<double>& n, Probl& P,
+						// output
+						std::vector<double>& alphan, std::vector<double>& dalphan_dn)
+{
+	std::vector<double> phi,
+						data_n,
+						udata_n,
+						ind,
+						udata_alphan,
+						out,
+						udata_dalphan_dn,
+						data_alphan,
+						data_dalphan_dn;
+
+	std::vector<int> cutoff;
+	double	q = P._q,
+			N0 = P._N0;
+	
+	int j = 0;
+	double	a, b, N, step;
+	a = -10;
+	b = 10;
+	N = 1001;
+	step = (b-a)/(N-1);
+	phi.resize(N);
+	j = 0;
+	for(auto i=a; i<=b; i+=step){
+		phi[j] = i;
+		j++;
+	}
+	// phi = 0 corresponds to n = N0 / 2.
+
+	data_n.resize(phi.size());
+	out.resize(phi.size());
+	org_gaussian_charge_n( phi,P,data_n, out);
+	out.clear();
+	for(unsigned i=0; i<data_n.size(); i++){
+		data_n[i] *= (-1)/ q;
+	}
+	
+	data_alphan = alphan_fun(phi,P);
+	
+	data_dalphan_dn = dalphan_dn_fun (phi,data_alphan,P);	
+
+	// Extract unique data to improve robustness.
+  if (udata_n.size() == 0 || ind.size() == 0 || udata_alphan.size() == 0 || udata_dalphan_dn.size() == 0){
+
+	udata_n = data_n;
+	std::vector<double>::iterator it;
+	it = std::unique (udata_n.begin(), udata_n.end());
+	udata_n.resize( std::distance(udata_n.begin(),it) );
+	std::sort(udata_n.begin(), udata_n.end());
+
+	ind.resize(udata_n.size());
+	j = 0;
+	for(unsigned i=udata_n.size()-1; i>0; --i){
+		if(i==1){
+			if(udata_n[i]!=udata_n[i-1]){
+				ind[j] = i;
+				ind[j+1] = 0;
+				j += 2;
+			}
+			else{
+				ind[j] = 0;
+				j++;
+			}
+		}
+		else{
+			if(udata_n[i]!=udata_n[i-1]){
+				ind[j] = i;
+				j++;
+			}
+		}
+	}
+	ind.resize(j);
+	std::sort(ind.begin(), ind.end());
+
+	udata_alphan.resize(ind.size());
+	udata_dalphan_dn.resize(ind.size());
+    for (unsigned i=0; i<ind.size(); i++){
+        udata_alphan[i] = data_alphan[ ind[i] ];
+        udata_dalphan_dn[i] = data_dalphan_dn[ ind[i] ];
+    }
+
+    // Fix for asymptotic values.
+	j = 0;
+	cutoff.resize(udata_alphan.size());
+    for (unsigned i=0; i<udata_alphan.size(); i++){
+        if(udata_alphan[i] <= 1){
+            cutoff[j] = i;
+			j++;
+        }
+    }
+	cutoff.resize(j);
+    for(unsigned i=0; i<cutoff.size(); i++){
+        udata_alphan[cutoff[i]] = udata_alphan[cutoff.back()];
+        udata_dalphan_dn[cutoff[i]] = 0;
+    }
+
+    cutoff.clear();
+	cutoff.resize(udata_n.size());
+	j = 0;
+    for (unsigned i=0; i<udata_n.size(); i++){
+        if(udata_n[i] <= 1e5){
+            cutoff[j] = i;
+			j++;
+        }
+    }
+	cutoff.resize(j);
+    for(unsigned i=0; i<cutoff.size(); i++){
+        udata_alphan[cutoff[i]] = udata_alphan[cutoff.back()];
+        udata_dalphan_dn[cutoff[i]] = 0;
+    }
+
+    cutoff.clear();
+	cutoff.resize(udata_n.size());
+	j = 0;
+    for (unsigned i=0; i<udata_n.size(); i++){
+        if(udata_n[i] >= 0.99 * N0){
+            cutoff[j] = i;
+			j++;
+        }
+    }
+	cutoff.resize(j);
+
+    for(unsigned i=0; i<cutoff.size(); i++){
+        udata_alphan[cutoff[i]] = udata_alphan[cutoff[0]];
+        udata_dalphan_dn[cutoff[i]] = 0;
+    }
+	cutoff.clear();
+  }
+
+	// Compute alphan by interpolation.
+	for(unsigned i=0; i<n.size(); i++){
+		alphan[i] = interp1( udata_n, udata_alphan, n[i], true );
+		dalphan_dn[i] = interp1( udata_n, udata_dalphan_dn, n[i], true );
+	}
+};
+
+std::vector<double>
+Newton::alphan_fun (std::vector<double>& phi, Probl& P)
+{
+	std::vector<double> n(phi.size(),0),
+						dn_dphi,
+						alphan(phi.size(),0),
+						out(phi.size(),0);
+	double	q = P._q,
+			Vth = P._Vth;
+  
+	org_gaussian_charge_n(phi,P,n,out);
+	for(unsigned i=0; i<n.size(); i++){
+		n[i] *= (-1)/q;
+	}
+
+	dn_dphi = dn_dphi_approx (phi,P);
+	
+	for(unsigned i=0; i<n.size(); i++){
+		alphan[i] = (1 / Vth) * n[i]/dn_dphi[i];
+	}
+	n.clear();
+	dn_dphi.clear();
+	out.clear();
+
+	return alphan;
+};
+
+std::vector<double>
+Newton::dn_dphi_approx (std::vector<double>& phi, Probl& P)
+{						
+	const double  	N0 		= P._N0,
+					sigman	= P._sigman,
+					kT		= P._Kb * P._T0,
+					q		= P._q,
+					Vth		= P._Vth;
+
+	std::vector<double>	coeff(phi.size(),0),
+						dn_dphi(phi.size(),0),
+						gx = P._gx,
+						gw = P._gw;
+
+	for (unsigned i=0; i<gx.size(); i++){
+		for(unsigned j=0; j<phi.size(); j++){
+			coeff[j] = (sqrt(2) * sigman * gx[i] - q * phi[j]) / kT;
+
+			dn_dphi[j] += N0 / (Vth * sqrt(M_PI)) * gw[i] * exp(coeff[j]) / pow((1 + exp( coeff[j] )),2);
+		}
+	}
+	coeff.clear();
+	gx.clear();
+	gw.clear();
+	return dn_dphi;
+};
+
+std::vector<double>
+Newton::d2n_dphi2_approx (std::vector<double>& phi, Probl& P)
+{
+	const double	N0		= P._N0,
+					sigman	= P._sigman,
+					kT		= P._Kb * P._T0,
+					q		= P._q,
+					Vth		= P._Vth;
+  
+	std::vector<double>	coeff(phi.size(),0.0),
+						d2n_dphi2(phi.size(),0.0),
+						gx = P._gx,
+						gw = P._gw;
+	
+	for(unsigned i=0; i<gx.size(); i++){
+		for(unsigned j=0; j<phi.size(); j++){
+			coeff[j] = (sqrt(2)*sigman*gx[i] - q*phi[j])/(kT);
+			
+			d2n_dphi2[j] += N0 / (pow(Vth,2)*sqrt(M_PI))*gw[i]*exp(coeff[j])/pow((1 + exp(coeff[j])),2) * //
+							(2*exp(coeff[j])/(1+exp(coeff[j])) - 1);
+		}
+	}
+	coeff.clear();
+	gx.clear();
+	gw.clear();
+	return d2n_dphi2;
+};
+
+std::vector<double>
+Newton::dalphan_dn_fun (std::vector<double>& phi, std::vector<double>& alphan, Probl& P)
+{
+	double	Vth = P._Vth;
+	std::vector<double>	dn_dphi, d2n_dphi2,
+						dalphan_dn(phi.size(),0);
+
+	dn_dphi = dn_dphi_approx (phi,P);
+
+	d2n_dphi2 = d2n_dphi2_approx (phi,P);
+		
+	for(unsigned i=0; i<phi.size(); i++){
+		dalphan_dn[i] = (1 / Vth) * (1 / dn_dphi[i]) - alphan[i] * d2n_dphi2[i] / pow(dn_dphi[i],2);
+	}
+	return dalphan_dn;
+};
+
 void 
 Newton::diff (sparse_matrix& in, double a, double b, std::vector<double>& out)
 {	
@@ -226,6 +1167,88 @@ Newton::compute_residual_norm (	double& resnrm, int& whichone, std::vector<doubl
 				break;
 			}
 		}
+};
+
+void 
+Newton::compute_variation (	std::vector<double>& Va, std::vector<double>& na, std::vector<double>& Fa, std::vector<double>& Ia, 
+							std::vector<double>& Vb, std::vector<double>& nb, std::vector<double>& Fb, std::vector<double>& Ib, 
+							Probl& P, double clamping,
+							// output
+							double& incrV, double& incrn, double& incrF, double& incrI)						
+{
+  std::vector<int>  cl = P._clamping,
+                    sc = P._scnodes;
+  std::vector<double>   diff(Vb.size(),0),
+                        q1,q2;
+  double    ni = P._ni,
+			Vth = P._Vth;
+
+  int j=0;
+
+  if(Vb.size() != Va.size()){
+    std::cout<<"error: compute_variation, different sizes"<<std::endl;
+  }
+  else{
+    for(unsigned i=0; i<Vb.size(); i++){
+        diff[i] = Vb[i]-Va[i];
+    }
+  }
+  
+	incrV = norm(diff,0) / (norm(Va,0) * clamping + cl[0]);
+
+  // incrn = constants.Vth * norm (log (nb(sc) ./ na(sc)), inf) / ...
+  //         (norm (Va(sc) - constants.Vth * log (na(sc) ./ ni), inf) * clamping + c[1]);
+  diff.clear();
+  q1.resize(sc.size());
+  q2.resize(sc.size());
+  j=0;
+  for(unsigned i=0; i<sc.size(); i++){
+    if(sc[i] == 1){
+        q1[j] = log(nb[i]/na[i]);
+        q2[j] = log(na[i]/ni);
+		j++;
+    }
+  }
+  q1.resize(j);
+  q2.resize(j);
+  
+  j=0;
+  diff.resize(sc.size());
+  for(unsigned i=0; i<sc.size(); i++){
+    if(sc[i] == 1){
+        diff[j] = Va[i] - (Vth * q2[i]);
+		j++;
+    }
+  }
+  diff.resize(j);
+  
+	incrn = Vth * norm(q1,0) / (norm(diff,0) * clamping + cl[1]);	
+
+	diff.clear();
+	if(Fb.size() != Fa.size()){
+		std::cout<<"error: compute_variation, different sizes"<<std::endl;
+	}
+	else{
+		diff.resize(Fb.size());
+		for(unsigned i=0; i<Fb.size(); i++){
+			diff[i] = Fb[i]-Fa[i];
+		}
+	}
+	incrF = norm(diff, 0) / (norm(Fa, 0) * clamping + cl[2]);
+	
+	diff.clear();
+	if(Ib.size() != Ia.size()){
+		std::cout<<"error: compute_variation, different size"<<std::endl;
+	}
+	else{
+		diff.resize(Ib.size());
+		for(unsigned i=0; i<Ib.size(); i++){
+			diff[i] = Ib[i]-Ia[i];
+		}
+	}
+	incrI = norm(diff, 0) / (norm(Ia, 0) * clamping + cl[3]);
+	
+	diff.clear();
 };
 
 void 
