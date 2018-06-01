@@ -189,6 +189,44 @@ Newton::org_secs_state_predict (	Probl& P, sparse_matrix& V, sparse_matrix& n, s
   }
 };
 
+void 
+Newton::compute_residual_norm (	double& resnrm, int& whichone, std::vector<double>& resall, std::vector<double>& res,
+								std::vector<int>& idxV, std::vector<int>& idxn, std::vector<int>& idxF, std::vector<int>& idxI)
+{
+	std::vector<double>	aux(idxV.size(),0);
+	
+	for(unsigned i=0; i<idxV.size(); i++){
+		aux[i] = std::abs( res[ idxV[i] ] );
+	}
+	resall[0] = *std::max_element( aux.begin(),aux.end() );
+  	
+	aux.resize(idxn.size());
+	for(unsigned i=0; i<idxn.size(); i++){
+		aux[i] = std::abs( res[idxn[i]] );
+	} 
+	resall[1] = *std::max_element( aux.begin(),aux.end() );  
+  
+	aux.resize(idxF.size());
+	for(unsigned i=0; i<idxF.size(); i++){
+		aux[i] = std::abs( res[idxF[i]] );
+	}
+	resall[2] = *std::max_element( aux.begin(),aux.end() );
+
+	aux.resize(idxI.size());
+	for(unsigned i=0; i<idxI.size(); i++){
+		aux[i] = std::abs( res[idxI[i]] );
+	}
+	resall[3] = *std::max_element( aux.begin(),aux.end() );
+  
+	aux.clear();
+	resnrm = *std::max_element(resall.begin(), resall.end());
+		for(unsigned i=0; i<resall.size(); i++){
+			if(resall[i] == resnrm){
+				whichone = i;
+				break;
+			}
+		}
+};
 
 void
 Newton::CONV_MSG (int tstep, int Nstep, int mNstep, double t, std::string reason, int field, double incr, std::vector<double>& res)

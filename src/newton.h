@@ -48,9 +48,9 @@ class Newton{
 								// double deltat, BCS_CIRC& bcs, std::vector<int>& indexingV, std::vector<int>& indexingn,		
 								// std::vector<int>& indexingF, std::vector<int>& indexingI, sparse_matrix& jacobian);
 						
-	// void
-	// compute_residual_norm (	double& resnrm, int& whichone, std::vector<double>& resall, std::vector<double>& res, Algor* alg,	
-                            // std::vector<int>& idxV, std::vector<int>& idxn, std::vector<int>& idxF, std::vector<int>& idxI);
+	void 
+	compute_residual_norm (	double& resnrm, int& whichone, std::vector<double>& resall, std::vector<double>& res,
+							std::vector<int>& idxV, std::vector<int>& idxn, std::vector<int>& idxF, std::vector<int>& idxI);
 	
 	// void
 	// compute_variation (std::vector<double>& Va, std::vector<double>& na, std::vector<double>& Fa, std::vector<double>& Ia, 
