@@ -173,12 +173,13 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 
 				bcs.assign(t, P._Csb, P._Vshift, F2);
 				
-				// _res = org_secs2d_newton_residual(	P, V2, n2, F2, I2, _V[tstep-1], _n[tstep-1], _F[tstep-1], _I[tstep-1],
-														// dt, bcs, indexingV, indexingn, indexingF, indexingI);
-				// /// ora sembra essere ok
-				// //for(unsigned i=0; i<_res.size(); i++){
-				// //	std::cout<<"res = "<<_res[i]<<std::endl;
-				// //}
+				_res = org_secs2d_newton_residual(	P, V2, n2, F2, I2, //_V[tstep-1], _n[tstep-1], _F[tstep-1], _I[tstep-1], 
+													/// questi vanno cambiati
+													dt, bcs, indexingV, indexingn, indexingF, indexingI);
+
+				//for(unsigned i=0; i<_res.size(); i++){
+				//	std::cout<<"res = "<<_res[i]<<std::endl;
+				//}
 				
 				if (in == 1){
 				
@@ -199,8 +200,8 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 						break;
 					}
 					
-					// _res = org_secs2d_newton_residual(	P, V2, n2, F2, I2, _V[tstep-1], _n[tstep-1], _F[tstep-1], _I[tstep-1],
-															// dt, bcs, indexingV, indexingn, indexingF, indexingI);
+					_res = org_secs2d_newton_residual(	P, V2, n2, F2, I2, //_V[tstep-1], _n[tstep-1], _F[tstep-1], _I[tstep-1],
+														dt, bcs, indexingV, indexingn, indexingF, indexingI);
 				}
 
 				resall.resize(4);
@@ -357,8 +358,8 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 		
 					bcs.assign(t, P._Csb, P._Vshift, F2);
 	  
-					// _res = org_secs2d_newton_residual(	P, V2, n2, F2, I2, _V[tstep-1], _n[tstep-1], _F[tstep-1], _I[tstep-1],	//
-														// dt, bcs, indexingV, indexingn, indexingF, indexingI);
+					_res = org_secs2d_newton_residual(	P, V2, n2, F2, I2, //_V[tstep-1], _n[tstep-1], _F[tstep-1], _I[tstep-1],	//
+														dt, bcs, indexingV, indexingn, indexingF, indexingI);
 														
 					resall.resize(4);
 					compute_residual_norm (resnrmk[imn-1], whichone, resall, _res, indexingV, indexingn, indexingF, indexingI);

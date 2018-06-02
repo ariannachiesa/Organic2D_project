@@ -19,7 +19,7 @@ BCS_CIRC::BCS_CIRC(	double freq, int voltage, double Csb, double Vshift, std::ve
 
 	_C.resize(4);
 	
-	_r.resize(3);
+	_r.resize(4);
 	
 	_r[0][0] = 1;
 	_r[1][0] = Rg;
