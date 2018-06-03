@@ -42,11 +42,10 @@ class Newton{
 								std::vector<int>& indexingI);
 	
 	///Assemble jacobian matrix
-	// void
-	// org_secs2d_newton_jacobian(	Probl& P,
-								// std::vector<double>& V, std::vector<double>& n, std::vector<double>& F,			
-								// double deltat, BCS_CIRC& bcs, std::vector<int>& indexingV, std::vector<int>& indexingn,		
-								// std::vector<int>& indexingF, std::vector<int>& indexingI, sparse_matrix& jacobian);
+	void
+	org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vector<double>& n, std::vector<double>& F,			
+								double deltat, BCS_CIRC& bcs, std::vector<int>& indexingV, std::vector<int>& indexingn,		
+								std::vector<int>& indexingF, std::vector<int>& indexingI, sparse_matrix& jacobian);
 						
 	void 
 	compute_residual_norm (	double& resnrm, int& whichone, std::vector<double>& resall, std::vector<double>& res,

@@ -81,11 +81,9 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	
 	///	Physical models.
 	std::vector<double>	mobn(nelements,0.0),
-						alphan(n.size(),0.0),
-						out(nelements,0.0);
+						alphan(n.size(),0.0);
 
-	org_physical_models2d(n, P, mobn, alphan, out);
-	out.clear();				/// fare l'overload del method!!!
+	org_physical_models2d(n, P, mobn, alphan);			/// overload: controllare che funzioni
 
 	
 	///	ASSEMBLING FIRST ROW
@@ -108,36 +106,36 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 		}
 	}
 
-	///	ENFORCING BCs ON FIRST ROW
+	// ///	ENFORCING BCs ON FIRST ROW
 	
-	std::vector<double>	BCbulk(V.size(),0.0),
-						BCgate(V.size(),0.0);
+	// std::vector<double>	BCbulk(V.size(),0.0),
+						// BCgate(V.size(),0.0);
 						
-	for(unsigned i=0; i<V.size(); i++){
-		BCbulk[i] = (V[i] - F[pins[0]]) - PhiB;
-	}
-	BCbulk = M*BCbulk;
+	// for(unsigned i=0; i<V.size(); i++){
+		// BCbulk[i] = (V[i] - F[pins[0]]) - PhiB;
+	// }
+	// BCbulk = M*BCbulk;
 	
-	for(unsigned i=0; i<V.size(); i++){
-		BCgate[i] = (V[i] - F[pins[1]]) - (PhiB + Vshift);
-	}
-	BCgate = M*BCgate;
+	// for(unsigned i=0; i<V.size(); i++){
+		// BCgate[i] = (V[i] - F[pins[1]]) - (PhiB + Vshift);
+	// }
+	// BCgate = M*BCgate;
 
-	int indexT = _nTrees-1;	
-	std::tuple<int, int, func_quad>	tupla1(0,2,[&resV,&BCbulk](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																{return (resV[quad->gt(i)]+BCbulk[quad->gt(i)]);}),
-									tupla2(indexT,3,[&resV,&BCgate](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																{return (resV[quad->gt(i)]+BCgate[quad->gt(i)];});
-	dirichlet_bcs_quad	bcsV;
-	bcsV.push_back(tupla1);
-	bcsV.push_back(tupla2);
+	// int indexT = _nTrees-1;	
+	// std::tuple<int, int, func_quad>	tupla1(0,2,[&resV,&BCbulk](tmesh::quadrant_iterator quad, tmesh::idx_t i)
+																// {return (resV[quad->gt(i)]+BCbulk[quad->gt(i)]);}),
+									// tupla2(indexT,3,[&resV,&BCgate](tmesh::quadrant_iterator quad, tmesh::idx_t i)
+																// {return (resV[quad->gt(i)]+BCgate[quad->gt(i)];});
+	// dirichlet_bcs_quad	bcsV;
+	// bcsV.push_back(tupla1);
+	// bcsV.push_back(tupla2);
 	
-	bim2a_dirichlet_bc (P._msh,bcsV,M,resV);	/// che matrice metto qui ??
+	// bim2a_dirichlet_bc (P._msh,bcsV,M,resV);	/// che matrice metto qui ??
 	
-	for(unsigned i=0; i<indexingV.size(); i++){
-		res[indexingV[i]] = resV[i];
-	}
-	resV.clear();
+	// for(unsigned i=0; i<indexingV.size(); i++){
+		// res[indexingV[i]] = resV[i];
+	// }
+	// resV.clear();
 	
 	///	COMPUTING SECOND ROW
 	sparse_matrix	A22,
@@ -385,19 +383,18 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 	bool	ins = P._ins;
 			
 	std::vector<int>::iterator it;
+	
 	std::vector< std::vector<int> >	dnodes = P._dnodes;
-	//std::vector< std::vector<double> >	r;
+	
 	std::vector<double>	epsilon(nelements,eps_semic),
 						rowscaling = P._rowscaling,
 						colscaling = P._colscaling;
+						
 	std::array<int,2>	pins = P._pins;
-	std::vector<int>	//ppins(pins.size(),0),
-						scnodes = P._scnodes,
-						//alldnodes = P._alldnodes,
+	
+	std::vector<int>	scnodes = P._scnodes,
 						insulator = P._insulator;
-						//intnodes(2*nnodes,0),
-						//intdofsV,
-						//intdofsn;
+						
 	sparse_matrix 	A, B, r;
 	
 	for(unsigned i=0; i<scnodes.size(); i++){
@@ -405,36 +402,8 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 			numscnodes++;
 	}
 	
-	// for(unsigned i=0; i<pins.size(); i++){
-		// ppins[i] = pins[i];
-	// }
-	// it = std::unique (ppins.begin(), ppins.end());	
-	// ppins.resize( std::distance(ppins.begin(),it) );
-	// assert (ppins.size() == 2);
-	// ppins.clear();
-	
 	numcontacts = pins.size();
-	ndofs = 2 * nnodes + F.size() + numcontacts;
-	
-	// j=0;
-	// for(int i=0; i<nnodes; i++){
-		// it = std::find (alldnodes.begin(), alldnodes.end(), i);
-		// if (it == alldnodes.end()){
-			// intnodes[j] = i;			 // Assembling vector of internal nodes.
-			// j++;
-		// }
-	// }
-	// intnodes.resize(j);
-	// std::sort(intnodes.begin(),intnodes.end());
-	
-	// intdofsV.resize(intnodes.size());
-	// intdofsn.resize(intnodes.size());
-	
-	// for(unsigned i=0; i<intnodes.size(); i++){
-		// intdofsV[i] = indexingV[intnodes[i]];
-		// intdofsn[i] = indexingn[intnodes[i]];
-	// }
-	
+	ndofs = 2 * nnodes + F.size() + numcontacts;	
 
 	///	COMPUTING COEFFICIENTS	
 	if(ins){
@@ -482,50 +451,64 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 
 	org_physical_models2d(n, P, mobn, alphan, der_dalpha_n);
   
-	jacobian.resize(ndofs);
+	jacobian.resize(ndofs);	
+
+	///	ENFORCING BCs ON FIRST ROW
+	
+	std::vector<double>	resV(V.size(),0.0);
+	
+	for(unsigned i=0; i<indexingV.size(); i++){
+		resV[i] = res[indexingV[i]];
+	}
+	
+	std::vector<double>	BCbulk(V.size(),0.0),
+						BCgate(V.size(),0.0);
+						
+	for(unsigned i=0; i<V.size(); i++){
+		BCbulk[i] = (V[i] - F[pins[0]]) - PhiB;
+	}
+	BCbulk = M*BCbulk;
+	
+	for(unsigned i=0; i<V.size(); i++){
+		BCgate[i] = (V[i] - F[pins[1]]) - (PhiB + Vshift);
+	}
+	BCgate = M*BCgate;
+
+	int indexT = _nTrees-1;	
+	std::tuple<int, int, func_quad>	tupla1(0,2,[&resV,&BCbulk](tmesh::quadrant_iterator quad, tmesh::idx_t i)
+																{return (resV[quad->gt(i)]+BCbulk[quad->gt(i)]);}),
+									tupla2(indexT,3,[&resV,&BCgate](tmesh::quadrant_iterator quad, tmesh::idx_t i)
+																{return (resV[quad->gt(i)]+BCgate[quad->gt(i)];});
+	dirichlet_bcs_quad	bcsV;
+	bcsV.push_back(tupla1);
+	bcsV.push_back(tupla2);
+	
+	bim2a_dirichlet_bc (P._msh, bcsV, A11, resV);	/// che matrice metto qui ??
+	
+	for(unsigned i=0; i<indexingV.size(); i++){
+		res[indexingV[i]] = resV[i];
+	}
+	resV.clear();
 
 	///	ASSEMBLING FIRST ROW
-	// sparse_matrix::col_iterator J2;
+	sparse_matrix::col_iterator J2;
 	
-	// for(unsigned i=0; i<intdofsV.size(); i++){
+	for(unsigned i=0; i<indexingV.size(); i++){
 		
-		// J = A11[intnodes[i]].begin ();
-		// J2 = A12[intnodes[i]].begin ();
+		J = A11[i].begin ();
+		J2 = A12[i].begin ();
 		
-		// for(unsigned j=0; j<indexingV.size(); j++){	
-			// if( A11.col_idx(J) == j ){
-				// jacobian[intdofsV[i]][indexingV[j]] += A11[intnodes[i]][j];	
-				// J++;
-			// }
-			// if( A12.col_idx(J2) == j ){
-				// jacobian[intdofsV[i]][indexingn[j]] += A12[intnodes[i]][j];
-				// J2++;
-			// }
-		// }
-	// }
-	
-
-	// ///	ENFORCING BCs ON FIRST ROW
-	// std::vector<int>	ddofsV;
-	// std::vector<double>	vec;
-	// int	pindof = 0;
-
-	// for(int i=0; i<numcontacts; i++){
-		// ddofsV.resize(dnodes[i].size());
-		// vec.resize(dnodes[i].size());
-		// for(unsigned j=0; j<dnodes[i].size(); j++){
-			// ddofsV[j] = indexingV[dnodes[i][j]] ;
-			// vec[j] = M[ dnodes[i][j] ][ dnodes[i][j] ] ;
-		// }	
-		
-		// pindof = indexingF[pins[i]];
-		// for(unsigned j=0; j<ddofsV.size(); j++){
-			// jacobian[ ddofsV[j] ][ ddofsV[j] ] += vec[j];
-			// jacobian[ ddofsV[j] ][pindof] -= vec[j];
-		// }
-		// ddofsV.clear();
-		// vec.clear();
-	// }
+		for(unsigned j=0; j<indexingV.size(); j++){	
+			if( A11.col_idx(J) == j ){
+				jacobian[indexingV[i]][indexingV[j]] += A11[i][j];
+				J++;
+			}
+			if( A12.col_idx(J2) == j ){
+				jacobian[indexingV[i]][indexingn[j]] += A12[i][j];
+				J2++;
+			}
+		}
+	}
 	
 
 	///	COMPUTING SECOND ROW
@@ -608,9 +591,7 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 						nimposed,
 						vec(n.size(),0.0);
 	
-	// out.resize(nelements);		forse non è necessario
-	org_gaussian_charge_n(V, P, rho, out);	/// fare overload del metodo!!!
-	out.clear();
+	org_gaussian_charge_n(V, P, rho);	/// overload: controllare
 	
 	nimposed = rho;
 	for(unsigned i=0; i<nimposed.size(); i++){
@@ -883,6 +864,37 @@ Newton::org_physical_models2d (	std::vector<double>& n, Probl& P,
 
 };
 
+void
+Newton::org_physical_models2d (	std::vector<double>& n, Probl& P,
+								// output
+								std::vector<double>& mobilityn, std::vector<double>& alphan)
+{
+	std::vector<double>	nm,
+						out;
+	int vpe = 4;	//3;
+	int nelements = P.get_msh_elem();
+	double	s = 0, j = 0, i;
+
+	nm.resize(nelements);
+    for (auto quadrant = P._msh.begin_quadrant_sweep (); quadrant != P._msh.end_quadrant_sweep (); ++quadrant){
+		s = 0;
+		for (int ii = 0; ii < 4; ++ii){
+			i= n[	quadrant->gt(ii) ];
+			s += 1/i;
+        }
+		nm[j] = (vpe/s);
+		j++;
+    }	
+
+	// Mobility model.
+	mobilityn = org_secs_mobility_EGDM (P._mu0n, nm, P._N0, P._sigman_kT, P);
+	
+	// Generalized Einstein relation.
+	out.resize(n.size());
+	org_einstein_n(n, P, alphan, out);	// output: alphan, Piece-wise linear.
+	out.clear();								
+};
+
 std::vector<double> 
 Newton::org_secs_mobility_EGDM (double mu0, std::vector<double>& c, double C0, double sigma, Probl& P)
 {
@@ -950,7 +962,7 @@ Newton::org_secs_mobility_EGDM (double mu0, std::vector<double>& c, double C0, d
 	int phi_lumo_ref = -2;
 	double n_ref;
 
-	n_ref = org_gaussian_charge_n( phi_lumo_ref, P.mat(), P.cnst(), P.quad());
+	n_ref = org_gaussian_charge_n( phi_lumo_ref, P);
 	n_ref = -n_ref/q;
   
 	double g1_ref = exp (phi_lumo_ref / Vth + 0.5 * pow((sigma * Kb * T0),2)) / (n_ref / C0);
@@ -1003,6 +1015,20 @@ Newton::org_gaussian_charge_n(	std::vector<double>& V, Probl& P,
 	drhon_dV = dn_dV;
     for(unsigned i=0; i<dn_dV.size(); i++){
 		drhon_dV[i] *= -q;
+    }
+};
+
+void
+Newton::org_gaussian_charge_n(	std::vector<double>& V, Probl& P,
+								// output
+								std::vector<double>& rhon)
+{
+	double	q = P._q;
+    std::vector<double> n = n_approx(V,P);
+	
+	rhon = n;
+    for(unsigned i=0; i<n.size(); i++){
+		rhon[i] *= -q;
     }
 };
 
