@@ -596,26 +596,6 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 		}
 	}
 	
-	// ///	ASSEMBLING SECOND ROW
-	
-	// for(unsigned i=0; i<intdofsn.size(); i++){
-		
-		// J = A21[intnodes[i]].begin ();
-		// J2 = A22[intnodes[i]].begin ();
-		
-		// for(unsigned j=0; j<indexingV.size(); j++){
-			// if( A12.col_idx (J)==j ){
-				// jacobian[intdofsn[i]][indexingV[j]] += A21[intnodes[i]][j];	
-				// J++;
-			// }
-			// if( A22.col_idx (J2)==j ){
-				// jacobian[intdofsn[i]][indexingn[j]] += A22[intnodes[i]][j];
-				// J2++;
-			// }
-		// }
-	// }
-
-	
 	///	ENFORCING BCs ON SECOND ROW: both JAC and RES
 	
 	std::vector<double>	resn(nnodes,0.0);
@@ -652,7 +632,7 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 	
 	bim2a_dirichlet_bc (P._msh, bcsn, A22, resn);
 
-	///	ADJUST FOR ZERO INSULATOR CHARGE: anche sia per jac che per res?
+	///	ADJUST FOR ZERO INSULATOR CHARGE: -----> anche sia per jac che per res?
 	std::vector<int>	insn(scnodes.size(),0);
 	for(unsigned i=0; i<scnodes.size(); i++){
 		if(scnodes[i] == 0){
@@ -660,25 +640,24 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 		}
 	}
 	
-	// vec.clear();
-	// vec.resize(insn.size());
-	// j = 0;
-	// for(unsigned i=0; i<insn.size(); i++){
-		// if(insn[i] == 1){
-			// vec[j] = M[i][i];
-			// j++;
-		// }
-	// }
-	// vec.resize(j);
+	vec.clear();
+	vec.resize(insn.size());
+	j = 0;
+	for(unsigned i=0; i<insn.size(); i++){
+		if(insn[i] == 1){
+			vec[j] = M[i][i];
+			j++;
+		}
+	}
+	vec.resize(j);
 	
-	// sparse_matrix diag;
-	// diag.resize(vec.size());
-	// for(unsigned j=0; j<vec.size(); j++){
-		// diag[j][j] = vec[j];
-	// }
+	sparse_matrix diag;
+	diag.resize(vec.size());
+	for(unsigned j=0; j<vec.size(); j++){
+		diag[j][j] = vec[j];
+	}
 	
-	// int h, i = 0;
-	// h = 0;
+	int h = 0, i = 0;
 	for(unsigned j=0; j<insn.size(); j++){
 		if(insn[j] == 1){
 			for (J = jacobian[indexingn[j]].begin (); J != jacobian[indexingn[j]].end (); ++J){
@@ -693,148 +672,177 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 			i++;
 		}
 	}
-
 	
-	// ///	ASSEMBLING THIRD ROW
-	// A.resize(4);
-	// bcs.get_A(A);
-	// B.resize(4);
-	// bcs.get_B(B);
-	// bcs.get_r(r);
+	///	ASSEMBLING SECOND ROW
 	
-	// for(unsigned i=0; i<indexingF.size(); i++){
+	// res
+	for(unsigned i=0; i<indexingn.size(); i++){
+		_res[indexingn[i]] = resn[i];
+	}
 	
-		// J = B[i].begin();
-	
-		// for(unsigned j=0; j<indexingF.size(); j++){
-			// jacobian[indexingF[i]][indexingF[j]] = (A[i][j]/deltat);
-			// if( B.col_idx(J) == j ){
-			// jacobian[indexingF[i]][indexingF[j]] += B[i][j];
-			// J++;
-			// }
-		// }
-		// for(unsigned j=0; j<indexingI.size(); j++){
-			// jacobian[indexingF[i]][indexingI[j]] = r[j][i];	
-		// }
-	// }
-	
-
-	// ///	COMPUTING FOURTH ROW
-	// std::vector<int>	rr;
-	// std::vector<double>	s1(indexingV.size(),0),
-						// s2(indexingV.size(),0),
-						// zeros(indexingV.size(),0);
-	// sparse_matrix	eye;
-	// eye.resize(indexingI.size());
-	// for(unsigned i=0; i<indexingI.size(); i++){
-		// eye[i][i] = 1;
-		// for(unsigned j=0; j<indexingI.size(); j++){
-			// jacobian[indexingI[i]][indexingI[j]] = eye[i][j];
-		// }
-	// }
-	
-	// for (int i=0; i<numcontacts; i++){
-		// rr.resize(dnodes[pins[i]].size());
-		// for(unsigned j=0; j<dnodes[pins[i]].size(); j++){
-			// rr[j] = dnodes[pins[i]][j] ;
-		// }
-		// s1 = zeros;
-		// s2 = zeros;
-		// for(unsigned k=0; k<rr.size(); k++){
-			// for(unsigned j=0; j<indexingV.size(); j++){
-				// s1[j] += (section*(A11[rr[k]][j])/deltat);
-				// s2[j] += (section*(A12[rr[k]][j])/deltat);
-			// }
-		// }
-	
-		// // Displacement current.
-		// for(unsigned j=0; j<indexingV.size(); j++){
-			// jacobian[indexingI[i]][indexingV[j]] -= s1[j];
-		// }
-		// for(unsigned j=0; j<indexingn.size(); j++){
-			// jacobian[indexingI[i]][indexingn[j]] -= s2[j];
-		// }
+	// jacobian
+	for(unsigned i=0; i<indexingn.size(); i++){
 		
-		// // Electron current.
-		// s1 = zeros;
-		// s2 = zeros;
-		// for(unsigned k=0; k<rr.size(); k++){
-			// for(unsigned j=0; j<indexingV.size(); j++){
-				// s1[j] += (-section * q * (A21[rr[k]][j]));
-				// s2[j] += (-section * q * (A22[rr[k]][j]));
-			// }
-		// }
+		J = A21[i].begin ();
+		J2 = A22[i].begin ();
 		
-		// for(unsigned j=0; j<indexingV.size(); j++){
-			// jacobian[indexingI[i]][indexingV[j]] -= s1[j];
-		// }
-		// for(unsigned j=0; j<indexingn.size(); j++){
-			// jacobian[indexingI[i]][indexingn[j]] -= s2[j];
-		// }
-		// rr.clear();
-	// }
-	// zeros.clear();
-	// s1.clear();
-	// s2.clear();
+		for(unsigned j=0; j<indexingV.size(); j++){
+			if( A21.col_idx (J)==j ){
+				jacobian[indexingn[i]][indexingV[j]] += A21[i][j];	
+				J++;
+			}
+			if( A22.col_idx (J2)==j ){
+				jacobian[indexingn[i]][indexingn[j]] += A22[i][j];
+				J2++;
+			}
+		}
+	}
 
-	// for(unsigned i=0; i<indexingV.size(); i++){
-		// for (J = jacobian[indexingV[i]].begin (); J != jacobian[indexingV[i]].end (); ++J){
-			// jacobian[indexingV[i]][jacobian.col_idx (J)] /= rowscaling[0];					
-		// }
-	// }
-	// for(unsigned i=0; i<indexingn.size(); i++){
-		// for (J = jacobian[indexingn[i]].begin (); J != jacobian[indexingn[i]].end (); ++J){
-			// jacobian[indexingn[i]][jacobian.col_idx (J)] /= rowscaling[1];					
-		// }
-	// }
-	// for(unsigned i=0; i<indexingF.size(); i++){
-		// for (J = jacobian[indexingF[i]].begin (); J != jacobian[indexingF[i]].end (); ++J){
-			// jacobian[indexingF[i]][jacobian.col_idx (J)] /= rowscaling[2];					
-		// }
-	// }
-	// for(unsigned i=0; i<indexingI.size(); i++){
-		// for (J = jacobian[indexingI[i]].begin (); J != jacobian[indexingI[i]].end (); ++J){
-			// jacobian[indexingI[i]][jacobian.col_idx (J)] /= rowscaling[3];					
-		// }
-	// }
+	
+	///	ASSEMBLING THIRD ROW
+	A.resize(4);
+	bcs.get_A(A);
+	
+	B.resize(4);
+	bcs.get_B(B);
+	
+	r.resize(4);
+	bcs.get_r(r);
+	
+	for(unsigned i=0; i<indexingF.size(); i++){
+	
+		J = B[i].begin();
+	
+		for(unsigned j=0; j<indexingF.size(); j++){
+			jacobian[indexingF[i]][indexingF[j]] = (A[i][j]/deltat);
+			if( B.col_idx(J) == j ){
+				jacobian[indexingF[i]][indexingF[j]] += B[i][j];
+				J++;
+			}
+		}
+		for(unsigned j=0; j<indexingI.size(); j++){
+			jacobian[indexingF[i]][indexingI[j]] = r[i][j];
+		}
+	}
+	
+
+	///	COMPUTING FOURTH ROW
+	std::vector<int>	rr;
+	std::vector<double>	s1(indexingV.size(),0),
+						s2(indexingV.size(),0),
+						zeros(indexingV.size(),0);
+	sparse_matrix	eye;
+	eye.resize(indexingI.size());
+	for(unsigned i=0; i<indexingI.size(); i++){
+		eye[i][i] = 1;
+		for(unsigned j=0; j<indexingI.size(); j++){
+			jacobian[indexingI[i]][indexingI[j]] = eye[i][j];
+		}
+	}
+	
+	for (int i=0; i<numcontacts; i++){
+		rr.resize(dnodes[pins[i]].size());
+		for(unsigned j=0; j<dnodes[pins[i]].size(); j++){
+			rr[j] = dnodes[pins[i]][j] ;
+		}
+		s1 = zeros;
+		s2 = zeros;
+		for(unsigned k=0; k<rr.size(); k++){
+			for(unsigned j=0; j<indexingV.size(); j++){
+				s1[j] += (section*(A11[rr[k]][j])/deltat);
+				s2[j] += (section*(A12[rr[k]][j])/deltat);
+			}
+		}
+	
+		// Displacement current.
+		for(unsigned j=0; j<indexingV.size(); j++){
+			jacobian[indexingI[i]][indexingV[j]] -= s1[j];
+		}
+		for(unsigned j=0; j<indexingn.size(); j++){
+			jacobian[indexingI[i]][indexingn[j]] -= s2[j];
+		}
+		
+		// Electron current.
+		s1 = zeros;
+		s2 = zeros;
+		for(unsigned k=0; k<rr.size(); k++){
+			for(unsigned j=0; j<indexingV.size(); j++){
+				s1[j] += (-section * q * (A21[rr[k]][j]));
+				s2[j] += (-section * q * (A22[rr[k]][j]));
+			}
+		}
+		
+		for(unsigned j=0; j<indexingV.size(); j++){
+			jacobian[indexingI[i]][indexingV[j]] -= s1[j];
+		}
+		for(unsigned j=0; j<indexingn.size(); j++){
+			jacobian[indexingI[i]][indexingn[j]] -= s2[j];
+		}
+		rr.clear();
+	}
+	zeros.clear();
+	s1.clear();
+	s2.clear();
+
+		
+	for(unsigned i=0; i<indexingV.size(); i++){
+		for (J = jacobian[indexingV[i]].begin (); J != jacobian[indexingV[i]].end (); ++J){
+			jacobian[indexingV[i]][jacobian.col_idx (J)] /= rowscaling[0];					
+		}
+	}
+	for(unsigned i=0; i<indexingn.size(); i++){
+		for (J = jacobian[indexingn[i]].begin (); J != jacobian[indexingn[i]].end (); ++J){
+			jacobian[indexingn[i]][jacobian.col_idx (J)] /= rowscaling[1];					
+		}
+	}
+	for(unsigned i=0; i<indexingF.size(); i++){
+		for (J = jacobian[indexingF[i]].begin (); J != jacobian[indexingF[i]].end (); ++J){
+			jacobian[indexingF[i]][jacobian.col_idx (J)] /= rowscaling[2];					
+		}
+	}
+	for(unsigned i=0; i<indexingI.size(); i++){
+		for (J = jacobian[indexingI[i]].begin (); J != jacobian[indexingI[i]].end (); ++J){
+			jacobian[indexingI[i]][jacobian.col_idx (J)] /= rowscaling[3];					
+		}
+	}
 	
  
-	// for(unsigned i=0; i<jacobian.rows(); i++){
-		// J = jacobian[i].begin();
-		// for(unsigned j=0; j<indexingV.size(); j++){
-			// if( jacobian.col_idx(J) == indexingV[j] ){
-				// jacobian[i][indexingV[j]] *= colscaling[0];
-				// J++;
-			// }
-		// }
-	// }
-	// for(unsigned i=0; i<jacobian.rows(); i++){
-		// J = jacobian[i].begin();
-		// for(unsigned j=0; j<indexingn.size(); j++){
-			// if( jacobian.col_idx(J) == indexingn[j] ){
-				// jacobian[i][indexingn[j]] *= colscaling[1];
-				// J++;
-			// }
-		// }
-	// }
-	// for(unsigned i=0; i<jacobian.rows(); i++){
-		// J = jacobian[i].begin();
-		// for(unsigned j=0; j<indexingF.size(); j++){
-			// if( jacobian.col_idx(J) == indexingF[j] ){
-				// jacobian[i][indexingF[j]] *= colscaling[2];
-				// J++;
-			// }
-		// }
-	// }
-	// for(unsigned i=0; i<jacobian.rows(); i++){
-		// J = jacobian[i].begin();
-		// for(unsigned j=0; j<indexingI.size(); j++){
-			// if( jacobian.col_idx(J) == indexingI[j] ){
-				// jacobian[i][indexingI[j]] *= colscaling[3];
-				// J++;
-			// }
-		// }
-	// }
+	for(unsigned i=0; i<jacobian.rows(); i++){
+		J = jacobian[i].begin();
+		for(unsigned j=0; j<indexingV.size(); j++){
+			if( jacobian.col_idx(J) == indexingV[j] ){
+				jacobian[i][indexingV[j]] *= colscaling[0];
+				J++;
+			}
+		}
+	}
+	for(unsigned i=0; i<jacobian.rows(); i++){
+		J = jacobian[i].begin();
+		for(unsigned j=0; j<indexingn.size(); j++){
+			if( jacobian.col_idx(J) == indexingn[j] ){
+				jacobian[i][indexingn[j]] *= colscaling[1];
+				J++;
+			}
+		}
+	}
+	for(unsigned i=0; i<jacobian.rows(); i++){
+		J = jacobian[i].begin();
+		for(unsigned j=0; j<indexingF.size(); j++){
+			if( jacobian.col_idx(J) == indexingF[j] ){
+				jacobian[i][indexingF[j]] *= colscaling[2];
+				J++;
+			}
+		}
+	}
+	for(unsigned i=0; i<jacobian.rows(); i++){
+		J = jacobian[i].begin();
+		for(unsigned j=0; j<indexingI.size(); j++){
+			if( jacobian.col_idx(J) == indexingI[j] ){
+				jacobian[i][indexingI[j]] *= colscaling[3];
+				J++;
+			}
+		}
+	}
 
 };
  
