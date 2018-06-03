@@ -52,7 +52,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 	
 	/// INIT STATE FROM SCRATCH
 	tstep = 0;
-	_tout[0] = tspan[0];
+	_tout[0] = tspan[0];		/// la dimensione di _tout va definita!
     t = tspan[0];
 	
 	// cambiare la struttura vector di vector!!!
@@ -546,8 +546,13 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 
 				told = _tout[tstep - 1];
 	  
+				/// mi conviene salvare solo alla fine del time step!!!
+				/// --> questo save lo salto
 				// saveNEWT(	Vold, nold, Fold, Iold, told, V2, n2, F2, I2, _res, t, dt, 
 							// nsaves, newton_solves, modified_newton_solves, freq);
+				/// praticamente _old è il vettore al passo precedente, _2 è il vettore al passo corrente
+				/// ma allora può essere che non abbia bisogno delle sparse_matrix. 
+				/// potrei semplicemente fare dei vettori old e new
 				
 				Vold.clear();
 				nold.clear();

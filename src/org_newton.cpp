@@ -4,8 +4,6 @@
 
 #include "newton.h"
 
-//////////
-
 /**
  *	Compute residual vector, which is the output of the method
  */
@@ -34,65 +32,14 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	bool	ins = P._ins;
 	std::array<int,2>	pins = P._pins;
 	std::vector< std::vector<int> >	dnodes = P._dnodes;
-	std::vector<int> 	indexV(nnodes,0),
-						indexn(nnodes,0),
-						intdofsV,
-						intdofsn,
-						alldnodes = P._alldnodes,
-						Nn(nnodes,0),
-						intnodes(2*nnodes,0),
-						insulator = P._insulator,
-						scnodes = P._scnodes,
-						ppins(pins.size(),0);
+	std::vector<int> 	insulator = P._insulator,
+						scnodes = P._scnodes;
 	std::vector<double>	epsilon(insulator.size(),eps_semic),
 						rowscaling = P._rowscaling,
 						res;
 	
-	std::vector<int>::iterator it;
-
-	// pins = P.dev()->get_pins();
-	// for(unsigned i=0; i<pins.size(); i++){
-		// ppins[i] = pins[i];
-	// }
-	
-	// it = std::unique (ppins.begin(), ppins.end());
-	// ppins.resize( std::distance(ppins.begin(),it) );
-	// assert ((ppins).size() == 2);
-	// ppins.clear();
-	
 	numcontacts = pins.size();
-	ndofs = 2 * nnodes + F.size() + numcontacts;
-
-	j=0;
-	for(int i=0; i<nnodes; i++){
-		it = std::find (alldnodes.begin(), alldnodes.end(), i);
-		if (it == alldnodes.end()){
-			intnodes[j] = i;
-			j++;
-		}
-	}
-	intnodes.resize(j);
-	std::sort(intnodes.begin(),intnodes.end());
-	
-	j=0;
-	for(int i=0; i<2*nnodes; i=i+2){
-		indexV[j] = i;
-		j++;
-	}
-
-	j=0;
-	for(int i=1; i<2*nnodes; i=i+2){
-		indexn[j] = i;
-		j++;
-	}
-
-	intdofsV.resize(intnodes.size());
-	intdofsn.resize(intnodes.size());
-	for(unsigned i=0; i<intnodes.size(); i++){
-		intdofsV[i] = indexingV[intnodes[i]];
-		intdofsn[i] = indexingn[intnodes[i]];
-	}
-		
+	ndofs = 2 * nnodes + F.size() + numcontacts;		
 	
 	/// COMPUTING COEFFICIENTS
 	if(ins){
@@ -104,13 +51,11 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	}
 
 	///	COMPUTING FIRST ROW
-	sparse_matrix 	//MM,
-					M,
+	sparse_matrix 	M,
 					A11,
 					A12;
 					
 	M.resize(nnodes);
-	//MM.resize(nnodes);
 	A11.resize(nnodes);
 	A12.resize(nnodes);
 	
@@ -124,9 +69,7 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 			not_ins[i] = 1;
 		}
 	}
-
-
-	//bim2a_reaction (P._msh, not_ins, ones, MM);	
+	
 	bim2a_reaction (P._msh, not_ins, ones, A12);
 	for(int i=0; i<nnodes; i++){
 		A12[i][i] *= q ;			
@@ -135,8 +78,6 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	bim2a_reaction (P._msh, eones, ones, M);		
 
 	bim2a_advection_diffusion (P._msh, epsilon, psi, A11);		
-
-	//A12 = MM;
 	
 	///	Physical models.
 	std::vector<double>	mobn(nelements,0.0),
@@ -166,10 +107,6 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 			resV[i] = sum1[i] + sum2[i];
 		}
 	}
-	
-	// for(unsigned i=0; i<intnodes.size(); i++){
-		// res[intdofsV[i]] = sum1[ intnodes[i] ] + sum2[ intnodes[i] ];
-	// }
 
 	///	ENFORCING BCs ON FIRST ROW
 	
@@ -197,54 +134,6 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	
 	bim2a_dirichlet_bc (P._msh,bcsV,M,resV);	/// che matrice metto qui ??
 	
-	// std::vector<int>	ddofsV;
-	// std::vector<double>	Vv;
-	// sparse_matrix Mm;
-	
-	// for (unsigned i=0; i<numcontacts; i++){
-		// Mm.resize(dnodes[i].size());
-		// ddofsV.resize(dnodes[i].size());
-		// for(unsigned j=0; j<dnodes[i].size(); j++){
-			// ddofsV[j] = indexingV[dnodes[i][j]] ;
-		// }
-	
-		// if (i == 0){ // Metal/semic. interface.
-			// Vv.resize(dnodes[i].size());
-			// for(unsigned j=0; j<dnodes[i].size(); j++){
-				// Vv[j] = ( (V[dnodes[i][j]] - F[pins[i]]) - PhiB);
-				// for(unsigned k=0; k<dnodes[i].size(); k++){
-					// Mm[j][k] = M[ dnodes[i][j] ][ dnodes[i][k] ];
-				// }
-			// }
-			// for(unsigned j=0; j<ddofsV.size(); j++){
-				// s=0;
-				// for(unsigned k=0; k<ddofsV.size(); k++){
-					// s += Mm[j][k]*Vv[k];
-				// }
-				// res[ddofsV[j]] += s;
-			// }
-			// Vv.clear();
-		// }
-		// else{ // Gate contact.
-			// Vv.resize(dnodes[i].size());
-			// for(unsigned j=0; j<dnodes[i].size(); j++){
-				// Vv[j] = ( (V[dnodes[i][j]] - F[pins[i]]) - (PhiB + Vshift) );
-				// for(unsigned k=0; k<dnodes[i].size(); k++){
-					// Mm[j][k] = M[ dnodes[i][j] ][ dnodes[i][k] ];
-				// }
-			// }
-			// for(unsigned j=0; j<ddofsV.size(); j++){
-				// s=0;
-				// for(unsigned k=0; k<ddofsV.size(); k++){
-					// s += Mm[j][k]*Vv[k];
-				// }
-				// res[ddofsV[j]] += s;
-			// }
-			// Vv.clear();
-		// }	
-		// ddofsV.clear();
-	// }
-
 	for(unsigned i=0; i<indexingV.size(); i++){
 		res[indexingV[i]] = resV[i];
 	}
@@ -308,87 +197,36 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 		resn[i] -= rhs[i]*n0[i];	
 	}
 	rhs.clear();
-
 	
-	// ///	ASSEMBLING SECOND ROW
-	// for(unsigned i=0; i<intnodes.size(); i++){
-		// res[intdofsn[i]] = r22[intnodes[i]];
+	// ///	ENFORCING BCs ON SECOND ROW
+	
+	// std::vector<double>	rho,	// forse posso non specificare le dimensioni...
+						// nimposed,
+						// vec(n.size(),0.0);
+	
+	// // out.resize(nelements);		forse non è necessario
+	// org_gaussian_charge_n(V, P, rho, out);	/// fare overload del metodo!!!
+	// out.clear();
+	
+	// nimposed = rho;
+	// for(unsigned i=0; i<nimposed.size(); i++){
+		// nimposed[i] *= (-1)/q;
 	// }
-
 	
-	///	ENFORCING BCs ON SECOND ROW
+	// BCbulk.clear();
+	// BCbulk.resize(n.size());
 	
-	std::vector<double>	rho,	// forse posso non specificare le dimensioni...
-						nimposed,
-						vec(n.size(),0.0);
-	
-	// out.resize(nelements);		forse non è necessario
-	org_gaussian_charge_n(V, P, rho, out);	/// fare overload del metodo!!!
-	out.clear();
-	
-	nimposed = rho;
-	for(unsigned i=0; i<nimposed.size(); i++){
-		nimposed[i] *= (-1)/q;
-	}
-	
-	BCbulk.clear();
-	BCbulk.resize(n.size());
-	
-	for(unsigned i=0; i<n.size(); i++){
-		BCbulk[i] = (n[i] - nimposed[i]);
-	}
-	BCbulk = M*BCbulk;
-	
-	std::tuple<int, int, func_quad>	tuplan(0,2,[&resn,&BCbulk](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																{return (resn[quad->gt(i)]+BCbulk[quad->gt(i)]);});
-	dirichlet_bcs_quad	bcsn;
-	bcsn.push_back(tupla1);
-	
-	bim2a_dirichlet_bc (P._msh,bcsn,M,resn);	/// che matrice metto qui ??
-	
-	// std::vector<double>	rho,
-						// drhodV,
-						// nn,
-						// v;
-	// std::vector<int> ddofsn;
-	// double p = 0;
-	// for(unsigned i=0; i<numcontacts; i++){
-		// ddofsn.resize(dnodes[i].size());
-		// for(unsigned j=0; j<dnodes[i].size(); j++){
-			// ddofsn[j] = indexingn[dnodes[i][j]] ;
-		// }
-		// if(i==0){	// Metal/semic. interface.
-			// Mm.resize(dnodes[i].size());
-			// v.resize(dnodes[i].size());
-			// nn.resize(dnodes[i].size());
-			// for(unsigned j=0; j<dnodes[i].size(); j++){
-				// v[j] = V[dnodes[i][j]] ;
-				// nn[j] = n[dnodes[i][j]] ;
-				// for(unsigned k=0; k<dnodes[i].size(); k++){
-					// Mm[j][k] = M[ dnodes[i][j] ][ dnodes[i][k] ];
-				// }
-			// }
-			// rho.resize(v.size());
-			// drhodV.resize(v.size());
-			// org_gaussian_charge_n (v, P.mat(), P.cnst(), P.quad(), rho, drhodV);
-			// for(unsigned j=0; j<rho.size(); j++){
-				// nn[j] = nn[j] + rho[j]/q;
-			// }
-			// for(unsigned j=0; j<ddofsn.size(); j++){
-				// s=0;
-				// for(unsigned k=0; k<ddofsn.size(); k++){
-					// p = Mm[j][k]*nn[k];
-					// s += p;
-				// }
-				// res[ddofsn[j]] += s;
-			// }
-		// }
-		// ddofsn.clear();
-		// v.clear();
-		// nn.clear();
-		// rho.clear();
-		// drhodV.size();
+	// for(unsigned i=0; i<n.size(); i++){
+		// BCbulk[i] = (n[i] - nimposed[i]);
 	// }
+	// BCbulk = M*BCbulk;
+	
+	// std::tuple<int, int, func_quad>	tuplan(0,2,[&resn,&BCbulk](tmesh::quadrant_iterator quad, tmesh::idx_t i)
+																// {return (resn[quad->gt(i)]+BCbulk[quad->gt(i)]);});
+	// dirichlet_bcs_quad	bcsn;
+	// bcsn.push_back(tupla1);
+	
+	// bim2a_dirichlet_bc (P._msh,bcsn,M,resn);	/// che matrice metto qui ??
 	
 	/// ADJUST FOR ZERO INSULATOR CHARGE
 	vec = M*n;
@@ -403,25 +241,6 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	}
 	resn.clear();
 	
-	// /// ADJUST FOR ZERO INSULATOR CHARGE
-	// std::vector<int>	insn(scnodes.size(),0);
-	// for(unsigned i=0; i<scnodes.size(); i++){
-		// if(scnodes[i] == 0){
-			// insn[i] = 1;
-		// }
-	// }
-	// for(unsigned j=0; j<insn.size(); j++){
-		// if(insn[j]==1){
-			// s=0;
-			// for(unsigned k=0; k<insn.size(); k++){
-				// if(insn[k] == 1){
-					// s += M[ j ][ k ]*n[k];
-				// }
-			// }
-			// res[indexingn[j]] =  s;
-		// }
-	// }
-
 	
 	///	ASSEMBLING THIRD ROW
 	sparse_matrix	A, r;
@@ -540,6 +359,486 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	return res;	
  };
 
+ 
+ /**
+ *	Assemble jacobian matrix: the matrix is passed to the method as reference,
+ *	then it is updated during the computation
+ */				 
+void 
+Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vector<double>& n, std::vector<double>& F,			
+									double deltat, BCS_CIRC& bcs, std::vector<int>& indexingV, std::vector<int>& indexingn,
+									std::vector<int>& indexingF, std::vector<int>& indexingI,sparse_matrix& jacobian)
+{
+	int	nnodes = P.get_msh_nodes(),
+		nelements = P.get_msh_elem(),
+        numcontacts, ndofs, numscnodes = 0, j = 0;
+		
+	double	eps_semic = P._eps_semic,
+			eps_ins = P._eps_ins,
+			q = P._q,
+			Vth = P._Vth,
+			section = P._section,
+			L = P._L,
+			tins = P._t_ins,
+			tsemic = P._t_semic;
+			
+	bool	ins = P._ins;
+			
+	std::vector<int>::iterator it;
+	std::vector< std::vector<int> >	dnodes = P._dnodes;
+	//std::vector< std::vector<double> >	r;
+	std::vector<double>	epsilon(nelements,eps_semic),
+						rowscaling = P._rowscaling,
+						colscaling = P._colscaling;
+	std::array<int,2>	pins = P._pins;
+	std::vector<int>	//ppins(pins.size(),0),
+						scnodes = P._scnodes,
+						//alldnodes = P._alldnodes,
+						insulator = P._insulator;
+						//intnodes(2*nnodes,0),
+						//intdofsV,
+						//intdofsn;
+	sparse_matrix 	A, B, r;
+	
+	for(unsigned i=0; i<scnodes.size(); i++){
+		if(scnodes[i]==1)
+			numscnodes++;
+	}
+	
+	// for(unsigned i=0; i<pins.size(); i++){
+		// ppins[i] = pins[i];
+	// }
+	// it = std::unique (ppins.begin(), ppins.end());	
+	// ppins.resize( std::distance(ppins.begin(),it) );
+	// assert (ppins.size() == 2);
+	// ppins.clear();
+	
+	numcontacts = pins.size();
+	ndofs = 2 * nnodes + F.size() + numcontacts;
+	
+	// j=0;
+	// for(int i=0; i<nnodes; i++){
+		// it = std::find (alldnodes.begin(), alldnodes.end(), i);
+		// if (it == alldnodes.end()){
+			// intnodes[j] = i;			 // Assembling vector of internal nodes.
+			// j++;
+		// }
+	// }
+	// intnodes.resize(j);
+	// std::sort(intnodes.begin(),intnodes.end());
+	
+	// intdofsV.resize(intnodes.size());
+	// intdofsn.resize(intnodes.size());
+	
+	// for(unsigned i=0; i<intnodes.size(); i++){
+		// intdofsV[i] = indexingV[intnodes[i]];
+		// intdofsn[i] = indexingn[intnodes[i]];
+	// }
+	
+
+	///	COMPUTING COEFFICIENTS	
+	if(ins){
+		for(unsigned i=0; i<insulator.size(); i++){	
+			if(insulator[i] == 1){
+				epsilon[i] = eps_ins;
+			}
+		}
+	}
+	
+
+	/// COMPUTING FIRST ROW
+	sparse_matrix	M,
+					A11,
+					A12;
+
+	std::vector<double> eones(insulator.size(),1.0),
+						not_ins(insulator.size(),0.0),
+						ones(nnodes,1.0),
+						psi(nnodes,0.0);
+	
+	M.resize(nnodes);
+	A11.resize(nnodes);
+	A12.resize(nnodes);
+	
+	for(unsigned i=0; i<insulator.size(); i++){
+		if(insulator[i] == 0){
+			not_ins[i] = 1;
+		}
+	}
+
+	bim2a_reaction (P._msh, not_ins, ones, A12);
+	for(int i=0; i<nnodes; i++){
+		A12[i][i] *= q ;			
+	}
+	
+	bim2a_reaction (P._msh, eones, ones, M);
+
+	bim2a_advection_diffusion (P._msh, epsilon, psi, A11);
+
+	///	Physical models.
+	std::vector<double>	mobn(nelements,0.0),
+						alphan(n.size(),0.0),
+						der_dalpha_n(nelements,0.0);
+
+	org_physical_models2d(n, P, mobn, alphan, der_dalpha_n);
+  
+	jacobian.resize(ndofs);
+
+	///	ASSEMBLING FIRST ROW
+	// sparse_matrix::col_iterator J2;
+	
+	// for(unsigned i=0; i<intdofsV.size(); i++){
+		
+		// J = A11[intnodes[i]].begin ();
+		// J2 = A12[intnodes[i]].begin ();
+		
+		// for(unsigned j=0; j<indexingV.size(); j++){	
+			// if( A11.col_idx(J) == j ){
+				// jacobian[intdofsV[i]][indexingV[j]] += A11[intnodes[i]][j];	
+				// J++;
+			// }
+			// if( A12.col_idx(J2) == j ){
+				// jacobian[intdofsV[i]][indexingn[j]] += A12[intnodes[i]][j];
+				// J2++;
+			// }
+		// }
+	// }
+	
+
+	// ///	ENFORCING BCs ON FIRST ROW
+	// std::vector<int>	ddofsV;
+	// std::vector<double>	vec;
+	// int	pindof = 0;
+
+	// for(int i=0; i<numcontacts; i++){
+		// ddofsV.resize(dnodes[i].size());
+		// vec.resize(dnodes[i].size());
+		// for(unsigned j=0; j<dnodes[i].size(); j++){
+			// ddofsV[j] = indexingV[dnodes[i][j]] ;
+			// vec[j] = M[ dnodes[i][j] ][ dnodes[i][j] ] ;
+		// }	
+		
+		// pindof = indexingF[pins[i]];
+		// for(unsigned j=0; j<ddofsV.size(); j++){
+			// jacobian[ ddofsV[j] ][ ddofsV[j] ] += vec[j];
+			// jacobian[ ddofsV[j] ][pindof] -= vec[j];
+		// }
+		// ddofsV.clear();
+		// vec.clear();
+	// }
+	
+
+	///	COMPUTING SECOND ROW
+
+	sparse_matrix	A21,
+					A22,
+					R;
+					
+	std::vector<double>	fluxn(n.size(),0.0),
+						alfa(insulator.size(),0.0),
+						mobn_n(insulator.size(),0.0);
+			
+	A21.resize(nnodes);
+	A22.resize(nnodes);
+	R.resize(nnodes);	
+
+	j=0;
+	for (auto quadrant = P._msh.begin_quadrant_sweep ();
+        quadrant != P._msh.end_quadrant_sweep ();
+        ++quadrant)
+	{		
+		if(insulator[j]==1){
+			// Adjust for zero insulator charge.
+			mobn_n[j] = 0;
+		}
+		else{	
+
+			for(int i=0; i<4; i++){
+				mobn_n[j] += n[ quadrant->gt(i) ];
+			}		
+			mobn_n[j] /= 4;
+		}
+		j++;
+	}
+	
+	for(unsigned i=0; i<insulator.size(); i++){
+		mobn_n[i] *= -mobn[i];
+		if(insulator[i] == 0){
+			alfa[i] = mobn[i]*Vth;
+		}
+	}
+	
+	bim2a_advection_diffusion (P._msh, mobn_n, psi, A21);
+		
+	if(alphan.size() == n.size() && alphan.size() == V.size()){
+		fluxn = alphan;
+		for(unsigned i=0; i<fluxn.size(); i++){
+			fluxn[i] *= (-1);
+			fluxn[i] += V[i]/Vth;
+		}
+	
+	}
+	else{
+		std::cout<<"error: org_secs2d_newton_jacobian, dimensions mismatch"<<std::endl;
+	}
+	
+	bim2a_advection_diffusion( P._msh, alfa, fluxn, A22); 
+	
+	for(unsigned i=0; i<ones.size(); i++){
+		ones[i] = ones[i]/deltat;
+	}
+	
+	bim2a_reaction (P._msh, not_ins, ones, R);
+
+	for(unsigned i=0; i<scnodes.size(); i++){
+		if(scnodes[i]==1){
+					A22[i][i] += R[i][i];
+		}
+	}
+	
+	// ///	ASSEMBLING SECOND ROW
+	
+	// for(unsigned i=0; i<intdofsn.size(); i++){
+		
+		// J = A21[intnodes[i]].begin ();
+		// J2 = A22[intnodes[i]].begin ();
+		
+		// for(unsigned j=0; j<indexingV.size(); j++){
+			// if( A12.col_idx (J)==j ){
+				// jacobian[intdofsn[i]][indexingV[j]] += A21[intnodes[i]][j];	
+				// J++;
+			// }
+			// if( A22.col_idx (J2)==j ){
+				// jacobian[intdofsn[i]][indexingn[j]] += A22[intnodes[i]][j];
+				// J2++;
+			// }
+		// }
+	// }
+
+	
+	///	ENFORCING BCs ON SECOND ROW: both JAC and RES
+	
+	std::vector<double>	resn(nnodes,0.0);
+	
+	for(unsigned i=0; i<indexingn.size(); i++){
+		resn[i] = _res[indexingn[i]];
+	}
+	
+	std::vector<double>	rho,	// forse posso non specificare le dimensioni...
+						nimposed,
+						vec(n.size(),0.0);
+	
+	// out.resize(nelements);		forse non è necessario
+	org_gaussian_charge_n(V, P, rho, out);	/// fare overload del metodo!!!
+	out.clear();
+	
+	nimposed = rho;
+	for(unsigned i=0; i<nimposed.size(); i++){
+		nimposed[i] *= (-1)/q;
+	}
+	
+	BCbulk.clear();
+	BCbulk.resize(n.size());
+	
+	for(unsigned i=0; i<n.size(); i++){
+		BCbulk[i] = (n[i] - nimposed[i]);
+	}
+	BCbulk = M*BCbulk;
+	
+	std::tuple<int, int, func_quad>	tuplan(0,2,[&resn,&BCbulk](tmesh::quadrant_iterator quad, tmesh::idx_t i)
+																{return (resn[quad->gt(i)]+BCbulk[quad->gt(i)]);});
+	dirichlet_bcs_quad	bcsn;
+	bcsn.push_back(tupla1);
+	
+	bim2a_dirichlet_bc (P._msh, bcsn, A22, resn);
+
+	///	ADJUST FOR ZERO INSULATOR CHARGE: anche sia per jac che per res?
+	std::vector<int>	insn(scnodes.size(),0);
+	for(unsigned i=0; i<scnodes.size(); i++){
+		if(scnodes[i] == 0){
+			insn[i] = 1;
+		}
+	}
+	
+	// vec.clear();
+	// vec.resize(insn.size());
+	// j = 0;
+	// for(unsigned i=0; i<insn.size(); i++){
+		// if(insn[i] == 1){
+			// vec[j] = M[i][i];
+			// j++;
+		// }
+	// }
+	// vec.resize(j);
+	
+	// sparse_matrix diag;
+	// diag.resize(vec.size());
+	// for(unsigned j=0; j<vec.size(); j++){
+		// diag[j][j] = vec[j];
+	// }
+	
+	// int h, i = 0;
+	// h = 0;
+	for(unsigned j=0; j<insn.size(); j++){
+		if(insn[j] == 1){
+			for (J = jacobian[indexingn[j]].begin (); J != jacobian[indexingn[j]].end (); ++J){
+				jacobian[ indexingn[j] ][ jacobian.col_idx (J) ] = 0;
+			}
+			for(unsigned k=0; k<insn.size(); k++){
+				if(insn[k] == 1 && i==h){
+					jacobian[indexingn[j]][indexingn[k]] += diag[i][h];
+					h++;
+				}
+			}
+			i++;
+		}
+	}
+
+	
+	// ///	ASSEMBLING THIRD ROW
+	// A.resize(4);
+	// bcs.get_A(A);
+	// B.resize(4);
+	// bcs.get_B(B);
+	// bcs.get_r(r);
+	
+	// for(unsigned i=0; i<indexingF.size(); i++){
+	
+		// J = B[i].begin();
+	
+		// for(unsigned j=0; j<indexingF.size(); j++){
+			// jacobian[indexingF[i]][indexingF[j]] = (A[i][j]/deltat);
+			// if( B.col_idx(J) == j ){
+			// jacobian[indexingF[i]][indexingF[j]] += B[i][j];
+			// J++;
+			// }
+		// }
+		// for(unsigned j=0; j<indexingI.size(); j++){
+			// jacobian[indexingF[i]][indexingI[j]] = r[j][i];	
+		// }
+	// }
+	
+
+	// ///	COMPUTING FOURTH ROW
+	// std::vector<int>	rr;
+	// std::vector<double>	s1(indexingV.size(),0),
+						// s2(indexingV.size(),0),
+						// zeros(indexingV.size(),0);
+	// sparse_matrix	eye;
+	// eye.resize(indexingI.size());
+	// for(unsigned i=0; i<indexingI.size(); i++){
+		// eye[i][i] = 1;
+		// for(unsigned j=0; j<indexingI.size(); j++){
+			// jacobian[indexingI[i]][indexingI[j]] = eye[i][j];
+		// }
+	// }
+	
+	// for (int i=0; i<numcontacts; i++){
+		// rr.resize(dnodes[pins[i]].size());
+		// for(unsigned j=0; j<dnodes[pins[i]].size(); j++){
+			// rr[j] = dnodes[pins[i]][j] ;
+		// }
+		// s1 = zeros;
+		// s2 = zeros;
+		// for(unsigned k=0; k<rr.size(); k++){
+			// for(unsigned j=0; j<indexingV.size(); j++){
+				// s1[j] += (section*(A11[rr[k]][j])/deltat);
+				// s2[j] += (section*(A12[rr[k]][j])/deltat);
+			// }
+		// }
+	
+		// // Displacement current.
+		// for(unsigned j=0; j<indexingV.size(); j++){
+			// jacobian[indexingI[i]][indexingV[j]] -= s1[j];
+		// }
+		// for(unsigned j=0; j<indexingn.size(); j++){
+			// jacobian[indexingI[i]][indexingn[j]] -= s2[j];
+		// }
+		
+		// // Electron current.
+		// s1 = zeros;
+		// s2 = zeros;
+		// for(unsigned k=0; k<rr.size(); k++){
+			// for(unsigned j=0; j<indexingV.size(); j++){
+				// s1[j] += (-section * q * (A21[rr[k]][j]));
+				// s2[j] += (-section * q * (A22[rr[k]][j]));
+			// }
+		// }
+		
+		// for(unsigned j=0; j<indexingV.size(); j++){
+			// jacobian[indexingI[i]][indexingV[j]] -= s1[j];
+		// }
+		// for(unsigned j=0; j<indexingn.size(); j++){
+			// jacobian[indexingI[i]][indexingn[j]] -= s2[j];
+		// }
+		// rr.clear();
+	// }
+	// zeros.clear();
+	// s1.clear();
+	// s2.clear();
+
+	// for(unsigned i=0; i<indexingV.size(); i++){
+		// for (J = jacobian[indexingV[i]].begin (); J != jacobian[indexingV[i]].end (); ++J){
+			// jacobian[indexingV[i]][jacobian.col_idx (J)] /= rowscaling[0];					
+		// }
+	// }
+	// for(unsigned i=0; i<indexingn.size(); i++){
+		// for (J = jacobian[indexingn[i]].begin (); J != jacobian[indexingn[i]].end (); ++J){
+			// jacobian[indexingn[i]][jacobian.col_idx (J)] /= rowscaling[1];					
+		// }
+	// }
+	// for(unsigned i=0; i<indexingF.size(); i++){
+		// for (J = jacobian[indexingF[i]].begin (); J != jacobian[indexingF[i]].end (); ++J){
+			// jacobian[indexingF[i]][jacobian.col_idx (J)] /= rowscaling[2];					
+		// }
+	// }
+	// for(unsigned i=0; i<indexingI.size(); i++){
+		// for (J = jacobian[indexingI[i]].begin (); J != jacobian[indexingI[i]].end (); ++J){
+			// jacobian[indexingI[i]][jacobian.col_idx (J)] /= rowscaling[3];					
+		// }
+	// }
+	
+ 
+	// for(unsigned i=0; i<jacobian.rows(); i++){
+		// J = jacobian[i].begin();
+		// for(unsigned j=0; j<indexingV.size(); j++){
+			// if( jacobian.col_idx(J) == indexingV[j] ){
+				// jacobian[i][indexingV[j]] *= colscaling[0];
+				// J++;
+			// }
+		// }
+	// }
+	// for(unsigned i=0; i<jacobian.rows(); i++){
+		// J = jacobian[i].begin();
+		// for(unsigned j=0; j<indexingn.size(); j++){
+			// if( jacobian.col_idx(J) == indexingn[j] ){
+				// jacobian[i][indexingn[j]] *= colscaling[1];
+				// J++;
+			// }
+		// }
+	// }
+	// for(unsigned i=0; i<jacobian.rows(); i++){
+		// J = jacobian[i].begin();
+		// for(unsigned j=0; j<indexingF.size(); j++){
+			// if( jacobian.col_idx(J) == indexingF[j] ){
+				// jacobian[i][indexingF[j]] *= colscaling[2];
+				// J++;
+			// }
+		// }
+	// }
+	// for(unsigned i=0; i<jacobian.rows(); i++){
+		// J = jacobian[i].begin();
+		// for(unsigned j=0; j<indexingI.size(); j++){
+			// if( jacobian.col_idx(J) == indexingI[j] ){
+				// jacobian[i][indexingI[j]] *= colscaling[3];
+				// J++;
+			// }
+		// }
+	// }
+
+};
+ 
+ 
 void
 Newton::org_physical_models2d (	std::vector<double>& n, Probl& P,
 								// output
