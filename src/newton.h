@@ -119,12 +119,11 @@ class Newton{
 	std::vector<double>
 	dalphan_dn_fun (std::vector<double>& phi, std::vector<double>& alphan, Probl& P);
 				
-	/// It saves Newton output at each time step
-	// void
-	// saveNEWT(	std::vector<double>& Vold, std::vector<double>& nold, std::vector<double>& Fold, std::vector<double>& Iold, double told, 
-				// std::vector<double>& V, std::vector<double>& n, std::vector<double>& F, std::vector<double>& I, std::vector<double>& res,
-				// double t, double dt, int nsaves, int newton_solves, int modified_newton_solves, double freq);
-
+	/// It saves Newton output at the end of each time step
+	void
+	saveNEWT(std::vector<double>& Vold, std::vector<double>& nold, std::vector<double>& Fold, std::vector<double>& Iold, double told, 
+			std::vector<double>& V, std::vector<double>& n, std::vector<double>& F, std::vector<double>& I, std::vector<double>& res,
+			double t, double dt, int nsaves, int newton_solves, int modified_newton_solves, double freq);
 };
 
 #endif	// NEWTON_H

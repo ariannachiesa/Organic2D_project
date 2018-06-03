@@ -207,7 +207,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 				resall.resize(4);
 				compute_residual_norm (resnrm[in-1],whichone,resall,_res,indexingV,indexingn,indexingF,indexingI);
 				
-				// org_secs2d_newton_jacobian(	P,	V2, n2, F2,	dt, bcs, indexingV, indexingn, indexingF, indexingI, _jac);
+				org_secs2d_newton_jacobian(	P, V2, n2, F2, dt, bcs, indexingV, indexingn, indexingF, indexingI, _jac);
 				
 				/// Solve non.linear system.
 				std::cout << "Solving linear system."<<std::endl;
@@ -590,8 +590,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 			told = _tout[tstep - 1];
 			nsaves++;
 	  
-			// saveNEWT(	Vold, nold, Fold, Iold, told, V2, n2, F2, I2, _res, t, dt, 
-						// nsaves, newton_solves, modified_newton_solves, freq);
+			saveNEWT(Vold, nold, Fold, Iold, told, V2, n2, F2, I2, _res, t, dt, nsaves, newton_solves, modified_newton_solves, freq);
 
 			Vold.clear();
 			nold.clear();

@@ -1902,3 +1902,64 @@ Newton::DIV_MN_MSG (	int tstep, int t, int Nstep, int mNstep, int field, std::ve
   std::cout<<res.back()<<" ]"<<std::endl;
   std::cout<<" "<<std::endl;
 };
+
+
+void
+saveNEWT (	std::vector<double>& Vold, std::vector<double>& nold, std::vector<double>& Fold, std::vector<double>& Iold, double told, 
+			std::vector<double>& V, std::vector<double>& n, std::vector<double>& F, std::vector<double>& I, std::vector<double>& res,
+			double t, double dt, int nsaves, int newton_solves, int modified_newton_solves, double freq)
+{
+
+  ColumnVector oct_V (V.size (), 0.0);
+  ColumnVector oct_n (n.size (), 0.0);
+  ColumnVector oct_F (F.size (), 0.0);
+  ColumnVector oct_I (I.size (), 0.0);
+  
+  ColumnVector oct_Vold (Vold.size (), 0.0);
+  ColumnVector oct_nold (nold.size (), 0.0);
+  ColumnVector oct_Fold (Fold.size (), 0.0);
+  ColumnVector oct_Iold (Iold.size (), 0.0);
+  
+  ColumnVector oct_res (res.size (), 0.0);
+
+  std::copy_n (V.begin (), V.size (), oct_V.fortran_vec ());
+  std::copy_n (n.begin (), n.size (), oct_n.fortran_vec ());
+  std::copy_n (F.begin (), F.size (), oct_F.fortran_vec ());
+  std::copy_n (I.begin (), I.size (), oct_I.fortran_vec ());
+  
+  std::copy_n (Vold.begin (), Vold.size (), oct_Vold.fortran_vec ());
+  std::copy_n (nold.begin (), nold.size (), oct_nold.fortran_vec ());
+  std::copy_n (Fold.begin (), Fold.size (), oct_Fold.fortran_vec ());
+  std::copy_n (Iold.begin (), Iold.size (), oct_Iold.fortran_vec ());
+  
+  std::copy_n (res.begin (), res.size (), oct_res.fortran_vec ());
+  
+  octave_io_mode m = gz_write_mode;
+  
+  // Define filename.
+  char FileName[255] = "";
+  sprintf(FileName,"NEWT_freq_%f_output_%d.gz",freq,nsaves);
+  
+  // Save to filename.
+  assert (octave_io_open (FileName, m, &m) == 0);
+
+  assert (octave_save ("told", told) == 0);
+  assert (octave_save ("Vold", oct_Vold) == 0);
+  assert (octave_save ("nold", oct_nold) == 0);
+  assert (octave_save ("Fold", oct_Fold) == 0);
+  assert (octave_save ("Iold", oct_Iold) == 0);
+
+  assert (octave_save ("t", t) == 0);
+  assert (octave_save ("V", oct_V) == 0);
+  assert (octave_save ("n", oct_n) == 0);
+  assert (octave_save ("F", oct_F) == 0);
+  assert (octave_save ("I", oct_I) == 0);
+  
+  assert (octave_save ("res", oct_res) == 0);
+  assert (octave_save ("dt", dt) == 0);
+  assert (octave_save ("newton_solves", newton_solves) == 0);
+  assert (octave_save ("modified_newton_solves", modified_newton_solves) == 0);
+
+  assert (octave_io_close () == 0);
+
+};
