@@ -46,9 +46,6 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 						resall(4,0),
 						vecincr(4,0);
 			
-	// assert (numel (unique (device.pins)) == 2);
-	// penso possa essere evitato come controllo
-			
 	dt = dt0;
 	dt = std::fmin(dt, dtmax);
 	
@@ -57,7 +54,6 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 	_tout[0] = tspan[0];		/// la dimensione di _tout va definita!
     t = tspan[0];
 	
-	// cambiare la struttura vector di vector!!!
 	_V.resize(Vin.size());
 	_n.resize(nin.size());
 	for(unsigned i=0; i<Vin.size(); i++){
@@ -131,25 +127,27 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 			std::cout<<"--"<<std::endl;
 		
 			tstep++;
-			// std::cout<<"tstep = "<<tstep<<std::endl;
 
 			_tout[tstep] = std::fmin (t + dt, tspan[n_fix_tstep - 1]);
-			//std::cout<<"tout[tstep] = "<<_tout[tstep]<<std::endl;
+
 			t = _tout[tstep];
-			//std::cout<<"t = "<<t<<std::endl;
+
 			dt = t - _tout[tstep - 1];
-			//std::cout<<"dt = "<<dt<<std::endl;
 			
 			/// tutti gli incr?
 			
 			incr0 = 4 * P._maxnpincr;
 			
 			for(unsigned i=0; i<F.size(); i++){
-				F[i] = _F[i][1];
+				F[i] = _F[i][1];		/// devo passare F[end] cioè il valore al passo corrente...
 			}
 			bcs.assign(t, P._Csb, P._Vshift, F);	// ma quando sono alla prima iterazione ? passo una roba non inizializzata
 			
+			// qua potrei passare tutti i vettori ai passi t-2 , t-1 e t. In uscita ho V0, n0, F0, I0 che saranno i nuovi vettori al passo corrente
+			// ovvero: org_secs_state_predict (P, V, Vold, Voldold, ecc.. tstep, _tout, V0, n0, F0, I0);
 			org_secs_state_predict (P, _V, _n, _F, _I, tstep, _tout, V0, n0, F0, I0);		/// da modificare
+			
+			// _2 sono i nuovi vettori al passo corrente
 			V2 = V0;
 			n2 = n0;
 			F2 = F0;
@@ -168,6 +166,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 			while (!reject && (in < P._maxit)){ /// NEWTON STEP
 				in += 1;
 
+				// tengo memoria dei valori al passo temporale corrente nel caso poi debba rifiutare il passo
 				V1 = V2;
 				n1 = n2;
 				F1 = F2;
@@ -185,6 +184,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 				for(unsigned i=0; i<_I.size(); i++){
 					Iold[i] = _I[i][1];
 				}
+				// come input al metodo passo i vettori all passo corrente e quelli al passo precedente
 				_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, indexingV, indexingn, indexingF, indexingI);
 
 				//for(unsigned i=0; i<_res.size(); i++){
@@ -192,8 +192,8 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 				//}
 				
 				if (in == 1){
-				
 					whichone = 0;
+					// dal momento che ancora non sono state imposte le BC potrebbe essere sbagliato
 					compute_residual_norm (resnrm[0],whichone,resall,_res,indexingV,indexingn,indexingF,indexingI);
 					
 					//for(unsigned i=0; i<resall.size(); i++){
@@ -210,13 +210,14 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 						break;
 					}
 					
-					_res = org_secs2d_newton_residual(	P, V2, n2, F2, I2, Vold, nold, Fold, Iold,
-														dt, bcs, indexingV, indexingn, indexingF, indexingI);
+					// come input al metodo passo i vettori all passo corrente e quelli al passo precedente
+					_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, indexingV, indexingn, indexingF, indexingI);
 				}
 
 				resall.resize(4);
 				compute_residual_norm (resnrm[in-1],whichone,resall,_res,indexingV,indexingn,indexingF,indexingI);
 				
+				// come input al metodo passo solo i vettori al passo corrente
 				org_secs2d_newton_jacobian(	P, V2, n2, F2, dt, bcs, indexingV, indexingn, indexingF, indexingI, _jac);
 				
 				/// Solve non.linear system.
@@ -279,6 +280,8 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 				delta.clear();
 				
 				V2.clear(); n2.clear(); F2.clear(); I2.clear();
+				// calcolo la nuova soluzione al passo corrente (vettori _2)
+				// _1 tiene sempre memoria di quella al passo corrente all'inizio del metodo di newton
 				org_secs_safe_increment (V1, n1, F1, I1, dV, dn, dF, dI, P, V2, n2, F2, I2, clamp, tauk);
 												
 				if ((clamp <= 0) || (tauk <= 0)){
@@ -286,6 +289,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 					break;
 				}
 		
+				// _0 passo corrente prima del NEWTstep e passo corrente durante NEWT _2
 				compute_variation ( V0, n0, F0, I0, V2, n2, F2, I2, P, std::fmin (clamp, tauk), incr0v, incr0n, incr0F, incr0I);
 									
 				vecincr[0] = incr0v;
@@ -305,7 +309,8 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 					// infowhyfinished[tstep-1] = -3;
 					break;
 				}
-	
+
+				// _1 passo corrente all'inizio del NEWTstep e passo corrente durante NEWT _2
 				compute_variation (	V1, n1, F1, I1, V2, n2, F2, I2, P, std::fmin (clamp, tauk), incr1v, incr1n, incr1F, incr1I);
 										
 				vecincr[0] = incr1v;
@@ -347,6 +352,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 				}
 				
 				/// MODIFIED NEWTON
+				// tengo memoria della soluzione al passo corrente
 				V1 = V2;
 				n1 = n2;
 				F1 = F2;
@@ -358,6 +364,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 				incnrmk.resize(P._maxit_mnewton+1);	/// inserire dimensioni più intelligenti?
 				inck_clamp.resize(P._maxit_mnewton+1);
 				resnrmk.resize(P._maxit_mnewton+1);
+				
 				for (int imn = 1; imn<P._maxit_mnewton+1; imn++) {	/// MODIFIED NEWTON STEP 
 					iimn = imn;
 		
@@ -507,6 +514,8 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 			else{
 				// memorizzo la soluzione al passo corrente
 				
+				// se fossero dei vettori farei _V = V2, _n = n2 ecc...
+				
 				for(unsigned i=0; i<V2.size(); i++){
 					_V[i][2] = V2[i];
 				}
@@ -576,7 +585,9 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 		if (P._savedata)
 		{
 			lastsaved = tstep;
-
+			
+			// se fossero dei vettori farei _Vold = Vold, _nold = nold, ecc...
+			
 			Vold.resize(_V.size());
 			for(unsigned i=0; i<Vold.size(); i++){
 				Vold[i] = _V[i][1];
