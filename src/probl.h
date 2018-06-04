@@ -26,14 +26,11 @@
  *	otherwise it will be refined n.cycles times and will have 2*n.cycles elements on both the x-axis and the y-axis
  */
 class Probl
-{	
-
-	protected:
+{
+	public:
 		
 	std::vector<double>	_data_phi_lumo;		/**< interpolation table */
 	std::vector<double>	_data_n;			/**< interpolated values */	
-		
-    public:
 	
 	/// Class to store physical constants
 	/// class	Constants

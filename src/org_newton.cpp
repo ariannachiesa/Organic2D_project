@@ -15,19 +15,20 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 {
 	int	nnodes = P.get_msh_nodes(),
 		nelements = P.get_msh_elem(),
-        ndofs,
-		j = 0;
+        ndofs;
+		//j = 0;
 	double	eps_semic = P._eps_semic,
 			eps_ins = P._eps_ins,
 			q = P._q,
 			Vth = P._Vth,
-			Vshift = P._Vshift,
-			L = P._L,
-			tins = P._t_ins,
-			tsemic = P._t_semic,
+			//Vshift = P._Vshift,
+			//L = P._L,
+			//tins = P._t_ins,
+			//tsemic = P._t_semic,
 			section = P._section,
-			PhiB = P._PhiB,
-			s1, s2, s = 0;
+			//PhiB = P._PhiB,
+			//s1, s2, 
+			s = 0;
 	unsigned int	numcontacts;
 	bool	ins = P._ins;
 	std::array<int,2>	pins = P._pins;
@@ -227,6 +228,8 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	// bim2a_dirichlet_bc (P._msh,bcsn,M,resn);	/// che matrice metto qui ??
 	
 	/// ADJUST FOR ZERO INSULATOR CHARGE
+	std::vector<double>	vec(n.size(),0.0);
+	
 	vec = M*n;
 	for(unsigned i=0; i<scnodes.size(); i++){
 		if(scnodes[i] == 0){
@@ -237,7 +240,6 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	for(unsigned i=0; i<indexingn.size(); i++){
 		res[indexingn[i]] = resn[i];
 	}
-	resn.clear();
 	
 	
 	///	ASSEMBLING THIRD ROW
@@ -246,7 +248,6 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	std::vector<double>	diff(F.size(),0),
 						resF(F.size(),0),
 						C;
-	double	s;
 	A.resize(4);
 	r.resize(4);
 	bcs.get_A(A);
@@ -331,7 +332,7 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 		// Electron current.
 		s=0;
 		for(unsigned j=0; j<rr.size(); j++){
-			s += section * q * r22[rr[j]];
+			s += section * q * resn[rr[j]];
 		}
 		res[indexingI[i]] += s;
 	}	
@@ -339,7 +340,7 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	sum1.clear();
 	sum2.clear();
 	diff.clear();
-	r22.clear();
+	resn.clear();
 	
 	for(unsigned i=0; i<indexingV.size(); i++){
 		res[indexingV[i]] /= rowscaling[0];
@@ -376,9 +377,11 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 			q = P._q,
 			Vth = P._Vth,
 			section = P._section,
-			L = P._L,
-			tins = P._t_ins,
-			tsemic = P._t_semic;
+			//L = P._L,
+			//tins = P._t_ins,
+			//tsemic = P._t_semic,
+			PhiB = P._PhiB,
+			Vshift = P._Vshift;
 			
 	bool	ins = P._ins;
 			
@@ -458,7 +461,7 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 	std::vector<double>	resV(V.size(),0.0);
 	
 	for(unsigned i=0; i<indexingV.size(); i++){
-		resV[i] = res[indexingV[i]];
+		resV[i] = _res[indexingV[i]];
 	}
 	
 	std::vector<double>	BCbulk(V.size(),0.0),
@@ -474,11 +477,11 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 	}
 	BCgate = M*BCgate;
 
-	int indexT = _nTrees-1;	
+	int indexT = P._nTrees-1;	
 	std::tuple<int, int, func_quad>	tupla1(0,2,[&resV,&BCbulk](tmesh::quadrant_iterator quad, tmesh::idx_t i)
 																{return (resV[quad->gt(i)]+BCbulk[quad->gt(i)]);}),
 									tupla2(indexT,3,[&resV,&BCgate](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																{return (resV[quad->gt(i)]+BCgate[quad->gt(i)];});
+																{return (resV[quad->gt(i)]+BCgate[quad->gt(i)]);});
 	dirichlet_bcs_quad	bcsV;
 	bcsV.push_back(tupla1);
 	bcsV.push_back(tupla2);
@@ -486,12 +489,12 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 	bim2a_dirichlet_bc (P._msh, bcsV, A11, resV);	/// che matrice metto qui ??
 	
 	for(unsigned i=0; i<indexingV.size(); i++){
-		res[indexingV[i]] = resV[i];
+		_res[indexingV[i]] = resV[i];
 	}
 	resV.clear();
 
 	///	ASSEMBLING FIRST ROW
-	sparse_matrix::col_iterator J2;
+	sparse_matrix::col_iterator J2, J;
 	
 	for(unsigned i=0; i<indexingV.size(); i++){
 		
@@ -499,11 +502,11 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 		J2 = A12[i].begin ();
 		
 		for(unsigned j=0; j<indexingV.size(); j++){	
-			if( A11.col_idx(J) == j ){
+			if( (unsigned)A11.col_idx(J) == j ){
 				jacobian[indexingV[i]][indexingV[j]] += A11[i][j];
 				J++;
 			}
-			if( A12.col_idx(J2) == j ){
+			if( (unsigned)A12.col_idx(J2) == j ){
 				jacobian[indexingV[i]][indexingn[j]] += A12[i][j];
 				J2++;
 			}
@@ -668,11 +671,11 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 		J2 = A22[i].begin ();
 		
 		for(unsigned j=0; j<indexingV.size(); j++){
-			if( A21.col_idx (J)==j ){
+			if( (unsigned)A21.col_idx (J)==j ){
 				jacobian[indexingn[i]][indexingV[j]] += A21[i][j];	
 				J++;
 			}
-			if( A22.col_idx (J2)==j ){
+			if( (unsigned)A22.col_idx (J2)==j ){
 				jacobian[indexingn[i]][indexingn[j]] += A22[i][j];
 				J2++;
 			}
@@ -696,7 +699,7 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 	
 		for(unsigned j=0; j<indexingF.size(); j++){
 			jacobian[indexingF[i]][indexingF[j]] = (A[i][j]/deltat);
-			if( B.col_idx(J) == j ){
+			if( (unsigned)B.col_idx(J) == j ){
 				jacobian[indexingF[i]][indexingF[j]] += B[i][j];
 				J++;
 			}
@@ -1905,9 +1908,9 @@ Newton::DIV_MN_MSG (	int tstep, int t, int Nstep, int mNstep, int field, std::ve
 
 
 void
-saveNEWT (	std::vector<double>& Vold, std::vector<double>& nold, std::vector<double>& Fold, std::vector<double>& Iold, double told, 
-			std::vector<double>& V, std::vector<double>& n, std::vector<double>& F, std::vector<double>& I, std::vector<double>& res,
-			double t, double dt, int nsaves, int newton_solves, int modified_newton_solves, double freq)
+Newton::saveNEWT (	std::vector<double>& Vold, std::vector<double>& nold, std::vector<double>& Fold, std::vector<double>& Iold, double told, 
+					std::vector<double>& V, std::vector<double>& n, std::vector<double>& F, std::vector<double>& I, std::vector<double>& res,
+					double t, double dt, int nsaves, int newton_solves, int modified_newton_solves, double freq)
 {
 
   ColumnVector oct_V (V.size (), 0.0);
@@ -1962,4 +1965,77 @@ saveNEWT (	std::vector<double>& Vold, std::vector<double>& nold, std::vector<dou
 
   assert (octave_io_close () == 0);
 
+};
+
+double
+Newton::interp1( std::vector<double> &xData, std::vector<double> &yData, double x, bool extrapolate )
+{
+   bool	found = false;
+   int	size = xData.size(),
+		i = 0,
+		begin = 0,
+		end = xData.size() - 1;
+		
+   if ( x >= xData[size - 2] )                                                 	// find left end of interval for interpolation
+   {																			// special case: beyond right end 
+      i = size - 2;
+   }
+   else
+   {
+	  while( begin <= end && found == false  ){
+		
+		i = ( begin + end ) / 2;
+
+		if( x == xData[i] ){
+			found = true;
+		}
+		else{
+			if( x < xData[i] ){
+				end = i-1;
+			}
+			else{
+				begin = i+1;
+			}
+		}
+	}
+   }
+   double xL = xData[i], yL = yData[i], xR = xData[i+1], yR = yData[i+1];      // points on either side (unless beyond ends) 
+   if ( !extrapolate )                                                         // if beyond ends of array and not extrapolating 
+   {
+      if ( x < xL ) yR = yL;
+      if ( x > xR ) yL = yR;
+   }
+   double dydx = ( yR - yL ) / ( xR - xL );                                    // gradient 
+   return yL + dydx * ( x - xL );                                              // linear interpolation
+};
+
+double
+Newton::norm(std::vector<double>& in, int n){	// i = 0 Inf , i = 1 H1 , i = 2 L2
+    double out = 0;
+	std::vector<double>	v(in.size(),0);
+    switch(n){
+        case 0: {
+                        for(unsigned i=0; i<in.size(); i++){
+                            v[i] = std::abs(in[i]);
+                        }
+                        out = *std::max_element( v.begin(),v.end() );
+						break;
+				}
+    }
+	v.clear();
+    return out;
+};
+
+bool
+Newton::any(std::vector<double>& v)
+{
+	int l=0;
+	for(unsigned i=0; i<v.size(); i++){
+		if(v[i]!=0)
+			l++;
+	}
+	if( (unsigned)l == v.size())
+		return true;
+	else
+		return false;
 };

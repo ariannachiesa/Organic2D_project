@@ -83,14 +83,26 @@ class Newton{
 								std::vector<double>& V, std::vector<double>& n, std::vector<double>& F, std::vector<double>& I,
 								int& clamp, double& tauk);
 								
+	double
+	norm(std::vector<double>& in, int n);
+	
+	bool
+	any(std::vector<double>& v);
+								
 	void
 	org_physical_models2d (std::vector<double>& n, Probl& P, std::vector<double>& mobilityn, std::vector<double>& alphan, std::vector<double>& der_dalpha_n);
+	
+	void
+	org_physical_models2d (std::vector<double>& n, Probl& P, std::vector<double>& mobilityn, std::vector<double>& alphan);
 	
 	std::vector<double>
 	org_secs_mobility_EGDM (double mu0, std::vector<double>& c, double C0, double sigma, Probl& P);
 	
 	void
 	org_gaussian_charge_n(std::vector<double>& V, Probl& P,std::vector<double>& rhon, std::vector<double>& drhon_dV);
+	
+	void
+	org_gaussian_charge_n(std::vector<double>& V, Probl& P,std::vector<double>& rhon);
 	
 	double
 	org_gaussian_charge_n(double V, Probl& P);
@@ -124,6 +136,9 @@ class Newton{
 	saveNEWT(std::vector<double>& Vold, std::vector<double>& nold, std::vector<double>& Fold, std::vector<double>& Iold, double told, 
 			std::vector<double>& V, std::vector<double>& n, std::vector<double>& F, std::vector<double>& I, std::vector<double>& res,
 			double t, double dt, int nsaves, int newton_solves, int modified_newton_solves, double freq);
+			
+	double
+	interp1( std::vector<double> &xData, std::vector<double> &yData, double x, bool extrapolate );
 };
 
 #endif	// NEWTON_H

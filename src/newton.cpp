@@ -15,6 +15,8 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 		clamp = 0,
 		lastsaved = 0,
 		nsaves = 0,
+		nsteps_check = P._nsteps_check,
+		maxit = P._maxit,
 		firstfixtstep, Nextvars, NI, tstep, in,
 		whichone, totmn, iimn, told;
 
@@ -81,7 +83,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 		}
 	}
     
-	NI  = P._pins.size();
+	NI  = P._pins.size();	/// credo sia sbagliato , 2x2 , dovrebe essere 2x3 , quindi 3x3
 	_I.resize(NI);
 	
 	if( std::accumulate( Iin.begin(), Iin.end(), 0.0) != 0.0){
@@ -147,7 +149,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 			}
 			bcs.assign(t, P._Csb, P._Vshift, F);	// ma quando sono alla prima iterazione ? passo una roba non inizializzata
 			
-			org_secs_state_predict (P, _V, _n, _F, _I, tstep, _tout, V0, n0, F0, I0);
+			org_secs_state_predict (P, _V, _n, _F, _I, tstep, _tout, V0, n0, F0, I0);		/// da modificare
 			V2 = V0;
 			n2 = n0;
 			F2 = F0;
@@ -173,9 +175,17 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 
 				bcs.assign(t, P._Csb, P._Vshift, F2);
 				
-				_res = org_secs2d_newton_residual(	P, V2, n2, F2, I2, //_V[tstep-1], _n[tstep-1], _F[tstep-1], _I[tstep-1], 
-													/// questi vanno cambiati
-													dt, bcs, indexingV, indexingn, indexingF, indexingI);
+				for(int i=0; i<nnodes; i++){
+					Vold[i] = _V[i][1];
+					nold[i] = _n[i][1];
+				}
+				for(unsigned i=0; i<_F.size(); i++){
+					Fold[i] = _F[i][1];
+				}
+				for(unsigned i=0; i<_I.size(); i++){
+					Iold[i] = _I[i][1];
+				}
+				_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, indexingV, indexingn, indexingF, indexingI);
 
 				//for(unsigned i=0; i<_res.size(); i++){
 				//	std::cout<<"res = "<<_res[i]<<std::endl;
@@ -200,7 +210,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 						break;
 					}
 					
-					_res = org_secs2d_newton_residual(	P, V2, n2, F2, I2, //_V[tstep-1], _n[tstep-1], _F[tstep-1], _I[tstep-1],
+					_res = org_secs2d_newton_residual(	P, V2, n2, F2, I2, Vold, nold, Fold, Iold,
 														dt, bcs, indexingV, indexingn, indexingF, indexingI);
 				}
 
@@ -225,10 +235,10 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 	  
 				_jac.aij(vals, irow, jcol, mumps_solver.get_index_base ());
 		
-				// if(in == 1){	// factorization of the matrix only at the first iteration of the Newton method
+				if(in == 1){	// only at the first iteration of the Newton method
 					mumps_solver.set_lhs_structure (_jac.rows(), irow, jcol);
 					mumps_solver.analyze ();
-				// }
+				}
 		
 				mumps_solver.set_lhs_data (vals);
 				mumps_solver.set_rhs (delta);
@@ -358,8 +368,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 		
 					bcs.assign(t, P._Csb, P._Vshift, F2);
 	  
-					_res = org_secs2d_newton_residual(	P, V2, n2, F2, I2, //_V[tstep-1], _n[tstep-1], _F[tstep-1], _I[tstep-1],	//
-														dt, bcs, indexingV, indexingn, indexingF, indexingI);
+					_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, indexingV, indexingn, indexingF, indexingI);
 														
 					resall.resize(4);
 					compute_residual_norm (resnrmk[imn-1], whichone, resall, _res, indexingV, indexingn, indexingF, indexingI);
@@ -496,18 +505,19 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 				std::cout<<"new dt "<<dt<<" s"<<std::endl;
 			}
 			else{
-
+				// memorizzo la soluzione al passo corrente
+				
 				for(unsigned i=0; i<V2.size(); i++){
-					_V[i][1] = V2[i];
+					_V[i][2] = V2[i];
 				}
 				for(unsigned i=0; i<n2.size(); i++){
-					_n[i][1] = n2[i];
+					_n[i][2] = n2[i];
 				}
 				for(unsigned i=0; i<F2.size(); i++){
-					_F[i][1] = F2[i];
+					_F[i][2] = F2[i];
 				}
 				for(unsigned i=0; i<I2.size(); i++){
-					_I[i][1] = I2[i];
+					_I[i][2] = I2[i];
 				}
 		
 				dtfact = std::fmin(0.8 * sqrt(P._maxnpincr / incr0), P._maxdtincr);
@@ -521,44 +531,44 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 				std::cout<<"(incr0 = "<<incr0<<")"<<std::endl;
 			}
 			
-			if (P._savedata && ((tstep - lastsaved) >= 100)){
-				lastsaved = tstep;
+			// if (P._savedata && ((tstep - lastsaved) >= 100)){
+				// lastsaved = tstep;
 		
-				Vold.resize(_V.size());
-				for(unsigned i=0; i<Vold.size(); i++){
-					Vold[i] = _V[i][0];
-				}
+				// Vold.resize(_V.size());
+				// for(unsigned i=0; i<Vold.size(); i++){
+					// Vold[i] = _V[i][1];
+				// }
 		
-				nold.resize(_n.size());
-				for(unsigned i=0; i<nold.size(); i++){
-					nold[i] = _n[i][0];
-				}
+				// nold.resize(_n.size());
+				// for(unsigned i=0; i<nold.size(); i++){
+					// nold[i] = _n[i][1];
+				// }
 		
-				Fold.resize(_F.size());
-				for(unsigned i=0; i<Fold.size(); i++){
-					Fold[i] = _F[i][0];
-				}
+				// Fold.resize(_F.size());
+				// for(unsigned i=0; i<Fold.size(); i++){
+					// Fold[i] = _F[i][1];
+				// }
 		
-				Iold.resize(_I.size());
-				for(unsigned i=0; i<Iold.size(); i++){
-					Iold[i] = _I[i][0];
-				}
+				// Iold.resize(_I.size());
+				// for(unsigned i=0; i<Iold.size(); i++){
+					// Iold[i] = _I[i][1];
+				// }
 
-				told = _tout[tstep - 1];
+				// told = _tout[tstep - 1];
 	  
-				/// mi conviene salvare solo alla fine del time step!!!
-				/// --> questo save lo salto
-				// saveNEWT(	Vold, nold, Fold, Iold, told, V2, n2, F2, I2, _res, t, dt, 
-							// nsaves, newton_solves, modified_newton_solves, freq);
-				/// praticamente _old è il vettore al passo precedente, _2 è il vettore al passo corrente
-				/// ma allora può essere che non abbia bisogno delle sparse_matrix. 
-				/// potrei semplicemente fare dei vettori old e new
+				// /// mi conviene salvare solo alla fine del time step!!!
+				// /// --> questo save lo salto
+				// // saveNEWT(	Vold, nold, Fold, Iold, told, V2, n2, F2, I2, _res, t, dt, 
+							// // nsaves, newton_solves, modified_newton_solves, freq);
+				// /// praticamente _old è il vettore al passo precedente, _2 è il vettore al passo corrente
+				// /// ma allora può essere che non abbia bisogno delle sparse_matrix. 
+				// /// potrei semplicemente fare dei vettori old e new
 				
-				Vold.clear();
-				nold.clear();
-				Fold.clear();
-				Iold.clear();
-			}
+				// Vold.clear();
+				// nold.clear();
+				// Fold.clear();
+				// Iold.clear();
+			// }
 
 			V0.clear(); n0.clear(); F0.clear(); I0.clear();
 		} /// END TIME STEP 
@@ -569,22 +579,22 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 
 			Vold.resize(_V.size());
 			for(unsigned i=0; i<Vold.size(); i++){
-				Vold[i] = _V[i][0];
+				Vold[i] = _V[i][1];
 			}
 		
 			nold.resize(_n.size());
 			for(unsigned i=0; i<nold.size(); i++){
-				nold[i] = _n[i][0];
+				nold[i] = _n[i][1];
 			}
 		
 			Fold.resize(_F.size());
 			for(unsigned i=0; i<Fold.size(); i++){
-				Fold[i] = _F[i][0];
+				Fold[i] = _F[i][1];
 			}
 		
 			Iold.resize(_I.size());
 			for(unsigned i=0; i<Iold.size(); i++){
-				Iold[i] = _I[i][0];
+				Iold[i] = _I[i][1];
 			}
 	  
 			told = _tout[tstep - 1];
