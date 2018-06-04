@@ -19,10 +19,10 @@ class Newton{
 	// std::vector< std::vector<double> >	_n;
 	// std::vector< std::vector<double> >	_F;
 	// std::vector< std::vector<double> >	_I;
-	sparse_matrix	_V;
-	sparse_matrix	_n;
-	sparse_matrix	_F;
-	sparse_matrix	_I;
+	std::vector<double>	_V;
+	std::vector<double>	_n;
+	std::vector<double>	_F;
+	std::vector<double>	_I;
 	std::vector<double>	_tout;
 	
 
