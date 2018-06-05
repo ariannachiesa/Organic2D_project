@@ -15,11 +15,7 @@ class Newton{
 	protected:
 	sparse_matrix		_jac;
 	std::vector<double>	_res;
-	
-	// std::vector< std::vector<double> >	_V;
-	// std::vector< std::vector<double> >	_n;
-	// std::vector< std::vector<double> >	_F;
-	// std::vector< std::vector<double> >	_I;
+
 	std::vector<double>	_V;
 	std::vector<double>	_n;
 	std::vector<double>	_F;
@@ -70,10 +66,6 @@ class Newton{
 	void
 	DIV_MN_MSG (int tstep, int t, int Nstep, int mNstep, int field, std::vector<double>& incrhist, double incr, 
 				std::vector<double>& res, int nsteps_check);
-				
-	// void
-	// org_secs_state_predict (Probl& P, sparse_matrix& V, sparse_matrix& n, sparse_matrix& F, sparse_matrix& I, int& tstep, std::vector<double>& tout,
-							// std::vector<double>& V0, std::vector<double>& n0, std::vector<double>& F0, std::vector<double>& I0);
 							
 	void
 	org_secs_state_predict (Probl& P, std::vector<double>& Vold, std::vector<double>& nold, std::vector<double>& Fold, std::vector<double>& Iold,

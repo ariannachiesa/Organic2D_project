@@ -51,19 +51,11 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 	
 	/// INIT STATE FROM SCRATCH
 	tstep = 0;
-	_tout[0] = tspan[0];		/// la dimensione di _tout va definita!
+	_tout[0] = tspan[0];		// la dimensione di _tout va definita!
     t = tspan[0];
 	
 	_V = Vin;
 	_n = nin;
-	// _V.resize(Vin.size());
-	// _n.resize(nin.size());
-	// for(unsigned i=0; i<Vin.size(); i++){
-		// _V[i][0] = Vin[i];
-	// }
-	// for(unsigned i=0; i<nin.size(); i++){
-		// _n[i][0] = nin[i];
-	// }
 	
 	_F.resize(4);
 	bcs.assign(t, P._Csb, P._Vshift, F);
@@ -71,15 +63,9 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 	F = bcs.get_F();
     Nextvars  = F.size();
 	if( std::accumulate( Fin.begin(), Fin.end(), 0.0) != 0.0){
-		// for(unsigned i=0; i<F.size(); i++){
-			// _F[i][0] = Fin[i];
-		// }
 		_F = Fin;
 	}
 	else{
-		// for(unsigned i=0; i<F.size(); i++){
-			// _F[i][0] = F[i];
-		// }
 		_F = F;
 	}
     
@@ -87,9 +73,6 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 	_I.resize(NI);
 	
 	if( std::accumulate( Iin.begin(), Iin.end(), 0.0) != 0.0){
-		// for(unsigned i=0; i<Iin.size(); i++){
-			// _I[i][0] = Iin[i];
-		// }
 		_I = Iin;
 	}
 
@@ -103,7 +86,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 	}
 	std::cout<<"Connecting contact at y = "<<yend<<" to circuit pin "<<P._pins[1]<<std::endl;
 	
-	/// node ordering
+	/// Node ordering
 	std::vector<int>    indexingV(nnodes,0),
 						indexingn(nnodes,0),
 						indexingF(Nextvars,0),
@@ -143,14 +126,10 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 			
 			incr0 = 4 * P._maxnpincr;
 			
-			// for(unsigned i=0; i<F.size(); i++){
-				// F[i] = _F[i][1];		/// devo passare F[end] cioè il valore al passo corrente...
-			// }
 			bcs.assign(t, P._Csb, P._Vshift, _F);
 			
-			// qua potrei passare tutti i vettori ai passi t-2 , t-1 e t. In uscita ho V0, n0, F0, I0 che saranno i nuovi vettori al passo corrente
-			// ovvero: org_secs_state_predict (P, V, Vold, Voldold, ecc.. tstep, _tout, V0, n0, F0, I0);
-			///org_secs_state_predict (P, _V, _n, _F, _I, tstep, _tout, V0, n0, F0, I0);		/// da modificare
+			/// inizializzare old e oldold
+			org_secs_state_predict (P, Vold, nold, Fold, Iold, Voldold, noldold, Foldold, Ioldold, tstep, tout, V0, n0, F0, I0);
 			
 			// _2 sono i nuovi vettori al passo corrente
 			V2 = V0;
@@ -179,17 +158,6 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 
 				bcs.assign(t, P._Csb, P._Vshift, F2);
 				
-				// for(int i=0; i<nnodes; i++){
-					// Vold[i] = _V[i][1];
-					// nold[i] = _n[i][1];
-				// }
-				// for(unsigned i=0; i<_F.size(); i++){
-					// Fold[i] = _F[i][1];
-				// }
-				// for(unsigned i=0; i<_I.size(); i++){
-					// Iold[i] = _I[i][1];
-				// }
-				// come input al metodo passo i vettori all passo corrente e quelli al passo precedente
 				///devo però definire i vettori old
 				_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, indexingV, indexingn, indexingF, indexingI);
 
@@ -216,7 +184,6 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 						break;
 					}
 					
-					// come input al metodo passo i vettori all passo corrente e quelli al passo precedente
 					_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, indexingV, indexingn, indexingF, indexingI);
 				}
 
@@ -358,7 +325,6 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 				}
 				
 				/// MODIFIED NEWTON
-				// tengo memoria della soluzione al passo corrente
 				V1 = V2;
 				n1 = n2;
 				F1 = F2;
@@ -520,6 +486,11 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 			}
 			else{
 				// aggiorno la soluzione al passo corrente con quella appena calcolata
+				Voldold = Vold;
+				noldold = nold;
+				Foldold = Fold;
+				Ioldold = Iold;
+				
 				Vold = _V;
 				nold = _n;
 				Fold = _F;
@@ -529,19 +500,6 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 				_n = n2;
 				_F = F2;
 				_I = I2;
-				
-				// for(unsigned i=0; i<V2.size(); i++){
-					// _V[i][2] = V2[i];
-				// }
-				// for(unsigned i=0; i<n2.size(); i++){
-					// _n[i][2] = n2[i];
-				// }
-				// for(unsigned i=0; i<F2.size(); i++){
-					// _F[i][2] = F2[i];
-				// }
-				// for(unsigned i=0; i<I2.size(); i++){
-					// _I[i][2] = I2[i];
-				// }
 		
 				dtfact = std::fmin(0.8 * sqrt(P._maxnpincr / incr0), P._maxdtincr);
 				dt = std::fmax( std::fmin(dtfact * dt, dtmax), dtmin);
@@ -553,45 +511,6 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 				std::cout<<"dt = "<<dt<<" ";
 				std::cout<<"(incr0 = "<<incr0<<")"<<std::endl;
 			}
-			
-			// if (P._savedata && ((tstep - lastsaved) >= 100)){
-				// lastsaved = tstep;
-		
-				// Vold.resize(_V.size());
-				// for(unsigned i=0; i<Vold.size(); i++){
-					// Vold[i] = _V[i][1];
-				// }
-		
-				// nold.resize(_n.size());
-				// for(unsigned i=0; i<nold.size(); i++){
-					// nold[i] = _n[i][1];
-				// }
-		
-				// Fold.resize(_F.size());
-				// for(unsigned i=0; i<Fold.size(); i++){
-					// Fold[i] = _F[i][1];
-				// }
-		
-				// Iold.resize(_I.size());
-				// for(unsigned i=0; i<Iold.size(); i++){
-					// Iold[i] = _I[i][1];
-				// }
-
-				// told = _tout[tstep - 1];
-	  
-				// /// mi conviene salvare solo alla fine del time step!!!
-				// /// --> questo save lo salto
-				// // saveNEWT(	Vold, nold, Fold, Iold, told, V2, n2, F2, I2, _res, t, dt, 
-							// // nsaves, newton_solves, modified_newton_solves, freq);
-				// /// praticamente _old è il vettore al passo precedente, _2 è il vettore al passo corrente
-				// /// ma allora può essere che non abbia bisogno delle sparse_matrix. 
-				// /// potrei semplicemente fare dei vettori old e new
-				
-				// Vold.clear();
-				// nold.clear();
-				// Fold.clear();
-				// Iold.clear();
-			// }
 
 			V0.clear(); n0.clear(); F0.clear(); I0.clear();
 		} /// END TIME STEP 
@@ -599,26 +518,6 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 		if (P._savedata)
 		{
 			lastsaved = tstep;
-			
-			// Vold.resize(_V.size());
-			// for(unsigned i=0; i<Vold.size(); i++){
-				// Vold[i] = _V[i][1];
-			// }
-		
-			// nold.resize(_n.size());
-			// for(unsigned i=0; i<nold.size(); i++){
-				// nold[i] = _n[i][1];
-			// }
-		
-			// Fold.resize(_F.size());
-			// for(unsigned i=0; i<Fold.size(); i++){
-				// Fold[i] = _F[i][1];
-			// }
-		
-			// Iold.resize(_I.size());
-			// for(unsigned i=0; i<Iold.size(); i++){
-				// Iold[i] = _I[i][1];
-			// }
 	  
 			told = _tout[tstep - 1];
 			nsaves++;
