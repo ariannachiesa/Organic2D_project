@@ -16,7 +16,6 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	int	nnodes = P.get_msh_nodes(),
 		nelements = P.get_msh_elem(),
         ndofs;
-		//j = 0;
 	double	eps_semic = P._eps_semic,
 			eps_ins = P._eps_ins,
 			q = P._q,
@@ -456,42 +455,42 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
   
 	jacobian.resize(ndofs);	
 
-	///	ENFORCING BCs ON FIRST ROW
+	// ///	ENFORCING BCs ON FIRST ROW
 	
-	std::vector<double>	resV(V.size(),0.0);
+	// std::vector<double>	resV(V.size(),0.0);
 	
-	for(unsigned i=0; i<indexingV.size(); i++){
-		resV[i] = _res[indexingV[i]];
-	}
+	// for(unsigned i=0; i<indexingV.size(); i++){
+		// resV[i] = _res[indexingV[i]];
+	// }
 	
-	std::vector<double>	BCbulk(V.size(),0.0),
-						BCgate(V.size(),0.0);
+	// std::vector<double>	BCbulk(V.size(),0.0),
+						// BCgate(V.size(),0.0);
 						
-	for(unsigned i=0; i<V.size(); i++){
-		BCbulk[i] = (V[i] - F[pins[0]]) - PhiB;
-	}
-	BCbulk = M*BCbulk;
+	// for(unsigned i=0; i<V.size(); i++){
+		// BCbulk[i] = (V[i] - F[pins[0]]) - PhiB;
+	// }
+	// BCbulk = M*BCbulk;
 	
-	for(unsigned i=0; i<V.size(); i++){
-		BCgate[i] = (V[i] - F[pins[1]]) - (PhiB + Vshift);
-	}
-	BCgate = M*BCgate;
+	// for(unsigned i=0; i<V.size(); i++){
+		// BCgate[i] = (V[i] - F[pins[1]]) - (PhiB + Vshift);
+	// }
+	// BCgate = M*BCgate;
 
-	int indexT = P._nTrees-1;	
-	std::tuple<int, int, func_quad>	tupla1(0,2,[&resV,&BCbulk](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																{return (resV[quad->gt(i)]+BCbulk[quad->gt(i)]);}),
-									tupla2(indexT,3,[&resV,&BCgate](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																{return (resV[quad->gt(i)]+BCgate[quad->gt(i)]);});
-	dirichlet_bcs_quad	bcsV;
-	bcsV.push_back(tupla1);
-	bcsV.push_back(tupla2);
+	// int indexT = P._nTrees-1;	
+	// std::tuple<int, int, func_quad>	tupla1(0,2,[&resV,&BCbulk](tmesh::quadrant_iterator quad, tmesh::idx_t i)
+																// {return (resV[quad->gt(i)]+BCbulk[quad->gt(i)]);}),
+									// tupla2(indexT,3,[&resV,&BCgate](tmesh::quadrant_iterator quad, tmesh::idx_t i)
+																// {return (resV[quad->gt(i)]+BCgate[quad->gt(i)]);});
+	// dirichlet_bcs_quad	bcsV;
+	// bcsV.push_back(tupla1);
+	// bcsV.push_back(tupla2);
 	
-	bim2a_dirichlet_bc (P._msh, bcsV, A11, resV);	/// che matrice metto qui ??
+	// bim2a_dirichlet_bc (P._msh, bcsV, A11, resV);	/// che matrice metto qui ??
 	
-	for(unsigned i=0; i<indexingV.size(); i++){
-		_res[indexingV[i]] = resV[i];
-	}
-	resV.clear();
+	// for(unsigned i=0; i<indexingV.size(); i++){
+		// _res[indexingV[i]] = resV[i];
+	// }
+	// resV.clear();
 
 	///	ASSEMBLING FIRST ROW
 	sparse_matrix::col_iterator J2, J;
@@ -582,41 +581,41 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 		}
 	}
 	
-	///	ENFORCING BCs ON SECOND ROW: both JAC and RES
+	// ///	ENFORCING BCs ON SECOND ROW: both JAC and RES
 	
-	std::vector<double>	resn(nnodes,0.0);
+	// std::vector<double>	resn(nnodes,0.0);
 	
-	for(unsigned i=0; i<indexingn.size(); i++){
-		resn[i] = _res[indexingn[i]];
-	}
+	// for(unsigned i=0; i<indexingn.size(); i++){
+		// resn[i] = _res[indexingn[i]];
+	// }
 	
-	std::vector<double>	rho,	// forse posso non specificare le dimensioni...
-						nimposed,
+	std::vector<double>	// rho,	// forse posso non specificare le dimensioni...
+						// nimposed,
 						vec(n.size(),0.0);
 	
-	org_gaussian_charge_n(V, P, rho);	/// overload: controllare
+	// org_gaussian_charge_n(V, P, rho);	/// overload: controllare
 	
-	nimposed = rho;
-	for(unsigned i=0; i<nimposed.size(); i++){
-		nimposed[i] *= (-1)/q;
-	}
+	// nimposed = rho;
+	// for(unsigned i=0; i<nimposed.size(); i++){
+		// nimposed[i] *= (-1)/q;
+	// }
 	
-	BCbulk.clear();
-	BCbulk.resize(n.size());
+	// BCbulk.clear();
+	// BCbulk.resize(n.size());
 	
-	for(unsigned i=0; i<n.size(); i++){
-		BCbulk[i] = (n[i] - nimposed[i]);
-	}
-	BCbulk = M*BCbulk;
+	// for(unsigned i=0; i<n.size(); i++){
+		// BCbulk[i] = (n[i] - nimposed[i]);
+	// }
+	// BCbulk = M*BCbulk;
 	
-	std::tuple<int, int, func_quad>	tuplan(0,2,[&resn,&BCbulk](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																{return (resn[quad->gt(i)]+BCbulk[quad->gt(i)]);});
-	dirichlet_bcs_quad	bcsn;
-	bcsn.push_back(tupla1);
+	// std::tuple<int, int, func_quad>	tuplan(0,2,[&resn,&BCbulk](tmesh::quadrant_iterator quad, tmesh::idx_t i)
+																// {return (resn[quad->gt(i)]+BCbulk[quad->gt(i)]);});
+	// dirichlet_bcs_quad	bcsn;
+	// bcsn.push_back(tupla1);
 	
-	bim2a_dirichlet_bc (P._msh, bcsn, A22, resn);
+	// bim2a_dirichlet_bc (P._msh, bcsn, A22, resn);
 
-	///	ADJUST FOR ZERO INSULATOR CHARGE: -----> anche sia per jac che per res?
+	///	ADJUST FOR ZERO INSULATOR CHARGE
 	std::vector<int>	insn(scnodes.size(),0);
 	for(unsigned i=0; i<scnodes.size(); i++){
 		if(scnodes[i] == 0){
@@ -659,12 +658,12 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 	
 	///	ASSEMBLING SECOND ROW
 	
-	// res
-	for(unsigned i=0; i<indexingn.size(); i++){
-		_res[indexingn[i]] = resn[i];
-	}
+	// // res
+	// for(unsigned i=0; i<indexingn.size(); i++){
+		// _res[indexingn[i]] = resn[i];
+	// }
 	
-	// jacobian
+	// // jacobian
 	for(unsigned i=0; i<indexingn.size(); i++){
 		
 		J = A21[i].begin ();

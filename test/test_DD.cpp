@@ -79,7 +79,8 @@ int main(int argc, char** argv){
 						f(CF.size(),0.0),
 						eps_ins_r(CF.size(),0.0),
 						tspan,
-						Fin(4,0.0);
+						Fin(4,0.0),
+						Iin(2,0.0);
 
 	for(unsigned i=0; i<CF.size(); i++){
 		frequency[i] = CF[i][0];
@@ -107,9 +108,10 @@ int main(int argc, char** argv){
             tstart_simul;
 
     tstart_loop = clock();	
-	for (unsigned i=0; i<frequency.size(); i++){
+//	for (unsigned i=0; i<frequency.size(); i++){
 	
-		freq = frequency[i];
+		//freq = frequency[i];
+		freq = frequency[0];
 		/// Compute frequency-dependent eps_ins and Csb.
 		if (freq <= frequency[60]){
 			P.set_eps_ins_r( interp1( f, eps_ins_r, freq, true ) );
@@ -152,11 +154,11 @@ int main(int argc, char** argv){
 		BCS_CIRC	bcs(freq, P._VG, P._Csb, P._Vshift, Fin);
 		
 		/// Newton's algorithm
-		// Newton		newt(	P, Vin, nin, tspan, Fin, Iin, bcs, freq );
+		Newton	newt(P, P.Vin, P.nin, tspan, Fin, Iin, bcs, freq);
 		
 		tstart_simul = clock() - tstart_simul;
         std::cout<<"Simulation run time: "<<tstart_simul<<" , ("<<((float)tstart_simul)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
-	}
+//	}
 
 	tstart_loop = clock() - tstart_loop;
     std::cout<<"Loop run time: "<<tstart_loop<<" , ("<<((float)tstart_loop)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;

@@ -42,6 +42,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 						V2, n2, F2, I2,
 						Vk, nk, Fk, Ik,
 						Vold, nold, Iold, Fold,
+						Voldold, noldold, Ioldold, Foldold,
 						dV, dn, dF, dI,
 						resall(4,0),
 						vecincr(4,0);
@@ -55,7 +56,11 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
     t = tspan[0];
 	
 	_V = Vin;
+	Vold = Vin;
+	Voldold = Vin;
 	_n = nin;
+	nold = nin;
+	noldold = nin;
 	
 	_F.resize(4);
 	bcs.assign(t, P._Csb, P._Vshift, F);
@@ -68,6 +73,8 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 	else{
 		_F = F;
 	}
+	Fold = _F;
+	Foldold = _F;
     
 	NI  = P._pins.size();
 	_I.resize(NI);
@@ -75,6 +82,8 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 	if( std::accumulate( Iin.begin(), Iin.end(), 0.0) != 0.0){
 		_I = Iin;
 	}
+	Iold = _I;
+	Ioldold = _I;
 
     firstfixtstep = 2;
 	
@@ -126,10 +135,9 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 			
 			incr0 = 4 * P._maxnpincr;
 			
-			bcs.assign(t, P._Csb, P._Vshift, _F);
+			bcs.assign(t, P._Csb, P._Vshift, _F);		/// ?
 			
-			/// inizializzare old e oldold
-			org_secs_state_predict (P, Vold, nold, Fold, Iold, Voldold, noldold, Foldold, Ioldold, tstep, tout, V0, n0, F0, I0);
+			org_secs_state_predict (P, Vold, nold, Fold, Iold, Voldold, noldold, Foldold, Ioldold, tstep, _tout, V0, n0, F0, I0);
 			
 			// _2 sono i nuovi vettori al passo corrente
 			V2 = V0;
@@ -158,7 +166,6 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 
 				bcs.assign(t, P._Csb, P._Vshift, F2);
 				
-				///devo però definire i vettori old
 				_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, indexingV, indexingn, indexingF, indexingI);
 
 				//for(unsigned i=0; i<_res.size(); i++){
@@ -192,6 +199,11 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 				
 				// come input al metodo passo solo i vettori al passo corrente
 				org_secs2d_newton_jacobian(	P, V2, n2, F2, dt, bcs, indexingV, indexingn, indexingF, indexingI, _jac);
+				
+				/// qua impongo le BC
+				
+				/// Dirichlet BCs on V:
+				
 				
 				/// Solve non.linear system.
 				std::cout << "Solving linear system."<<std::endl;
