@@ -7,6 +7,7 @@
 
 #include "bcs_circuit.h"
 #include "bim_sparse.h"
+#include "interp1.h"
 #include "probl.h"
 
 class Newton{
@@ -70,11 +71,15 @@ class Newton{
 	DIV_MN_MSG (int tstep, int t, int Nstep, int mNstep, int field, std::vector<double>& incrhist, double incr, 
 				std::vector<double>& res, int nsteps_check);
 				
+	// void
+	// org_secs_state_predict (Probl& P, sparse_matrix& V, sparse_matrix& n, sparse_matrix& F, sparse_matrix& I, int& tstep, std::vector<double>& tout,
+							// std::vector<double>& V0, std::vector<double>& n0, std::vector<double>& F0, std::vector<double>& I0);
+							
 	void
-	org_secs_state_predict (Probl& P, sparse_matrix& V, sparse_matrix& n, sparse_matrix& F, sparse_matrix& I, int& tstep, std::vector<double>& tout,
-							std::vector<double>& V0, std::vector<double>& n0, std::vector<double>& F0, std::vector<double>& I0);
-	void
-	diff (sparse_matrix& in, double a, double b, std::vector<double>& out);
+	org_secs_state_predict (Probl& P, std::vector<double>& Vold, std::vector<double>& nold, std::vector<double>& Fold, std::vector<double>& Iold,
+							std::vector<double>& Voldold, std::vector<double>& noldold, std::vector<double>& Foldold, std::vector<double>& Ioldold,
+							int& tstep, std::vector<double>& tout, std::vector<double>& V0, std::vector<double>& n0, std::vector<double>& F0, 
+							std::vector<double>& I0);
 	
 	void
 	org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& n0, std::vector<double>& F0, std::vector<double>& I0,
@@ -84,7 +89,7 @@ class Newton{
 								int& clamp, double& tauk);
 								
 	double
-	norm(std::vector<double>& in, int n);
+	infnorm(std::vector<double>& in);
 	
 	bool
 	any(std::vector<double>& v);
@@ -136,9 +141,6 @@ class Newton{
 	saveNEWT(std::vector<double>& Vold, std::vector<double>& nold, std::vector<double>& Fold, std::vector<double>& Iold, double told, 
 			std::vector<double>& V, std::vector<double>& n, std::vector<double>& F, std::vector<double>& I, std::vector<double>& res,
 			double t, double dt, int nsaves, int newton_solves, int modified_newton_solves, double freq);
-			
-	double
-	interp1( std::vector<double> &xData, std::vector<double> &yData, double x, bool extrapolate );
 };
 
 #endif	// NEWTON_H

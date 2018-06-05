@@ -1360,27 +1360,18 @@ Newton::dalphan_dn_fun (std::vector<double>& phi, std::vector<double>& alphan, P
 	return dalphan_dn;
 };
 
-void 
-Newton::diff (sparse_matrix& in, double a, double b, std::vector<double>& out)
-{	
-	out.resize( in.size() );
-    for(unsigned i=0; i<in.size(); i++){
-        out[i] = (in[i][b] - in[i][a]);
-    }
-};
-
 void
-Newton::org_secs_state_predict (	Probl& P, sparse_matrix& V, sparse_matrix& n, sparse_matrix& F,
-									sparse_matrix& I, int& tstep, std::vector<double>& tout,
+Newton::org_secs_state_predict (	Probl& P, std::vector<double>& Vold, std::vector<double>& nold, std::vector<double>& Fold, std::vector<double>& Iold,
+									std::vector<double>& Voldold, std::vector<double>& noldold, std::vector<double>& Foldold, std::vector<double>& Ioldold,
+									int& tstep, std::vector<double>& tout,
 									// output
 									std::vector<double>& V0, std::vector<double>& n0, std::vector<double>& F0, std::vector<double>& I0)
 {
   if (tstep > 2){
 
+	int	length, j;
     double  dt, difft;
-    std::vector<double> it(2,0), t(2,0),
-						vdiff1, dndt, dlndt, dVdt, dIdt, dFdt;
-	sparse_matrix  n_2, ln;
+    std::vector<double> it(2,0), t(2,0), dndt, dlndt, dVdt, dIdt, dFdt, lnold, lnoldold;
 
     it[0] = (tstep - 2);
     it[1] = (tstep - 1);
@@ -1390,87 +1381,86 @@ Newton::org_secs_state_predict (	Probl& P, sparse_matrix& V, sparse_matrix& n, s
 	
     dt = tout[tstep] - tout[tstep - 1];
 
-	///diff(n,it[0],it[1], vdiff1);	 ???
-	diff(n,0,1, vdiff1);
+	dndt.resize(nold.size());
+	for(unsigned i=0; i<nold.size(); i++){
+        dndt[i] = (nold[i] - noldold[i]);
+    }
+	
     difft = t[1]-t[0];
-	dndt = vdiff1;
     for(unsigned i=0; i<dndt.size(); i++){
 		dndt[i] /= difft;
     }
-	vdiff1.clear();
 
     // n
-	n_2.resize(P._scnodes.size());
-    for(unsigned i=0; i<P._scnodes.size(); i++){
-        if(P._scnodes[i] == 1){
-			n_2[i][0] = n[it[0]][i];
-			n_2[i][1] = n[it[1]][i];
-        }
-    }
-	
     //ln = log (n(device.scnodes, it(1:2)));
-	ln.resize(n_2.size());
-    for(int j=0; j<2; j++){
-        for(unsigned i=0; i<n_2.size(); i++){
-			ln[i][j] = log(n_2[i][j]);
-        }
+	length = std::accumulate( P._scnodes.begin(), P._scnodes.end(), 0.0);
+	lnold.resize(length);
+	lnoldold.resize(length);
+    j = 0;
+	for(unsigned i=0; i<P._scnodes.size(); i++){
+			if(P._scnodes[i] == 1){
+				lnold[j] = log(nold[i]);
+				lnoldold[j] = log(noldold[i]);
+				j++;
+			}
     }
 
     //dlndt  = diff (ln, 1, 2) ./ diff (t);
-    vdiff1.clear();
-	diff(ln,0.0,1.0, vdiff1);
+	dlndt.resize(lnold.size());
+	for(unsigned i=0; i<lnold.size(); i++){
+        dlndt[i] = (lnold[i] - lnoldold[i]);
+    }
 	
-	dlndt = vdiff1;
 	for(unsigned i=0; i<dlndt.size(); i++){
 		dlndt[i] /= difft;
     }
-	vdiff1.clear();
 	
 	//n0 = n[tstep-1];
-	for(unsigned i=0; i<n.size(); i++){
-		n0[i] = n[i][1];	// colonna tstep-1, indice 1 o 2 ????
-	}
+	n0 = nold;
 
     // V, F, I
     //dVdt  = diff (V(:, it(1:2)), 1, 2) ./ diff (t);
-    vdiff1.clear();
-	///diff(V,it[0],it[1], vdiff1);
-	diff(V,0,1, vdiff1);
-	dVdt = vdiff1;
+
+	dVdt.resize(Vold.size());
+	for(unsigned i=0; i<Vold.size(); i++){
+        dVdt[i] = (Vold[i] - Voldold[i]);
+    }
+
 	for(unsigned i=0; i<dVdt.size(); i++){
 		dVdt[i] /= difft; 
     }
 
     //dFdt  = diff (F(:, it(1:2)), 1, 2) ./ diff (t);
-    vdiff1.clear();
-	///diff(F,it[0],it[1], vdiff1);
-	diff(F,0,1, vdiff1);
-	dFdt = vdiff1;
+	dFdt.resize(Fold.size());
+	for(unsigned i=0; i<Fold.size(); i++){
+        dFdt[i] = (Fold[i] - Foldold[i]);
+    }
+	
 	for(unsigned i=0; i<dFdt.size(); i++){
 		dFdt[i] /= difft;
     }
 
     //dIdt  = diff (I(:, it(1:2)), 1, 2) ./ diff (t);
-    vdiff1.clear();
-	///diff(I,it[0],it[1], vdiff1);
-	diff(I,0,1, vdiff1);
-	dIdt = vdiff1;
+	dIdt.resize(Iold.size());
+	for(unsigned i=0; i<Iold.size(); i++){
+        dIdt[i] = (Iold[i] - Ioldold[i]);
+    }
+	
 	for(unsigned i=0; i<dIdt.size(); i++){
 		dIdt[i] /= difft;
     }
-	vdiff1.clear();
 
     //V0 = V(:, it(2)) + dVdt * dt;
-	V0.resize(dVdt.size());
-	for(unsigned i=0; i<dVdt.size(); i++){
-		V0[i] = ( dVdt[i]*dt );
+	V0 = dVdt;
+	for(unsigned i=0; i<V0.size(); i++){
+		V0[i] *= dt ;
 	}
-	if(V0.size() != V.size()){
+	if(V0.size() != Vold.size()){
 		std::cout<<"error: dimensions mismatch, org_state_predict"<<std::endl;
 	}
 	else{
-		for(unsigned i=0; i<V.size(); i++){
-			V0[i] += V[i][it[1]];
+		for(unsigned i=0; i<V0.size(); i++){
+			V0[i] += Vold[i];
 		}
 	}
 
@@ -1479,12 +1469,12 @@ Newton::org_secs_state_predict (	Probl& P, sparse_matrix& V, sparse_matrix& n, s
 		dlndt[i] *= dt ;
 	}
 	
-	if(dlndt.size() != ln.size()){
+	if(dlndt.size() != lnold.size()){
 		std::cout<<"error: dimensions mismatch, org_state_predict"<<std::endl;
 	}
 	else{
 		for(unsigned i=0; i<dlndt.size(); i++){
-			dlndt[i] += ln[i][1];
+			dlndt[i] += lnold[i];
 		}	
 		for(unsigned i=0; i<P._scnodes.size(); i++){
 			if(P._scnodes[i] == 1){
@@ -1494,54 +1484,39 @@ Newton::org_secs_state_predict (	Probl& P, sparse_matrix& V, sparse_matrix& n, s
 	}
 
     //F0 = F(:, it(2)) + dFdt * dt;
-	F0.resize(dFdt.size());
-	for(unsigned i=0; i<dFdt.size(); i++){
-		F0[i] = ( dFdt[i]*dt );	
+	F0 = dFdt;
+	for(unsigned i=0; i<F0.size(); i++){
+		F0[i] *= dt ;	
 	}
-	if(F0.size() != F.size()){
+	if(F0.size() != Fold.size()){
 		std::cout<<"error: dimensions mismatch, org_state_predict"<<std::endl;
 	}
 	else{
-		for(unsigned i=0; i<F.size(); i++){
-			F0[i] += F[i][it[1]];
+		for(unsigned i=0; i<F0.size(); i++){
+			F0[i] += Fold[i];
 		}
 	}
 
     //I0 = I(:, it(2)) + dIdt * dt;
-	I0.resize(dIdt.size());
-	for(unsigned i=0; i<dIdt.size(); i++){
-		I0[i] = ( dIdt[i]*dt );	
+	I0 = dIdt;
+	for(unsigned i=0; i<I0.size(); i++){
+		I0[i] *= dt ;	
 	}
-	if(I0.size() != I.size()){
+	if(I0.size() != Iold.size()){
 		std::cout<<"error: dimensions mismatch, org_state_predict"<<std::endl;
 	}
 	else{
-		for(unsigned i=0; i<I.size(); i++){
-			I0[i] += I[i][it[1]];
+		for(unsigned i=0; i<I0.size(); i++){
+			I0[i] += Iold[i];
 		}
 	}
   }
   else{
-  
-	V0.resize(V.size());
-	n0.resize(n.size());
-	if(V0.size() != n0.size() ){
-		std::cout<<"Error: dimensions mismatch, org_secs_state_predict, tstep<1"<<std::endl;
-	}
-	else{
-	for(unsigned i=0; i<V.size(); i++){
-		V0[i] = V[i][1];
-		n0[i] = n[i][1];
-	}
-	F0.resize(F.size());
-	for(unsigned i=0; i<F.size(); i++){
-		F0[i] = F[i][1];
-	}
-	I0.resize(I.size());
-	for(unsigned i=0; i<I.size(); i++){
-		I0[i] = I[i][1];
-	}
-	}
+	// passo ai vettori _0 i valori al passo temporale precedente (t_step-1)
+	V0 = Vold;
+	n0 = nold;
+	F0 = Fold;
+	I0 = Iold;
   }
 };
 
@@ -1609,7 +1584,7 @@ Newton::compute_variation (	std::vector<double>& Va, std::vector<double>& na, st
     }
   }
   
-	incrV = norm(diff,0) / (norm(Va,0) * clamping + cl[0]);
+	incrV = infnorm(diff) / (infnorm(Va) * clamping + cl[0]);
 
   // incrn = constants.Vth * norm (log (nb(sc) ./ na(sc)), inf) / ...
   //         (norm (Va(sc) - constants.Vth * log (na(sc) ./ ni), inf) * clamping + c[1]);
@@ -1637,7 +1612,7 @@ Newton::compute_variation (	std::vector<double>& Va, std::vector<double>& na, st
   }
   diff.resize(j);
   
-	incrn = Vth * norm(q1,0) / (norm(diff,0) * clamping + cl[1]);	
+	incrn = Vth * infnorm(q1) / (infnorm(diff) * clamping + cl[1]);	
 
 	diff.clear();
 	if(Fb.size() != Fa.size()){
@@ -1649,7 +1624,7 @@ Newton::compute_variation (	std::vector<double>& Va, std::vector<double>& na, st
 			diff[i] = Fb[i]-Fa[i];
 		}
 	}
-	incrF = norm(diff, 0) / (norm(Fa, 0) * clamping + cl[2]);
+	incrF = infnorm(diff) / (infnorm(Fa) * clamping + cl[2]);
 	
 	diff.clear();
 	if(Ib.size() != Ia.size()){
@@ -1661,7 +1636,7 @@ Newton::compute_variation (	std::vector<double>& Va, std::vector<double>& na, st
 			diff[i] = Ib[i]-Ia[i];
 		}
 	}
-	incrI = norm(diff, 0) / (norm(Ia, 0) * clamping + cl[3]);
+	incrI = infnorm(diff) / (infnorm(Ia) * clamping + cl[3]);
 	
 	diff.clear();
 };
@@ -1676,10 +1651,8 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
 	double tk = 1;
 	std::vector<double>	Min, n0_2;
 	std::vector<int>	scnodes = P._scnodes,
-						clamping = P._clamping;
-	
-  
-	std::vector<int>  where(n0.size(),0);
+						clamping = P._clamping,
+						where(n0.size(),0);
 
 	if (n0.size() != dn.size()){
 		std::cout<<"error: org_secs_safe_increment, vectors with different size"<<std::endl;
@@ -1715,11 +1688,9 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
 
   if (P._clampOnOff){
     // V
-
     if (any(dV)){
-		clamp = std::fmin (1, clamping[0] / norm(dV,0));
+		clamp = std::fmin (1, clamping[0] / infnorm(dV));
     }
-	
 
     // n
     std::vector<double> dn2(dn.size(),0),
@@ -1735,24 +1706,24 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
       for(unsigned i=0; i<dn.size(); i++){
         dn2[i] = dn2[i]*(dn[i]/n0[i]);
       }
-      clamp = std::fmin (clamp, (exp (clamping[1] / P._Vth) - 1) / norm (dn2,0) );
+      clamp = std::fmin (clamp, (exp (clamping[1] / P._Vth) - 1) / infnorm (dn2) );
     }
 
     if (any (dn3)){
       for(unsigned i=0; i<dn.size(); i++){
         dn3[i] = dn3[i]*(dn[i]/n0[i]);
       }
-      clamp = std::fmin (clamp, (1 - exp (-clamping[1]/P._Vth)) / norm (dn3, 0) );
+      clamp = std::fmin (clamp, (1 - exp (-clamping[1]/P._Vth)) / infnorm (dn3) );
     }
 
     // F
     if (any(dF)){
-      clamp = std::fmin (clamp, clamping[2] / norm (dF, 0));
+      clamp = std::fmin (clamp, clamping[2] / infnorm (dF));
     }
 
     // I
     if (any(dI)){
-      clamp = std::fmin (clamp, clamping[3] / norm (dI, 0));
+      clamp = std::fmin (clamp, clamping[3] / infnorm (dI));
     }
   }
   else{
@@ -1761,7 +1732,6 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
   
   tauk = tk;
   tk = std::fmin (tauk, clamp);
-
 
   if(V0.size() != dV.size()){
     std::cout<<"error: org_secs_safe_increment, dimensions mismatch (V)"<<std::endl;
@@ -1772,7 +1742,6 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
         V[i] = (V0[i] + tk * dV[i]);
     }
   }
-
   
   if(n0.size() != dn.size()){
     std::cout<<"error: org_secs_safe_increment, dimensions mismatch (n)"<<std::endl;
@@ -1784,7 +1753,6 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
     }
   }
 
-  
   if(F0.size() != dF.size()){
     std::cout<<"error: org_secs_safe_increment, dimensions mismatch (F)"<<std::endl;
   }
@@ -1830,7 +1798,6 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
   //if (any (n(_scnodes) <= 0))
 	if(any(n0_2)){
 		std::cout<<"error: org_secs_safe_increment, negative charge density"<<std::endl;
-		exit(EXIT_FAILURE);
 	}	
 };
 
@@ -1968,60 +1935,15 @@ Newton::saveNEWT (	std::vector<double>& Vold, std::vector<double>& nold, std::ve
 };
 
 double
-Newton::interp1( std::vector<double> &xData, std::vector<double> &yData, double x, bool extrapolate )
-{
-   bool	found = false;
-   int	size = xData.size(),
-		i = 0,
-		begin = 0,
-		end = xData.size() - 1;
-		
-   if ( x >= xData[size - 2] )                                                 	// find left end of interval for interpolation
-   {																			// special case: beyond right end 
-      i = size - 2;
-   }
-   else
-   {
-	  while( begin <= end && found == false  ){
-		
-		i = ( begin + end ) / 2;
-
-		if( x == xData[i] ){
-			found = true;
-		}
-		else{
-			if( x < xData[i] ){
-				end = i-1;
-			}
-			else{
-				begin = i+1;
-			}
-		}
-	}
-   }
-   double xL = xData[i], yL = yData[i], xR = xData[i+1], yR = yData[i+1];      // points on either side (unless beyond ends) 
-   if ( !extrapolate )                                                         // if beyond ends of array and not extrapolating 
-   {
-      if ( x < xL ) yR = yL;
-      if ( x > xR ) yL = yR;
-   }
-   double dydx = ( yR - yL ) / ( xR - xL );                                    // gradient 
-   return yL + dydx * ( x - xL );                                              // linear interpolation
-};
-
-double
-Newton::norm(std::vector<double>& in, int n){	// i = 0 Inf , i = 1 H1 , i = 2 L2
+Newton::infnorm(std::vector<double>& in){
     double out = 0;
 	std::vector<double>	v(in.size(),0);
-    switch(n){
-        case 0: {
-                        for(unsigned i=0; i<in.size(); i++){
-                            v[i] = std::abs(in[i]);
-                        }
-                        out = *std::max_element( v.begin(),v.end() );
-						break;
-				}
-    }
+
+	for(unsigned i=0; i<in.size(); i++){
+		v[i] = std::abs(in[i]);
+	}
+	out = *std::max_element( v.begin(),v.end() );
+
 	v.clear();
     return out;
 };
