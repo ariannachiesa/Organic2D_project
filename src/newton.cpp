@@ -155,14 +155,14 @@ unsigned n_fix_tstep = firstfixtstep;
 			I2 = I0;
 			
 			in = 0;
-			//rejmn = 0;
-			//totmn = 0;
+			rejmn = 0;	///
+			totmn = 0;	///
 
 			reject = false;
 			
 			incnrm.resize(maxit);
 			inc_clamp.resize(maxit);
-			resnrm.resize(maxit); ///inizializzare a qualcosa di più sensato?
+			resnrm.resize(maxit);
 			
 			// while (!reject && (in < P._maxit)){ /// NEWTON STEP
 				in += 1;
@@ -183,106 +183,74 @@ unsigned n_fix_tstep = firstfixtstep;
 					// std::cout<<"res = "<<_res[i]<<std::endl;
 				// }
 				
-				if (in == 1){
-					whichone = 0;
-					/// dal momento che ancora non sono state imposte le BC potrebbe essere sbagliato
-					compute_residual_norm (resnrm[0],whichone,resall,_res,indexingV,indexingn,indexingF,indexingI);
+				// if (in == 1){
+					// whichone = 0;
+					// /// dal momento che ancora non sono state imposte le BC potrebbe essere sbagliato
+					// compute_residual_norm (resnrm[0],whichone,resall,_res,indexingV,indexingn,indexingF,indexingI);
 					
-					// for(unsigned i=0; i<resall.size(); i++){
-						// std::cout<<"resall = "<<resall[i]<<std::endl;
+					// // for(unsigned i=0; i<resall.size(); i++){
+						// // std::cout<<"resall = "<<resall[i]<<std::endl;
+					// // }
+					// // std::cout<<"resnrm = "<<resnrm[0]<<std::endl;
+					
+					// if(P._rowscaling.size() == resall.size()){
+						// for(unsigned i=0; i<P._rowscaling.size(); i++){
+							// P._rowscaling[i] = P._rowscaling[i] * (resall[i]+1);
+						// }
 					// }
-					// std::cout<<"resnrm = "<<resnrm[0]<<std::endl;
-					
-					if(P._rowscaling.size() == resall.size()){
-						for(unsigned i=0; i<P._rowscaling.size(); i++){
-							P._rowscaling[i] = P._rowscaling[i] * (resall[i]+1);
-						}
-					}
-					else{
-						std::cout<<"error: dimensions mismatch"<<std::endl;
-						///break;
-					}
-					
-					_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, indexingV, indexingn, indexingF, indexingI);
-					// for(unsigned i=0; i<_res.size(); i++){
-						// std::cout<<"res = "<<_res[i]<<std::endl;
+					// else{
+						// std::cout<<"error: dimensions mismatch"<<std::endl;
+						// ///break;
 					// }
-				}
-
-				resall.resize(4);
-				compute_residual_norm (resnrm[in-1],whichone,resall,_res,indexingV,indexingn,indexingF,indexingI);
 					
-				// for(unsigned i=0; i<resall.size(); i++){
-					// std::cout<<"resall = "<<resall[i]<<std::endl;
+					// _res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, indexingV, indexingn, indexingF, indexingI);
+					// // for(unsigned i=0; i<_res.size(); i++){
+						// // std::cout<<"res = "<<_res[i]<<std::endl;
+					// // }
 				// }
-				// std::cout<<"resnrm = "<<resnrm[in-1]<<std::endl;
-				
-				// come input al metodo passo solo i vettori al passo corrente
-				org_secs2d_newton_jacobian(	P, V2, n2, F2, dt, bcs, indexingV, indexingn, indexingF, indexingI, _jac);
-				
-				/// qua impongo le BC
-				
-				/// Dirichlet BCs on V:
-				std::vector<double>	BCbulk(V2.size(),0.0),
-									BCgate(V2.size(),0.0);
-						
-				for(unsigned i=0; i<V2.size(); i++){
-					BCbulk[i] = (V2[i] - F[P._pins[0]]) - P._PhiB;
-				}
-				//BCbulk = M*BCbulk;
-	
-				for(unsigned i=0; i<V2.size(); i++){
-					BCgate[i] = (V2[i] - F[P._pins[1]]) - (P._PhiB + P._Vshift);
-				}
-				//BCgate = M*BCgate;
 
-				int indexT = P._nTrees-1;
-				std::vector<double>	res = _res;
-				std::tuple<int, int, func_quad>	tupla1(0,2,[&res,&BCbulk](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																			{return (res[quad->gt(i)]+BCbulk[quad->gt(i)]);}),
-												tupla2(indexT,3,[&res,&BCgate](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																			{return (res[quad->gt(i)]+BCgate[quad->gt(i)]);});
-				dirichlet_bcs_quad	bcsV;
-				bcsV.push_back(tupla1);
-				bcsV.push_back(tupla2);
-	
-				bim2a_dirichlet_bc (P._msh, bcsV, _jac, _res, default_ord);
-				// for(unsigned i=0; i<_res.size(); i++){
-					// std::cout<<"res = "<<_res[i]<<std::endl;
-				// }
+				// resall.resize(4);
+				// compute_residual_norm (resnrm[in-1],whichone,resall,_res,indexingV,indexingn,indexingF,indexingI);
+					
+				// // for(unsigned i=0; i<resall.size(); i++){
+					// // std::cout<<"resall = "<<resall[i]<<std::endl;
+				// // }
+				// // std::cout<<"resnrm = "<<resnrm[in-1]<<std::endl;
 				
-				/// Dirichlet BCs on n:
-				std::vector<double>	rho, nimposed;
+				// // come input al metodo passo solo i vettori al passo corrente
+				// org_secs2d_newton_jacobian(	P, V2, n2, F2, dt, bcs, indexingV, indexingn, indexingF, indexingI, _jac);
+				
+				// /// Dirichlet BCs on V:
+				// int indexT = P._nTrees-1;
+				
+				// ordering	ordV = [] (tmesh::idx_t gt) -> size_t { return dof_ordering<2, 0> (gt); };
+				// std::tuple<int, int, func_quad>	tupla1(0,2,[](tmesh::quadrant_iterator quad, tmesh::idx_t i){return (1.0);}),
+												// tupla2(indexT,3,[](tmesh::quadrant_iterator quad, tmesh::idx_t i){return 0.0;});
+																			
+				// dirichlet_bcs_quad	bcsV;
+				// bcsV.push_back(tupla1);
+				// bcsV.push_back(tupla2);
+	
+				// bim2a_dirichlet_bc (P._msh, bcsV, _jac, _res, ordV);
+				
+				// /// Dirichlet BCs on n:
+				// std::vector<double>	rho, nimposed;
 
-				org_gaussian_charge_n(V2, P, rho);
+				// org_gaussian_charge_n(V2, P, rho);
 	
-				nimposed = rho;
-				for(unsigned i=0; i<nimposed.size(); i++){
-					nimposed[i] *= (-1)/P._q;
-					//std::cout<<"nimposed = "<<nimposed[i]<<std::endl;
-				}
-	
-				// BCbulk.clear();
-				// BCbulk.resize(n2.size());
-	
-				// for(unsigned i=0; i<n2.size(); i++){
-					// BCbulk[i] = (n2[i] - nimposed[i]);
+				// nimposed = rho;
+				// for(unsigned i=0; i<nimposed.size(); i++){
+					// nimposed[i] *= (-1)/P._q;
 				// }
-				//BCbulk = M*BCbulk;
 	
-				std::tuple<int, int, func_quad>	tuplan(0,2,[&res,&nimposed](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																			{return (nimposed[quad->gt(i)]-res[quad->gt(i)]);});
-																			//{return (res[quad->gt(i)]+BCbulk[quad->gt(i)]);});
-				dirichlet_bcs_quad	bcsn;
-				bcsn.push_back(tupla1);
+				// ordering	ordn = [] (tmesh::idx_t gt) -> size_t { return dof_ordering<2, 1> (gt); };
+				// std::tuple<int, int, func_quad>	tuplan(0,2,[&n2,&nimposed](tmesh::quadrant_iterator quad, tmesh::idx_t i)
+																			// {return 0.0;});
+				// dirichlet_bcs_quad	bcsn;
+				// bcsn.push_back(tuplan);
 	
-				bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, default_ord);	/// ?
-				
-				for(unsigned i=0; i<indexingn.size(); i++){
-					std::cout<<"resN = "<<_res[indexingn[i]]<<std::endl;
-				}
-				
-				
+				// bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn);
+
 				// /// Solve non.linear system.
 				// std::cout << "Solving linear system."<<std::endl;
 		
@@ -313,6 +281,13 @@ unsigned n_fix_tstep = firstfixtstep;
 				// for(unsigned i=0; i<delta.size(); i++){
 					// delta[i] *= (-1);
 					// // std::cout<<"delta = "<<delta[i]<<std::endl;	// non viene. rimane uguale a res ... ???
+				// }
+				
+				// for(unsigned i=0; i<indexingV.size(); i++){
+					// V2[i] += delta[indexingV[i]];
+					// //std::cout<<"res = "<<_res[indexingV[i]]<<std::endl;
+					// //std::cout<<"V = "<<V2[i]<<std::endl;
+					// //std::cout<<"delta = "<<delta[indexingV[i]]<<std::endl;
 				// }
 				
 				// newton_solves +=1;

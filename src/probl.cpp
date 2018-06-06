@@ -495,8 +495,8 @@ Probl::Probl(	int maxcycle,
 	Device(Vshift, Csb, t_semic, t_ins, L, ins, pins, contacts, section, Vdrain, maxcycle);
 	
 	///	Calculation of interpolated n
-    std::vector<double> coeff(_data_phi_lumo.size(),0),
-						n(_data_phi_lumo.size(),0),
+    std::vector<double> coeff(_data_phi_lumo.size(),0.0),
+						n(_data_phi_lumo.size(),0.0),
 						gx = _gx,
 						gw = _gw;
 						
@@ -508,7 +508,7 @@ Probl::Probl(	int maxcycle,
 	_data_n.resize(_data_phi_lumo.size());
     for(unsigned i=0; i<gx.size(); i++){
         for(unsigned j=0; j<_data_phi_lumo.size(); j++){		
-            coeff[j] = (sqrt(2) * sigman * gx[i] - q * _data_phi_lumo[j]) / kT ;
+            coeff[j] = (sqrt(2) * _sigman * gx[i] - q * _data_phi_lumo[j]) / kT ;
             denom = 1+exp(coeff[j]);
 			n[j] += N0 / sqrt(M_PI) * gw[i] / denom;
 			_data_n[j] = -q*n[j];
@@ -754,7 +754,7 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 	phiout = phi0;
 	
 	for(iter=1; iter<=_pmaxit; iter++){
-	
+
 		phiout = phi;
 		
 		org_gaussian_charge_n(phiout, rho,drho);

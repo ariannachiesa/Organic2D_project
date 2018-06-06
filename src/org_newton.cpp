@@ -20,13 +20,7 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 			eps_ins = P._eps_ins,
 			q = P._q,
 			Vth = P._Vth,
-			//Vshift = P._Vshift,
-			//L = P._L,
-			//tins = P._t_ins,
-			//tsemic = P._t_semic,
 			section = P._section,
-			//PhiB = P._PhiB,
-			//s1, s2, 
 			s = 0;
 	unsigned int	numcontacts;
 	bool	ins = P._ins;
@@ -83,8 +77,7 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	std::vector<double>	mobn(nelements,0.0),
 						alphan(n.size(),0.0);
 
-	org_physical_models2d(n, P, mobn, alphan);			/// overload: controllare che funzioni
-
+	org_physical_models2d(n, P, mobn, alphan);
 	
 	///	ASSEMBLING FIRST ROW
 	
@@ -921,6 +914,7 @@ Newton::org_secs_mobility_EGDM (double mu0, std::vector<double>& c, double C0, d
 	for(unsigned i=0; i<data_n.size(); i++){
 		data_n[i] *= (-1)/q;
 	}
+
 	if (udata_n.size()==0 || ind.size()==0 || udata_phi_lumo.size()==0){
 
 		udata_n = data_n;
@@ -968,7 +962,7 @@ Newton::org_secs_mobility_EGDM (double mu0, std::vector<double>& c, double C0, d
 	n_ref = -n_ref/q;
   
 	double g1_ref = exp (phi_lumo_ref / Vth + 0.5 * pow((sigma * Kb * T0),2)) / (n_ref / C0);
-
+	
 	// Density enhancement factor.
 	g1.resize(phi_lumo.size());
 	for(unsigned i=0; i<phi_lumo.size(); i++){
@@ -989,7 +983,7 @@ Newton::org_secs_mobility_EGDM (double mu0, std::vector<double>& c, double C0, d
 	mu.resize(g1.size());
 			
 	g2 = exp((0.44*(pow(sigma,1.5)-2.2))*(sqrt(1+0.8*pow(std::fmin(q*1/std::cbrt(C0)*Efield/(sigma*Kb*T0),2),2))-1));
-
+	
 	mu = g1;
 	for(unsigned i=0; i<g1.size(); i++){
 		mu[i] *= mu0*g2;

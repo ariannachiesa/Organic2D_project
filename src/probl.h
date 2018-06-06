@@ -117,7 +117,7 @@ class Probl
 	int niter;						/**< n. iterations required to compute the initial guess */
 		
 	Probl(	int maxcycle,
-			double T0 = 300,																												// Constants
+			double T0 = 295,																												// Constants
 			double PhiB = 0.54, double sigman = 2.6, double mu0n = 4.29110133911508e-6,														// Material
 			int nq = 101,																													// Quad
 			int pmaxit = 1000, int maxit = 5, int maxit_mnewton = 30, int nsteps_check = 3, double maxnpincr = 1e-3, double ptoll = 1e-10, 
