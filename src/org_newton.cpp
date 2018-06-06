@@ -132,10 +132,10 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	
 	// bim2a_dirichlet_bc (P._msh,bcsV,M,resV);	/// che matrice metto qui ??
 	
-	// for(unsigned i=0; i<indexingV.size(); i++){
-		// res[indexingV[i]] = resV[i];
-	// }
-	// resV.clear();
+	for(unsigned i=0; i<indexingV.size(); i++){
+		res[indexingV[i]] = resV[i];
+	}
+	resV.clear();
 	
 	///	COMPUTING SECOND ROW
 	sparse_matrix	A22,

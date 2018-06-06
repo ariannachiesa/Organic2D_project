@@ -28,7 +28,7 @@ int main(int argc, char** argv){
 	std::vector<double>	Vguess(nnodes, P._PhiB);
 	
 	/// Export nodal field Vguess to a octbin.gz file for visualization.
-	P._msh.octbin_export ("Vguess_visualization", Vguess);
+	P._msh.octbin_export ("Vguess_visualization", Vguess, default_ord);
 	
 	/// Solve Linear Poisson
 	tstart_p = clock();

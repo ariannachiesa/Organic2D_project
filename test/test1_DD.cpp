@@ -98,7 +98,7 @@ int main(int argc, char** argv){
 	tstart_simul = clock();
 		
 	/// Enforcing boundary conditions of the attached control circuit
-	BCS_CIRC	bcs(freq, P._VG, P._Csb, P._Vshift, Fin);
+	BCS_CIRC	bcs(freq, P._VG, P._Csb, P._Vshift, Fin, 0, 0, 0);	// VG costante
 		
 	/// Newton's algorithm
 	Newton	newt(P, P.Vin, P.nin, tspan, Fin, Iin, bcs, freq);
