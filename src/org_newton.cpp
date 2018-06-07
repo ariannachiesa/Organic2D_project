@@ -317,9 +317,6 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 			q = P._q,
 			Vth = P._Vth,
 			section = P._section,
-			//L = P._L,
-			//tins = P._t_ins,
-			//tsemic = P._t_semic,
 			PhiB = P._PhiB,
 			Vshift = P._Vshift;
 			
@@ -340,10 +337,7 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 						
 	sparse_matrix 	A, B, r;
 	
-	for(unsigned i=0; i<scnodes.size(); i++){
-		if(scnodes[i]==1)
-			numscnodes++;
-	}
+	numscnodes = std::accumulate( scnodes.begin(), scnodes.end(), 0.0);
 	
 	numcontacts = pins.size();
 	ndofs = 2 * nnodes + F.size() + numcontacts;	
@@ -386,7 +380,7 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 	bim2a_reaction (P._msh, eones, ones, M);
 
 	bim2a_advection_diffusion (P._msh, epsilon, psi, A11);
-
+	
 	///	Physical models.
 	std::vector<double>	mobn(nelements,0.0),
 						alphan(n.size(),0.0),
@@ -396,42 +390,6 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
   
 	jacobian.resize(ndofs);	
 
-	// ///	ENFORCING BCs ON FIRST ROW
-	
-	// std::vector<double>	resV(V.size(),0.0);
-	
-	// for(unsigned i=0; i<indexingV.size(); i++){
-		// resV[i] = _res[indexingV[i]];
-	// }
-	
-	// std::vector<double>	BCbulk(V.size(),0.0),
-						// BCgate(V.size(),0.0);
-						
-	// for(unsigned i=0; i<V.size(); i++){
-		// BCbulk[i] = (V[i] - F[pins[0]]) - PhiB;
-	// }
-	// BCbulk = M*BCbulk;
-	
-	// for(unsigned i=0; i<V.size(); i++){
-		// BCgate[i] = (V[i] - F[pins[1]]) - (PhiB + Vshift);
-	// }
-	// BCgate = M*BCgate;
-
-	// int indexT = P._nTrees-1;	
-	// std::tuple<int, int, func_quad>	tupla1(0,2,[&resV,&BCbulk](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																// {return (resV[quad->gt(i)]+BCbulk[quad->gt(i)]);}),
-									// tupla2(indexT,3,[&resV,&BCgate](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																// {return (resV[quad->gt(i)]+BCgate[quad->gt(i)]);});
-	// dirichlet_bcs_quad	bcsV;
-	// bcsV.push_back(tupla1);
-	// bcsV.push_back(tupla2);
-	
-	// bim2a_dirichlet_bc (P._msh, bcsV, A11, resV);	/// che matrice metto qui ??
-	
-	// for(unsigned i=0; i<indexingV.size(); i++){
-		// _res[indexingV[i]] = resV[i];
-	// }
-	// resV.clear();
 
 	///	ASSEMBLING FIRST ROW
 	sparse_matrix::col_iterator J2, J;
@@ -453,7 +411,6 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 		}
 	}
 	
-
 	///	COMPUTING SECOND ROW
 
 	sparse_matrix	A21,
@@ -509,7 +466,7 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 	}
 	
 	bim2a_advection_diffusion( P._msh, alfa, fluxn, A22); 
-	
+
 	for(unsigned i=0; i<ones.size(); i++){
 		ones[i] = ones[i]/deltat;
 	}
@@ -522,41 +479,9 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 		}
 	}
 	
-	// ///	ENFORCING BCs ON SECOND ROW: both JAC and RES
-	
-	// std::vector<double>	resn(nnodes,0.0);
-	
-	// for(unsigned i=0; i<indexingn.size(); i++){
-		// resn[i] = _res[indexingn[i]];
-	// }
-	
-	std::vector<double>	// rho,	// forse posso non specificare le dimensioni...
-						// nimposed,
-						vec(n.size(),0.0);
-	
-	// org_gaussian_charge_n(V, P, rho);	/// overload: controllare
-	
-	// nimposed = rho;
-	// for(unsigned i=0; i<nimposed.size(); i++){
-		// nimposed[i] *= (-1)/q;
-	// }
-	
-	// BCbulk.clear();
-	// BCbulk.resize(n.size());
-	
-	// for(unsigned i=0; i<n.size(); i++){
-		// BCbulk[i] = (n[i] - nimposed[i]);
-	// }
-	// BCbulk = M*BCbulk;
-	
-	// std::tuple<int, int, func_quad>	tuplan(0,2,[&resn,&BCbulk](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																// {return (resn[quad->gt(i)]+BCbulk[quad->gt(i)]);});
-	// dirichlet_bcs_quad	bcsn;
-	// bcsn.push_back(tupla1);
-	
-	// bim2a_dirichlet_bc (P._msh, bcsn, A22, resn);
 
 	///	ADJUST FOR ZERO INSULATOR CHARGE
+	std::vector<double>	vec(n.size(),0.0);
 	std::vector<int>	insn(scnodes.size(),0);
 	for(unsigned i=0; i<scnodes.size(); i++){
 		if(scnodes[i] == 0){
@@ -597,14 +522,7 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 		}
 	}
 	
-	///	ASSEMBLING SECOND ROW
-	
-	// // res
-	// for(unsigned i=0; i<indexingn.size(); i++){
-		// _res[indexingn[i]] = resn[i];
-	// }
-	
-	// // jacobian
+	///	ASSEMBLING SECOND ROW		/// ?
 	for(unsigned i=0; i<indexingn.size(); i++){
 		
 		J = A21[i].begin ();
