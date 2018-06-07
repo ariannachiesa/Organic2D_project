@@ -71,7 +71,7 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 
 	bim2a_reaction (P._msh, eones, ones, M);		
 
-	bim2a_advection_diffusion (P._msh, epsilon, psi, A11);		
+	bim2a_advection_diffusion (P._msh, epsilon, psi, A11);
 	
 	///	Physical models.
 	std::vector<double>	mobn(nelements,0.0),
@@ -98,32 +98,6 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 			resV[i] = sum1[i] + sum2[i];
 		}
 	}
-
-	// ///	ENFORCING BCs ON FIRST ROW
-	
-	// std::vector<double>	BCbulk(V.size(),0.0),
-						// BCgate(V.size(),0.0);
-						
-	// for(unsigned i=0; i<V.size(); i++){
-		// BCbulk[i] = (V[i] - F[pins[0]]) - PhiB;
-	// }
-	// BCbulk = M*BCbulk;
-	
-	// for(unsigned i=0; i<V.size(); i++){
-		// BCgate[i] = (V[i] - F[pins[1]]) - (PhiB + Vshift);
-	// }
-	// BCgate = M*BCgate;
-
-	// int indexT = _nTrees-1;	
-	// std::tuple<int, int, func_quad>	tupla1(0,2,[&resV,&BCbulk](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																// {return (resV[quad->gt(i)]+BCbulk[quad->gt(i)]);}),
-									// tupla2(indexT,3,[&resV,&BCgate](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																// {return (resV[quad->gt(i)]+BCgate[quad->gt(i)];});
-	// dirichlet_bcs_quad	bcsV;
-	// bcsV.push_back(tupla1);
-	// bcsV.push_back(tupla2);
-	
-	// bim2a_dirichlet_bc (P._msh,bcsV,M,resV);	/// che matrice metto qui ??
 	
 	for(unsigned i=0; i<indexingV.size(); i++){
 		res[indexingV[i]] = resV[i];
@@ -132,7 +106,7 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	
 	///	COMPUTING SECOND ROW
 	sparse_matrix	A22,
-					Aa;
+					R;
 	std::vector<double>	resn(nnodes,0.0),
 						rhs(nnodes, 0.0),
 						alpha(insulator.size(),0.0),
@@ -143,7 +117,7 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 						mob_nodes(scnodes.size(),0.0);
   
 	A22.resize(nnodes);
-	Aa.resize(nnodes);
+	R.resize(nnodes);
 		
 	for(unsigned i=0; i<insulator.size(); i++){
 		if(insulator[i] == 0){
@@ -165,16 +139,16 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	}
 
 	bim2a_advection_diffusion (	P._msh, alpha, beta, A22);
-	
+
 	for(unsigned i=0; i<ones.size(); i++){
 		ones[i] = ones[i]/deltat;
 	}
 	
-	bim2a_reaction (P._msh, not_ins, ones, Aa);
+	bim2a_reaction (P._msh, not_ins, ones, R);
 
 	for(unsigned i=0; i<scnodes.size(); i++){
 		if(scnodes[i] == 1){
-				A22[i][i] += Aa[i][i];
+				A22[i][i] += R[i][i];
 		}
 	}
 	
@@ -185,41 +159,11 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	// Avoid cancellation errors.
 	
 	for(unsigned i=0; i<rhs.size(); i++){
-		resn[i] -= rhs[i]*n0[i];	
+		resn[i] -= rhs[i]*n0[i];
 	}
 	rhs.clear();
 	
-	// ///	ENFORCING BCs ON SECOND ROW
-	
-	// std::vector<double>	rho,	// forse posso non specificare le dimensioni...
-						// nimposed,
-						// vec(n.size(),0.0);
-	
-	// // out.resize(nelements);		forse non è necessario
-	// org_gaussian_charge_n(V, P, rho, out);	/// fare overload del metodo!!!
-	// out.clear();
-	
-	// nimposed = rho;
-	// for(unsigned i=0; i<nimposed.size(); i++){
-		// nimposed[i] *= (-1)/q;
-	// }
-	
-	// BCbulk.clear();
-	// BCbulk.resize(n.size());
-	
-	// for(unsigned i=0; i<n.size(); i++){
-		// BCbulk[i] = (n[i] - nimposed[i]);
-	// }
-	// BCbulk = M*BCbulk;
-	
-	// std::tuple<int, int, func_quad>	tuplan(0,2,[&resn,&BCbulk](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																// {return (resn[quad->gt(i)]+BCbulk[quad->gt(i)]);});
-	// dirichlet_bcs_quad	bcsn;
-	// bcsn.push_back(tupla1);
-	
-	// bim2a_dirichlet_bc (P._msh,bcsn,M,resn);	/// che matrice metto qui ??
-	
-	/// ADJUST FOR ZERO INSULATOR CHARGE
+	/// ADJUST FOR ZERO INSULATOR CHARGE		/// ?
 	std::vector<double>	vec(n.size(),0.0);
 	
 	vec = M*n;
@@ -275,10 +219,6 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	std::vector<int>	rr;
 	
 	sum1.clear();
-	sum1.resize(A11.rows());
-	
-	sum2.clear();
-	sum2.resize(A12.rows());
 	
 	for(unsigned i=0; i<indexingI.size(); i++){
 		res[indexingI[i]] = I[i];
@@ -292,45 +232,53 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 		diff.clear();
 		diff.resize(V.size());
 		for(unsigned j=0; j<V.size(); j++){
-			diff[j] = (V[j]-V0[j])/deltat;
+			diff[j] = (V[j]-V0[j]);
 		}
+		sum1.resize(rr.size());
 		for(unsigned j=0; j<rr.size(); j++){
+			s = 0;
 			for(unsigned k=0; k<A11[rr[j]].size(); k++){
-				sum1[k] += A11[rr[j]][k];
+				s += A11[rr[j]][k]*diff[k];
 			}
+			sum1[j] = s;
 		}
-		s=0;
-		for(unsigned j=0; j<V.size(); j++){
-			s += section*sum1[j]*diff[j];
+		s = 0;
+		for(unsigned j=0; j<sum1.size(); j++){
+			s += sum1[j];
 		}
-		res[indexingI[i]] -= s;
+		sum1.clear();
+		 res[indexingI[i]] -= section * s / deltat;
 
 		diff.clear();
 		diff.resize(n.size());
 		for(unsigned j=0; j<n.size(); j++){
-			diff[j] = (n[j]-n0[j])/deltat;
+			diff[j] = (n[j]-n0[j]);
 		}
-		for(unsigned j=0; j<rr.size(); j++){			
+		sum1.resize(rr.size());
+		for(unsigned j=0; j<rr.size(); j++){
+			s = 0;
 			for(unsigned k=0; k<A12[rr[j]].size(); k++){
-				sum2[k] += A12[rr[j]][k];
+				s += A12[rr[j]][k]*diff[k];
 			}
+			sum1[j] = s;
 		}
-		s=0;
-		for(unsigned j=0; j<n.size(); j++){
-			s += section*sum2[j]*diff[j];
+		s = 0;
+		for(unsigned j=0; j<sum1.size(); j++){
+			s += sum1[j];
 		}
-		res[indexingI[i]] -= s;
+		sum1.clear();
+
+		res[indexingI[i]] -= section * s / deltat;
 
 		// Electron current.
 		s=0;
 		for(unsigned j=0; j<rr.size(); j++){
-			s += section * q * resn[rr[j]];
+			s += resn[rr[j]];
 		}
-		res[indexingI[i]] += s;
+		res[indexingI[i]] -= -section * q * s;
 	}	
 	rr.clear();
 	sum1.clear();
-	sum2.clear();
 	diff.clear();
 	resn.clear();
 	
