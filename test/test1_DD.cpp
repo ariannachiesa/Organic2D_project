@@ -92,8 +92,8 @@ int main(int argc, char** argv){
 	/// Circuit boundary conditions and initial condition.
 	/// Full circuit.
 		
-	Fin[0] = - P._Vshift;
-	Fin[2] = - P._Vshift * P._Csb;
+	// Fin[0] = - P._Vshift;
+	// Fin[2] = - P._Vshift * P._Csb;
 		
 	tstart_simul = clock();
 		

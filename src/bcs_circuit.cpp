@@ -9,11 +9,11 @@ BCS_CIRC::BCS_CIRC(	double freq, int voltage, double Csb, double Vshift, std::ve
 	_A.resize(4);
 	_B.resize(4);
 
-	_A[0][2] = 1;
-	_B[0][3] = -1;
-	_B[1][0] = 1;
-	_B[2][1] = 1;
-	_B[3][2] = 1;	
+	// _A[0][2] = 1;
+	// _B[0][3] = -1;
+	// _B[1][0] = 1;
+	// _B[2][1] = 1;
+	// _B[3][2] = 1;	
 	
 	_F = F;
 
@@ -21,15 +21,15 @@ BCS_CIRC::BCS_CIRC(	double freq, int voltage, double Csb, double Vshift, std::ve
 	
 	_r.resize(4);
 	
-	_r[0][0] = 1;
-	_r[1][0] = Rg;
-	_r[2][1] = Rb;
+	// _r[0][0] = 1;
+	// _r[1][0] = Rg;
+	// _r[2][1] = Rb;
 	
 	_amp = amp;
 	_freq = freq;
 };
 
-void BCS_CIRC::assign(double t, double Vshift, double Csb, std::vector<double>& F){
+void BCS_CIRC::assign(double t, double  Vshift, double Csb, std::vector<double>& F){
 	std::vector<double>	s(4,0);
 	std::vector<double>	C(4,0);
 	double	VG;
@@ -46,7 +46,8 @@ void BCS_CIRC::assign(double t, double Vshift, double Csb, std::vector<double>& 
 	s[1] = -VG;
 	s[3] = - VG * Csb;
 	_F = F;
-	C = _B*_F;	
+	C = _B*_F;
+	
 	for(unsigned i=0; i<4; i++){
 		C[i] += s[i];
 	}

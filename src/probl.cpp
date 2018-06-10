@@ -371,7 +371,7 @@ Probl::Device(	double Vshift, double Csb, double t_semic, double t_ins, double L
 			}
 		}
 	
-	 std::vector<int>::iterator it2, it3;
+	std::vector<int>::iterator it2, it3;
 	
 	std::sort (row1.begin(), row1.end());				// row1 = vector of the nodes on boundary 0 of the semiconductor
 	
