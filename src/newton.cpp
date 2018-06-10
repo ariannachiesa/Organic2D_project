@@ -233,12 +233,12 @@ unsigned n_fix_tstep = firstfixtstep;
 				/// Dirichlet BCs on V:
 				int indexT = P._nTrees-1;
 				
-				std::tuple<int, int, func_quad>	tupla1(0,2,[&n2](tmesh::quadrant_iterator quad, tmesh::idx_t i){return (-n2[quad->gt(i)]);}),
-												tupla2(indexT,3,[](tmesh::quadrant_iterator quad, tmesh::idx_t i){return 0.0;});
+				std::tuple<int, int, func_quad>	tupla1(0,2,[&n2](tmesh::quadrant_iterator quad, tmesh::idx_t i){return (-n2[quad->gt(i)]);});
+												//tupla2(indexT,3,[](tmesh::quadrant_iterator quad, tmesh::idx_t i){return 0.0;});
 																			
 				dirichlet_bcs_quad	bcsV;
 				bcsV.push_back(tupla1);
-				bcsV.push_back(tupla2);
+				//bcsV.push_back(tupla2);
 	
 				bim2a_dirichlet_bc (P._msh, bcsV, _jac, _res);//;, ordV);
 				
@@ -299,6 +299,7 @@ unsigned n_fix_tstep = firstfixtstep;
 				std::cout<<"delta size = "<<delta.size()<<std::endl;
 				for(unsigned i=0; i<indexingV.size(); i++){
 					//V2[i] += delta[indexingV[i]];
+					std::cout<<"n = "<<n2[i]<<std::endl;
 					n2[i] += delta[i];
 					std::cout<<"n DOPO = "<<n2[i]<<std::endl;
 				}

@@ -53,16 +53,16 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	// A11.resize(nnodes);
 	// A12.resize(nnodes);
 	
-	// std::vector<double> eones(insulator.size(),1.0),
-						// not_ins(insulator.size(),0.0),
-						// ones(nnodes,1.0),
-						// psi(nnodes,0.0);
+	std::vector<double> eones(insulator.size(),1.0),
+						not_ins(insulator.size(),0.0),
+						ones(nnodes,1.0),
+						psi(nnodes,0.0);
 	
-	// for(unsigned i=0; i<insulator.size(); i++){
-		// if(insulator[i] == 0){
-			// not_ins[i] = 1;
-		// }
-	// }
+	for(unsigned i=0; i<insulator.size(); i++){
+		if(insulator[i] == 0){
+			not_ins[i] = 1;
+		}
+	}
 	
 	// bim2a_reaction (P._msh, not_ins, ones, A12);
 	// for(int i=0; i<nnodes; i++){
@@ -145,21 +145,19 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	for(unsigned i=0; i<scnodes.size(); i++){
 		if(scnodes[i] == 1){
 				A22[i][i] += R[i][i];
-				///R[i][i] += A22[i][i];
 		}
 	}
 	
 	resn = A22 * n;
-	///resn = R * n;
 
-	// // bim2a_rhs (P._msh, not_ins, ones, rhs);
+	bim2a_rhs (P._msh, not_ins, ones, rhs);
 	
-	// // // Avoid cancellation errors.
+	// Avoid cancellation errors.
 	
-	// // for(unsigned i=0; i<rhs.size(); i++){
-		// // resn[i] -= rhs[i]*n0[i];
-	// // }
-	// // rhs.clear();
+	for(unsigned i=0; i<rhs.size(); i++){
+		resn[i] -= rhs[i]*n0[i];
+	}
+	rhs.clear();
 	
 	for(unsigned i=0; i<indexingn.size(); i++){
 		//res[indexingn[i]] = resn[i];
@@ -368,20 +366,20 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 					// A11,
 					// A12;
 
-	// std::vector<double> eones(insulator.size(),1.0),
-						// not_ins(insulator.size(),0.0),
-						// ones(nnodes,1.0),
-						// psi(nnodes,0.0);
+	std::vector<double> eones(insulator.size(),1.0),
+						not_ins(insulator.size(),0.0),
+						ones(nnodes,1.0),
+						psi(nnodes,0.0);
 	
 	// M.resize(nnodes);
 	// // A11.resize(nnodes);
 	// // A12.resize(nnodes);
 	
-	// for(unsigned i=0; i<insulator.size(); i++){
-		// if(insulator[i] == 0){
-			// not_ins[i] = 1;
-		// }
-	// }
+	for(unsigned i=0; i<insulator.size(); i++){
+		if(insulator[i] == 0){
+			not_ins[i] = 1;
+		}
+	}
 
 	// //bim2a_reaction (P._msh, not_ins, ones, A12);
 	// ///bim2a_reaction (P._msh, not_ins, ones, jacobian, indexingV, indexingn);
@@ -461,12 +459,12 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 		// j++;
 	// }
 	
-	for(unsigned i=0; i<insulator.size(); i++){
-		//mobn_n[i] *= -mobn[i];
-		//if(insulator[i] == 0){
-			alfa[i] = mobn[i]*Vth;
-		//}
-	}
+	// for(unsigned i=0; i<insulator.size(); i++){
+		// mobn_n[i] *= -mobn[i];
+		// if(insulator[i] == 0){
+			// alfa[i] = mobn[i]*Vth;
+		// }
+	// }
 	
 	//bim2a_advection_diffusion (P._msh, mobn_n, psi, A21);
 	///bim2a_advection_diffusion (P._msh, mobn_n, psi, jacobian, indexingn, indexingV);
@@ -494,7 +492,7 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 	}
 	
 	bim2a_reaction (P._msh, not_ins, ones, R);
-	//bim2a_reaction (P._msh, not_ins, ones, jacobian, indexingn, indexingn);
+	//bim2a_reaction (P._msh, not_ins, ones, jacobian);//, indexingn, indexingn);
 
 	for(unsigned i=0; i<scnodes.size(); i++){
 		if(scnodes[i]==1){
