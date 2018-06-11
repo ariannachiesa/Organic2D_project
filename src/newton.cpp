@@ -99,10 +99,8 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 	std::cout<<"Connecting contact at y = "<<yend<<" to circuit pin "<<P._pins[1]<<std::endl;
 	
 	/// Node ordering
-	// ordering	ordV = [] (tmesh::idx_t gt) -> size_t { return dof_ordering<2, 0> (gt); },
-				// ordn = [] (tmesh::idx_t gt) -> size_t { return dof_ordering<2, 1> (gt); };
-	ordering	ordV = [] (p4est_gloidx_t gt) -> size_t { return dof_ordering<1, 0> (gt); },
-				ordn = [&nnodes] (p4est_gloidx_t gt) -> size_t { return dof_ordering<1, nnodes> (gt); };
+	ordering	ordV = [] (tmesh::idx_t gt) -> size_t { return dof_ordering<2, 0> (gt); },
+				ordn = [] (tmesh::idx_t gt) -> size_t { return dof_ordering<2, 1> (gt); };
 				
 	std::vector<int>    indexingV(nnodes,0),
 						indexingn(nnodes,0),
@@ -110,10 +108,10 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 						indexingI(NI,0);
 
 	for (int i=0; i<nnodes; i++){
-		indexingV[i] = i;
+		indexingV[i] = 2*i;
 	}	
 	for (int i=0; i<nnodes; i++){
-		indexingn[i] = i+nnodes;
+		indexingn[i] = 2*i+1;
 	}
 	for (int i=0; i<Nextvars; i++){
 		indexingF[i] = i + 2 * nnodes;
@@ -177,7 +175,8 @@ unsigned n_fix_tstep = firstfixtstep;
 
 				bcs.assign(t, P._Vshift, P._Csb, F2);
 				
-				_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, indexingV, indexingn, indexingF, indexingI);
+				_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, indexingV, indexingn, indexingF, indexingI,
+													ordV, ordn);
 
 				
 				if (in == 1){
@@ -199,7 +198,8 @@ unsigned n_fix_tstep = firstfixtstep;
 						///break;
 					}
 					
-					_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, indexingV, indexingn, indexingF, indexingI);
+					_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, indexingV, indexingn, indexingF, indexingI,
+														ordV, ordn);
 				}
 
 				resall.resize(4);
@@ -210,13 +210,15 @@ unsigned n_fix_tstep = firstfixtstep;
 				// }
 				// std::cout<<"resnrm = "<<resnrm[in-1]<<std::endl;
 				
-				org_secs2d_newton_jacobian(	P, V2, n2, F2, dt, bcs, indexingV, indexingn, indexingF, indexingI, _jac);
+				org_secs2d_newton_jacobian(	P, V2, n2, F2, dt, bcs, indexingV, indexingn, indexingF, indexingI, _jac, ordV, ordn);
 				
 				/// Dirichlet BCs on V:
 				int indexT = P._nTrees-1;
-				double	Vshift = P._Vshift,
+				double	PhiB = P._PhiB,
+						Vshift = P._Vshift,
 						Vgate = P._VG;
-				std::tuple<int, int, func_quad>	tupla1(0,2,[](tmesh::quadrant_iterator quad, tmesh::idx_t i){return 0.0;}),		// impongo PhiB
+				std::tuple<int, int, func_quad>	tupla1(0,2,[&PhiB,&V2](tmesh::quadrant_iterator quad, tmesh::idx_t i)
+																	{return (PhiB-V2[quad->gt(i)]);}),				// impongo PhiB
 												tupla2(indexT,3,[&Vgate,&Vshift,&V2](tmesh::quadrant_iterator quad, tmesh::idx_t i)
 																	{return (Vgate+Vshift-V2[quad->gt(i)]);});		// impongo Vshift + Vgate
 																			
@@ -241,7 +243,7 @@ unsigned n_fix_tstep = firstfixtstep;
 				dirichlet_bcs_quad	bcsn;
 				bcsn.push_back(tuplan);
 	
-				// bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn);
+				bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn);
 				
 				/// Solve non.linear system.
 				std::cout << "Solving linear system."<<std::endl;
@@ -262,8 +264,6 @@ unsigned n_fix_tstep = firstfixtstep;
 				mumps_solver.init();
 	  
 				_jac.aij(vals, irow, jcol, mumps_solver.get_index_base ());
-				
-				//saveJAC(nnodes, nnodes, vals);
 		
 				if(in == 1){	// only at the first iteration of the Newton method
 					mumps_solver.set_lhs_structure (_jac.rows(), irow, jcol);
@@ -289,19 +289,19 @@ unsigned n_fix_tstep = firstfixtstep;
 					std::cout<<"n DOPO = "<<n2[i]<<std::endl;
 				}
 				
-				newton_solves +=1;
+				// newton_solves +=1;
 	
-				dV.resize(indexingV.size());
-				for(unsigned i=0; i<indexingV.size(); i++){
-					dV[i] = delta[indexingV[i]] * P._colscaling[0];
-					//std::cout<<"dV = "<<dV[i]<<std::endl;
-				}
+				// dV.resize(indexingV.size());
+				// for(unsigned i=0; i<indexingV.size(); i++){
+					// dV[i] = delta[indexingV[i]] * P._colscaling[0];
+					// //std::cout<<"dV = "<<dV[i]<<std::endl;
+				// }
 
-				dn.resize(indexingn.size());
-				for(unsigned i=0; i<indexingn.size(); i++){
-					dn[i] = delta[indexingn[i]] * P._colscaling[1];	
-					//std::cout<<"dn = "<<dn[i]<<std::endl;
-				}
+				// dn.resize(indexingn.size());
+				// for(unsigned i=0; i<indexingn.size(); i++){
+					// dn[i] = delta[indexingn[i]] * P._colscaling[1];	
+					// //std::cout<<"dn = "<<dn[i]<<std::endl;
+				// }
 
 				// dF.resize(indexingF.size());
 				// for(unsigned i=0; i<indexingF.size(); i++){
