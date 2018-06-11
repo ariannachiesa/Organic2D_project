@@ -35,22 +35,12 @@ class Newton{
 	org_secs2d_newton_residual(	Probl& P,										
 								std::vector<double>& V, std::vector<double>& n, std::vector<double>& F, std::vector<double>& I,		
 								std::vector<double>& V0, std::vector<double>& n0, std::vector<double>& F0, std::vector<double>& I0,	
-								double deltat, BCS_CIRC& bcs, std::vector<int>& indexingV, std::vector<int>& indexingn, std::vector<int>& indexingF, 
-								std::vector<int>& indexingI, ordering& ordV, ordering& ordn);
-	// std::vector<double>							
-	// org_secs2d_newton_residual(	Probl& P,										
-								// std::vector<double>& V, std::vector<double>& n, //std::vector<double>& F, std::vector<double>& I,		
-								// std::vector<double>& V0, std::vector<double>& n0, //std::vector<double>& F0, std::vector<double>& I0,	
-								// double deltat, std::vector<int>& indexingV, std::vector<int>& indexingn);
+								double deltat, BCS_CIRC& bcs, ordering& ordV, ordering& ordn, std::vector<int>& indexingF, std::vector<int>& indexingI);
 	
 	///Assemble jacobian matrix
 	void
-	org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vector<double>& n, std::vector<double>& F,			
-								double deltat, BCS_CIRC& bcs, std::vector<int>& indexingV, std::vector<int>& indexingn,		
-								std::vector<int>& indexingF, std::vector<int>& indexingI, sparse_matrix& jacobian, ordering& ordV, ordering& ordn);
-	// void
-	// org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vector<double>& n,	
-								// double deltat, ordering& indexingV, ordering& indexingn, sparse_matrix& jacobian);
+	org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vector<double>& n, std::vector<double>& F, double deltat, BCS_CIRC& bcs, 
+								ordering& ordV, ordering& ordn,	std::vector<int>& indexingF, std::vector<int>& indexingI, sparse_matrix& jacobian);
 						
 	void 
 	compute_residual_norm (	double& resnrm, int& whichone, std::vector<double>& resall, std::vector<double>& res,

@@ -175,8 +175,7 @@ unsigned n_fix_tstep = firstfixtstep;
 
 				bcs.assign(t, P._Vshift, P._Csb, F2);
 				
-				_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, indexingV, indexingn, indexingF, indexingI,
-													ordV, ordn);
+				_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, ordV, ordn, indexingF, indexingI);
 
 				
 				if (in == 1){
@@ -198,8 +197,7 @@ unsigned n_fix_tstep = firstfixtstep;
 						///break;
 					}
 					
-					_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, indexingV, indexingn, indexingF, indexingI,
-														ordV, ordn);
+					_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, ordV, ordn, indexingF, indexingI);
 				}
 
 				resall.resize(4);
@@ -210,7 +208,7 @@ unsigned n_fix_tstep = firstfixtstep;
 				// }
 				// std::cout<<"resnrm = "<<resnrm[in-1]<<std::endl;
 				
-				org_secs2d_newton_jacobian(	P, V2, n2, F2, dt, bcs, indexingV, indexingn, indexingF, indexingI, _jac, ordV, ordn);
+				org_secs2d_newton_jacobian(	P, V2, n2, F2, dt, bcs, ordV, ordn, indexingF, indexingI, _jac);
 				
 				/// Dirichlet BCs on V:
 				int indexT = P._nTrees-1;
@@ -245,49 +243,49 @@ unsigned n_fix_tstep = firstfixtstep;
 	
 				bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn);
 				
-				/// Solve non.linear system.
-				std::cout << "Solving linear system."<<std::endl;
+				// /// Solve non.linear system.
+				// std::cout << "Solving linear system."<<std::endl;
 		
-				delta.resize(_res.size());
-				delta = _res;
+				// delta.resize(_res.size());
+				// delta = _res;
 				
-				for(unsigned i=0; i<delta.size(); i++){
-					std::cout<<"delta PRIMA = "<<delta[i]<<std::endl;
-				}
+				// // for(unsigned i=0; i<delta.size(); i++){
+					// // std::cout<<"delta PRIMA = "<<delta[i]<<std::endl;
+				// // }
 		
-				mumps mumps_solver;
+				// mumps mumps_solver;
       
-				std::vector<double> vals(nnodes,0.0);
-				std::vector<int> 	irow(nnodes,0),
-									jcol(nnodes,0);
+				// std::vector<double> vals(nnodes,0.0);
+				// std::vector<int> 	irow(nnodes,0),
+									// jcol(nnodes,0);
 							
-				mumps_solver.init();
+				// mumps_solver.init();
 	  
-				_jac.aij(vals, irow, jcol, mumps_solver.get_index_base ());
+				// _jac.aij(vals, irow, jcol, mumps_solver.get_index_base ());
 		
-				if(in == 1){	// only at the first iteration of the Newton method
-					mumps_solver.set_lhs_structure (_jac.rows(), irow, jcol);
-					mumps_solver.analyze ();
-				}
+				// if(in == 1){	// only at the first iteration of the Newton method
+					// mumps_solver.set_lhs_structure (_jac.rows(), irow, jcol);
+					// mumps_solver.analyze ();
+				// }
 		
-				mumps_solver.set_lhs_data (vals);
-				mumps_solver.set_rhs (delta);
-				mumps_solver.factorize ();
+				// mumps_solver.set_lhs_data (vals);
+				// mumps_solver.set_rhs (delta);
+				// mumps_solver.factorize ();
 		
-				mumps_solver.solve ();
+				// mumps_solver.solve ();
 		
-				for(unsigned i=0; i<delta.size(); i++){
-					std::cout<<"delta = "<<delta[i]<<std::endl;
-				}
+				// // for(unsigned i=0; i<delta.size(); i++){
+					// // std::cout<<"delta = "<<delta[i]<<std::endl;
+				// // }
 				
-				for(unsigned i=0; i<indexingV.size(); i++){
-					V2[i] += delta[indexingV[i]];
-					std::cout<<"V DOPO = "<<V2[i]<<std::endl;
-				}
-				for(unsigned i=0; i<indexingn.size(); i++){
-					n2[i] += delta[indexingn[i]];
-					std::cout<<"n DOPO = "<<n2[i]<<std::endl;
-				}
+				// // for(unsigned i=0; i<indexingV.size(); i++){
+					// // V2[i] += delta[indexingV[i]];
+					// // std::cout<<"V DOPO = "<<V2[i]<<std::endl;
+				// // }
+				// // for(unsigned i=0; i<indexingn.size(); i++){
+					// // n2[i] += delta[indexingn[i]];
+					// // std::cout<<"n DOPO = "<<n2[i]<<std::endl;
+				// // }
 				
 				// newton_solves +=1;
 	
