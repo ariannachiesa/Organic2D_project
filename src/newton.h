@@ -141,6 +141,9 @@ class Newton{
 	saveNEWT(std::vector<double>& Vold, std::vector<double>& nold, std::vector<double>& Fold, std::vector<double>& Iold, double told, 
 			std::vector<double>& V, std::vector<double>& n, std::vector<double>& F, std::vector<double>& I, std::vector<double>& res,
 			double t, double dt, int nsaves, int newton_solves, int modified_newton_solves, double freq);
+			
+	void
+	saveJAC (int nrows, int ncols, std::vector<double>& vals);
 };
 
 #endif	// NEWTON_H

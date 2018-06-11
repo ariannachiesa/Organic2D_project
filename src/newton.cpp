@@ -101,7 +101,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 	/// Node ordering
 	// ordering	ordV = [] (tmesh::idx_t gt) -> size_t { return dof_ordering<2, 0> (gt); },
 				// ordn = [] (tmesh::idx_t gt) -> size_t { return dof_ordering<2, 1> (gt); };
-	 ordering	ordV = [] (p4est_gloidx_t gt) -> size_t { return dof_ordering<1, 0> (gt); };
+	ordering	ordV = [] (p4est_gloidx_t gt) -> size_t { return dof_ordering<1, 0> (gt); };
 				// ordn = [&nnodes] (p4est_gloidx_t gt) -> size_t { return dof_ordering<1, nnodes> (gt); };
 				
 	std::vector<int>    indexingV(nnodes,0),
@@ -141,7 +141,7 @@ unsigned n_fix_tstep = firstfixtstep;
 			tstep++;
 
 			//_tout[tstep] = std::fmin (t + dt, tspan[n_fix_tstep - 1]);
-			_tout[2] = std::fmin (t + dt, tspan[n_fix_tstep - 1]);	// quello corrente dovrebbe / potrebbe essere 2
+			_tout[2] = std::fmin (t + dt, tspan[n_fix_tstep - 1]);
 
 			//t = _tout[tstep];
 			t = _tout[2];
@@ -188,11 +188,6 @@ unsigned n_fix_tstep = firstfixtstep;
 				
 				_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, indexingV, indexingn, indexingF, indexingI);
 
-				/// qua ancora non ho imposto le condizioni al bordo su res
-				
-				// for(unsigned i=0; i<_res.size(); i++){
-					// std::cout<<"res = "<<_res[i]<<std::endl;
-				// }
 				
 				if (in == 1){
 					whichone = 0;
@@ -214,9 +209,6 @@ unsigned n_fix_tstep = firstfixtstep;
 					}
 					
 					_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, indexingV, indexingn, indexingF, indexingI);
-					// for(unsigned i=0; i<_res.size(); i++){
-						// std::cout<<"res = "<<_res[i]<<std::endl;
-					// }
 				}
 
 				resall.resize(4);
@@ -228,19 +220,21 @@ unsigned n_fix_tstep = firstfixtstep;
 				// std::cout<<"resnrm = "<<resnrm[in-1]<<std::endl;
 				
 				org_secs2d_newton_jacobian(	P, V2, n2, F2, dt, bcs, indexingV, indexingn, indexingF, indexingI, _jac);
-				///org_secs2d_newton_jacobian(	P, V2, n2, F2, dt, bcs, ordV, ordn, indexingF, indexingI, _jac);
 				
 				/// Dirichlet BCs on V:
 				int indexT = P._nTrees-1;
-				
-				std::tuple<int, int, func_quad>	tupla1(0,2,[&n2](tmesh::quadrant_iterator quad, tmesh::idx_t i){return (-n2[quad->gt(i)]);});
-												//tupla2(indexT,3,[](tmesh::quadrant_iterator quad, tmesh::idx_t i){return 0.0;});
+				double	Vshift = P._Vshift,
+						Vgate = P._VG;
+				std::tuple<int, int, func_quad>	tupla1(0,2,[](tmesh::quadrant_iterator quad, tmesh::idx_t i){return 0.0;}),		// impongo PhiB
+												tupla2(indexT,3,[&Vgate,&Vshift,&V2](tmesh::quadrant_iterator quad, tmesh::idx_t i)
+																	{return (Vgate-V2[quad->gt(i)]);});						// impongo Vshift
 																			
 				dirichlet_bcs_quad	bcsV;
 				bcsV.push_back(tupla1);
-				//bcsV.push_back(tupla2);
+				bcsV.push_back(tupla2);
 	
-				bim2a_dirichlet_bc (P._msh, bcsV, _jac, _res);//;, ordV);
+				std::cout << "BCs." <<std::endl;
+				bim2a_dirichlet_bc (P._msh, bcsV, _jac, _res, ordV);
 				
 				// /// Dirichlet BCs on n:
 				// std::vector<double>	rho, nimposed;
@@ -266,7 +260,6 @@ unsigned n_fix_tstep = firstfixtstep;
 				delta = _res;
 				
 				for(unsigned i=0; i<delta.size(); i++){
-					//delta[i] *= (-1);
 					std::cout<<"delta PRIMA = "<<delta[i]<<std::endl;
 				}
 		
@@ -279,6 +272,8 @@ unsigned n_fix_tstep = firstfixtstep;
 				mumps_solver.init();
 	  
 				_jac.aij(vals, irow, jcol, mumps_solver.get_index_base ());
+				
+				//saveJAC(nnodes, nnodes, vals);
 		
 				if(in == 1){	// only at the first iteration of the Newton method
 					mumps_solver.set_lhs_structure (_jac.rows(), irow, jcol);
@@ -292,15 +287,15 @@ unsigned n_fix_tstep = firstfixtstep;
 				mumps_solver.solve ();
 		
 				for(unsigned i=0; i<delta.size(); i++){
-					//delta[i] *= (-1);
 					std::cout<<"delta = "<<delta[i]<<std::endl;
 				}
 				
-				std::cout<<"delta size = "<<delta.size()<<std::endl;
 				for(unsigned i=0; i<indexingV.size(); i++){
-					//V2[i] += delta[indexingV[i]];
-					std::cout<<"n = "<<n2[i]<<std::endl;
-					n2[i] += delta[i];
+					V2[i] += delta[indexingV[i]];
+					std::cout<<"V DOPO = "<<V2[i]<<std::endl;
+				}
+				for(unsigned i=0; i<indexingn.size(); i++){
+					n2[i] += delta[indexingn[i]];
 					std::cout<<"n DOPO = "<<n2[i]<<std::endl;
 				}
 				
