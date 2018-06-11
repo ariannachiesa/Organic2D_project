@@ -101,23 +101,14 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 	/// Node ordering
 	// ordering	ordV = [] (tmesh::idx_t gt) -> size_t { return dof_ordering<2, 0> (gt); },
 				// ordn = [] (tmesh::idx_t gt) -> size_t { return dof_ordering<2, 1> (gt); };
-	ordering	ordV = [] (p4est_gloidx_t gt) -> size_t { return dof_ordering<1, 0> (gt); };
-				// ordn = [&nnodes] (p4est_gloidx_t gt) -> size_t { return dof_ordering<1, nnodes> (gt); };
+	ordering	ordV = [] (p4est_gloidx_t gt) -> size_t { return dof_ordering<1, 0> (gt); },
+				ordn = [&nnodes] (p4est_gloidx_t gt) -> size_t { return dof_ordering<1, nnodes> (gt); };
 				
 	std::vector<int>    indexingV(nnodes,0),
 						indexingn(nnodes,0),
 						indexingF(Nextvars,0),
 						indexingI(NI,0);
 
-	// for (int i=0; i<2*nnodes; i=i+2){
-		// indexingV[j] = i;
-		// j++;
-	// }	
-	// j=0;
-	// for (int i=1; i<2*nnodes; i=i+2){
-		// indexingn[j] = i;
-		// j++;
-	// }
 	for (int i=0; i<nnodes; i++){
 		indexingV[i] = i;
 	}	
@@ -227,29 +218,28 @@ unsigned n_fix_tstep = firstfixtstep;
 						Vgate = P._VG;
 				std::tuple<int, int, func_quad>	tupla1(0,2,[](tmesh::quadrant_iterator quad, tmesh::idx_t i){return 0.0;}),		// impongo PhiB
 												tupla2(indexT,3,[&Vgate,&Vshift,&V2](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																	{return (Vgate-V2[quad->gt(i)]);});						// impongo Vshift
+																	{return (Vgate+Vshift-V2[quad->gt(i)]);});		// impongo Vshift + Vgate
 																			
 				dirichlet_bcs_quad	bcsV;
 				bcsV.push_back(tupla1);
 				bcsV.push_back(tupla2);
-	
-				std::cout << "BCs." <<std::endl;
+
 				bim2a_dirichlet_bc (P._msh, bcsV, _jac, _res, ordV);
 				
-				// /// Dirichlet BCs on n:
-				// std::vector<double>	rho, nimposed;
+				/// Dirichlet BCs on n:
+				std::vector<double>	rho, nimposed;
 
-				// org_gaussian_charge_n(V2, P, rho);
+				org_gaussian_charge_n(V2, P, rho);
 	
-				// nimposed = rho;
-				// for(unsigned i=0; i<nimposed.size(); i++){
-					// nimposed[i] *= (-1)/P._q;
-				// }
+				nimposed = rho;
+				for(unsigned i=0; i<nimposed.size(); i++){
+					nimposed[i] *= (-1)/P._q;
+				}
 	
-				// std::tuple<int, int, func_quad>	tuplan(0,2,[](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																			// {return 0.0;});
-				// dirichlet_bcs_quad	bcsn;
-				// bcsn.push_back(tuplan);
+				std::tuple<int, int, func_quad>	tuplan(0,2,[&nimposed,&n2](tmesh::quadrant_iterator quad, tmesh::idx_t i)
+																{return (nimposed[quad->gt(i)]-n2[quad->gt(i)]);});
+				dirichlet_bcs_quad	bcsn;
+				bcsn.push_back(tuplan);
 	
 				// bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn);
 				
@@ -299,19 +289,19 @@ unsigned n_fix_tstep = firstfixtstep;
 					std::cout<<"n DOPO = "<<n2[i]<<std::endl;
 				}
 				
-				// newton_solves +=1;
+				newton_solves +=1;
 	
-				// dV.resize(indexingV.size());
-				// for(unsigned i=0; i<indexingV.size(); i++){
-					// dV[i] = delta[indexingV[i]] * P._colscaling[0];
-					// //std::cout<<"dV = "<<dV[i]<<std::endl;
-				// }
+				dV.resize(indexingV.size());
+				for(unsigned i=0; i<indexingV.size(); i++){
+					dV[i] = delta[indexingV[i]] * P._colscaling[0];
+					//std::cout<<"dV = "<<dV[i]<<std::endl;
+				}
 
-				// dn.resize(indexingn.size());
-				// for(unsigned i=0; i<indexingn.size(); i++){
-					// dn[i] = delta[indexingn[i]] * P._colscaling[1];	
-					// //std::cout<<"dn = "<<dn[i]<<std::endl;
-				// }
+				dn.resize(indexingn.size());
+				for(unsigned i=0; i<indexingn.size(); i++){
+					dn[i] = delta[indexingn[i]] * P._colscaling[1];	
+					//std::cout<<"dn = "<<dn[i]<<std::endl;
+				}
 
 				// dF.resize(indexingF.size());
 				// for(unsigned i=0; i<indexingF.size(); i++){

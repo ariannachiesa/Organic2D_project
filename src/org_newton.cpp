@@ -111,8 +111,7 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 					R;
 	std::vector<double>	resn(nnodes,0.0),
 						rhs(nnodes, 0.0),
-						//alpha(insulator.size(),0.0),
-						alpha(insulator.size(),1.0),
+						alpha(insulator.size(),0.0),
 						a_el(insulator.size(),0.0),
 						eta(scnodes.size(),0.0),
 						beta(nnodes,0.0),
@@ -159,27 +158,17 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	}
 	rhs.clear();
 	
-	for(unsigned i=0; i<indexingn.size(); i++){
-		res[indexingn[i]] = -resn[i];
-		//res[i] = resn[i];
+	/// ADJUST FOR ZERO INSULATOR CHARGE	
+	for(unsigned i=0; i<scnodes.size(); i++){
+		if(scnodes[i] == 0){
+			resn[i] = 0;
+		}
 	}
 	
-	// / ADJUST FOR ZERO INSULATOR CHARGE
-	// std::vector<double>	vec(n.size(),0.0);
-	
-	// vec = M*n;
-	// for(unsigned i=0; i<scnodes.size(); i++){
-		// if(scnodes[i] == 0){
-			// s = 0;
-			// for(unsigned j=0; j<scnodes.size(); j++){
-				// if(scnodes[j] == 0){
-					// s += M[i][j]*n[j];
-				// }
-			// }
-			// resn[i] = vec[i];
-			// res[i] = s;
-		// }
-	// }
+	for(unsigned i=0; i<indexingn.size(); i++){
+		res[indexingn[i]] = resn[i];
+		//res[i] = resn[i];
+	}
 	
 	
 	// ///	ASSEMBLING THIRD ROW
@@ -286,13 +275,12 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	// diff.clear();
 	// resn.clear();
 	
+	
 	for(unsigned i=0; i<indexingV.size(); i++){
 		res[indexingV[i]] /= rowscaling[0];
-		//res[i] /= rowscaling[0];
 	}
 	for(unsigned i=0; i<indexingn.size(); i++){
 		res[indexingn[i]] /= rowscaling[1];
-		//res[i] /= rowscaling[1];
 	}
 	
 	// for(unsigned i=0; i<indexingF.size(); i++){
@@ -424,8 +412,7 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 					R;
 					
 	std::vector<double>	fluxn(n.size(),0.0),
-						//alfa(insulator.size(),0.0),
-						alfa(insulator.size(),1.0),
+						alfa(insulator.size(),0.0),
 						mobn_n(insulator.size(),0.0);
 			
 	A21.resize(nnodes);
@@ -506,64 +493,21 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 		}
 	}
 
-	// ///	ADJUST FOR ZERO INSULATOR CHARGE
-	// std::vector<double>	vec(n.size(),0.0);
-	// std::vector<int>	insn(scnodes.size(),0);
-	// for(unsigned i=0; i<scnodes.size(); i++){
-		// if(scnodes[i] == 0){
-			// insn[i] = 1;
-		// }
-	// }
+	///	ADJUST FOR ZERO INSULATOR CHARGE
 	
-	// vec.clear();
-	// vec.resize(insn.size());
-	// j = 0;
-	// for(unsigned i=0; i<insn.size(); i++){
-		// if(insn[i] == 1){
-			// vec[j] = M[i][i];
-			// j++;
-		// }
-	// }
-	// vec.resize(j);
+	for(unsigned i=0; i<scnodes.size(); i++){
+		if(scnodes[i] == 0){
+			for (J = jacobian[indexingn[i]].begin (); J != jacobian[indexingn[i]].end (); ++J){
+				jacobian[ indexingn[i] ][ jacobian.col_idx (J) ] = 0;
+			}
+		}
+	}
 	
-	// sparse_matrix diag;
-	// diag.resize(vec.size());
-	// for(unsigned j=0; j<vec.size(); j++){
-		// diag[j][j] = vec[j];
-	// }
-	
-	// int h = 0, i = 0;
-	// for(unsigned j=0; j<insn.size(); j++){
-		// if(insn[j] == 1){
-			// // for (J = jacobian[indexingn[j]].begin (); J != jacobian[indexingn[j]].end (); ++J){
-				// // jacobian[ indexingn[j] ][ jacobian.col_idx (J) ] = 0;
-			// // }
-			// /// for (J = jacobian[2*j+1].begin (); J != jacobian[2*j+1].end (); ++J){
-				// /// jacobian[ 2*j+1 ][ jacobian.col_idx (J) ] = 0;
-			// /// }
-			// /// for (J = jacobian[j+nnodes].begin (); J != jacobian[j+nnodes].end (); ++J){
-				// /// jacobian[ j+nnodes ][ jacobian.col_idx (J) ] = 0;
-			// /// }
-			// for (J = jacobian[j].begin (); J != jacobian[j].end (); ++J){
-				// jacobian[ j ][ jacobian.col_idx (J) ] = 0;
-			// }
-			// // for(unsigned k=0; k<insn.size(); k++){
-				// // if(insn[k] == 1 && i==h){
-					// // jacobian[indexingn[j]][indexingn[k]] += diag[i][h];
-					// // h++;
-				// // }
-			// // }
-			// for(unsigned k=0; k<insn.size(); k++){
-				// if(insn[k] == 1 && i==h){
-					// //jacobian[2*j+1][2*k+1] += diag[i][h];
-					// //jacobian[j+nnodes][k+nnodes] += diag[i][h];
-					// jacobian[j][k] += diag[i][h];
-					// h++;
-				// }
-			// }
-			// i++;
-		// }
-	// }
+	for(unsigned i=0; i<scnodes.size(); i++){
+		if(scnodes[i] == 0){
+			jacobian[ indexingn[i] ][ indexingn[i] ] += M[i][i];
+		}
+	}
 
 	
 	// ///	ASSEMBLING THIRD ROW
@@ -696,6 +640,30 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 			}
 		}
 	}
+	// for(unsigned i=0; i<jacobian.rows(); i++){
+		// J = jacobian[i].begin();
+		// while( jacobian.col_idx(J)%2 != 0){
+			// J++;
+			// if( J == jacobian[i].end () ){
+				// break;
+			// }
+		// }
+		// if(J != jacobian[i].end ()){
+		// for(unsigned j=0; j<indexingV.size(); j++){
+			// if( jacobian.col_idx(J) == indexingV[j] ){
+				// jacobian[i][indexingV[j]] *= colscaling[0];
+				// J++;
+				// while( jacobian.col_idx(J)%2 != 0){
+					// J++;
+					// if( J == jacobian[i].end () ){
+						// j = indexingV.size();
+						// break;
+					// }
+				// }
+			// }
+		// }
+		// }
+	// }
 	
 	for(unsigned i=0; i<jacobian.rows(); i++){
 		J = jacobian[i].begin();
@@ -709,7 +677,32 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 			}
 		}
 	}
-	
+	// for(unsigned i=0; i<jacobian.rows(); i++){
+		// J = jacobian[i].begin();
+		// while( jacobian.col_idx(J)%2 == 0 ){
+			// J++;
+			// if( J == jacobian[i].end () ){
+				// break;
+			// }
+		// }
+		// if(J != jacobian[i].end ()){
+		// for(unsigned j=0; j<indexingn.size(); j++){
+			// if( jacobian.col_idx(J) == indexingn[j] ){
+				// jacobian[i][indexingn[j]] *= colscaling[1];
+				// J++;
+				// while( jacobian.col_idx(J)%2 == 0 ){
+					// J++;
+					// if( J == jacobian[i].end () ){
+						// std::cout<<"break 2"<<std::endl;
+						// j = indexingn.size();
+						// break;
+					// }
+				// }
+			// }
+		// }
+		// }
+	// }
+
 	// for(unsigned i=0; i<jacobian.rows(); i++){
 		// J = jacobian[i].begin();
 		// for(unsigned j=0; j<indexingF.size(); j++){
