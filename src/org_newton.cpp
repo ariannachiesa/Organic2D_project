@@ -1345,18 +1345,18 @@ Newton::org_secs_state_predict (	Probl& P, std::vector<double>& Vold, std::vecto
 
 void 
 Newton::compute_residual_norm (	double& resnrm, int& whichone, std::vector<double>& resall, std::vector<double>& res,
-								std::vector<int>& idxV, std::vector<int>& idxn, std::vector<int>& idxF, std::vector<int>& idxI)
+								int nnodes, ordering& idxV, ordering& idxn, std::vector<int>& idxF, std::vector<int>& idxI)
 {
-	std::vector<double>	aux(idxV.size(),0);
+	std::vector<double>	aux(nnodes,0);
 	
-	for(unsigned i=0; i<idxV.size(); i++){
-		aux[i] = std::abs( res[ idxV[i] ] );
+	for(int i=0; i<nnodes; i++){
+		aux[i] = std::abs( res[ idxV(i) ] );
 	}
 	resall[0] = *std::max_element( aux.begin(),aux.end() );
   	
-	aux.resize(idxn.size());
-	for(unsigned i=0; i<idxn.size(); i++){
-		aux[i] = std::abs( res[idxn[i]] );
+	aux.resize(nnodes);
+	for(int i=0; i<nnodes; i++){
+		aux[i] = std::abs( res[idxn(i)] );
 	} 
 	resall[1] = *std::max_element( aux.begin(),aux.end() );  
   

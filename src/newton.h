@@ -44,7 +44,7 @@ class Newton{
 						
 	void 
 	compute_residual_norm (	double& resnrm, int& whichone, std::vector<double>& resall, std::vector<double>& res,
-							std::vector<int>& idxV, std::vector<int>& idxn, std::vector<int>& idxF, std::vector<int>& idxI);
+							int nnodes, ordering& idxV, ordering& idxn, std::vector<int>& idxF, std::vector<int>& idxI);
 	
 	void
 	compute_variation (	std::vector<double>& Va, std::vector<double>& na, std::vector<double>& Fa, std::vector<double>& Ia, 

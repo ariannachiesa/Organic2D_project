@@ -180,7 +180,7 @@ unsigned n_fix_tstep = firstfixtstep;
 				
 				if (in == 1){
 					whichone = 0;
-					compute_residual_norm (resnrm[0],whichone,resall,_res,indexingV,indexingn,indexingF,indexingI);
+					compute_residual_norm (resnrm[0],whichone,resall,_res,nnodes,ordV,ordn,indexingF,indexingI);
 					
 					// for(unsigned i=0; i<resall.size(); i++){
 						// std::cout<<"resall = "<<resall[i]<<std::endl;
@@ -201,7 +201,7 @@ unsigned n_fix_tstep = firstfixtstep;
 				}
 
 				resall.resize(4);
-				compute_residual_norm (resnrm[in-1],whichone,resall,_res,indexingV,indexingn,indexingF,indexingI);
+				compute_residual_norm (resnrm[in-1],whichone,resall,_res,nnodes,ordV,ordn,indexingF,indexingI);
 					
 				// for(unsigned i=0; i<resall.size(); i++){
 					// std::cout<<"resall = "<<resall[i]<<std::endl;
@@ -243,76 +243,76 @@ unsigned n_fix_tstep = firstfixtstep;
 	
 				bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn);
 				
-				// /// Solve non.linear system.
-				// std::cout << "Solving linear system."<<std::endl;
+				/// Solve non.linear system.
+				std::cout << "Solving linear system."<<std::endl;
 		
-				// delta.resize(_res.size());
-				// delta = _res;
+				delta.resize(_res.size());
+				delta = _res;
 				
-				// // for(unsigned i=0; i<delta.size(); i++){
-					// // std::cout<<"delta PRIMA = "<<delta[i]<<std::endl;
-				// // }
+				// for(unsigned i=0; i<delta.size(); i++){
+					// std::cout<<"delta PRIMA = "<<delta[i]<<std::endl;
+				// }
 		
-				// mumps mumps_solver;
+				mumps mumps_solver;
       
-				// std::vector<double> vals(nnodes,0.0);
-				// std::vector<int> 	irow(nnodes,0),
-									// jcol(nnodes,0);
+				std::vector<double> vals(nnodes,0.0);
+				std::vector<int> 	irow(nnodes,0),
+									jcol(nnodes,0);
 							
-				// mumps_solver.init();
+				mumps_solver.init();
 	  
-				// _jac.aij(vals, irow, jcol, mumps_solver.get_index_base ());
+				_jac.aij(vals, irow, jcol, mumps_solver.get_index_base ());
 		
-				// if(in == 1){	// only at the first iteration of the Newton method
-					// mumps_solver.set_lhs_structure (_jac.rows(), irow, jcol);
-					// mumps_solver.analyze ();
+				if(in == 1){	// only at the first iteration of the Newton method
+					mumps_solver.set_lhs_structure (_jac.rows(), irow, jcol);
+					mumps_solver.analyze ();
+				}
+		
+				mumps_solver.set_lhs_data (vals);
+				mumps_solver.set_rhs (delta);
+				mumps_solver.factorize ();
+		
+				mumps_solver.solve ();
+		
+				// for(unsigned i=0; i<delta.size(); i++){
+					// std::cout<<"delta = "<<delta[i]<<std::endl;
 				// }
-		
-				// mumps_solver.set_lhs_data (vals);
-				// mumps_solver.set_rhs (delta);
-				// mumps_solver.factorize ();
-		
-				// mumps_solver.solve ();
-		
-				// // for(unsigned i=0; i<delta.size(); i++){
-					// // std::cout<<"delta = "<<delta[i]<<std::endl;
-				// // }
 				
-				// // for(unsigned i=0; i<indexingV.size(); i++){
-					// // V2[i] += delta[indexingV[i]];
-					// // std::cout<<"V DOPO = "<<V2[i]<<std::endl;
-				// // }
-				// // for(unsigned i=0; i<indexingn.size(); i++){
-					// // n2[i] += delta[indexingn[i]];
-					// // std::cout<<"n DOPO = "<<n2[i]<<std::endl;
-				// // }
-				
-				// newton_solves +=1;
-	
-				// dV.resize(indexingV.size());
 				// for(unsigned i=0; i<indexingV.size(); i++){
-					// dV[i] = delta[indexingV[i]] * P._colscaling[0];
-					// //std::cout<<"dV = "<<dV[i]<<std::endl;
+					// V2[i] += delta[indexingV[i]];
+					// std::cout<<"V DOPO = "<<V2[i]<<std::endl;
 				// }
-
-				// dn.resize(indexingn.size());
 				// for(unsigned i=0; i<indexingn.size(); i++){
-					// dn[i] = delta[indexingn[i]] * P._colscaling[1];	
-					// //std::cout<<"dn = "<<dn[i]<<std::endl;
+					// n2[i] += delta[indexingn[i]];
+					// std::cout<<"n DOPO = "<<n2[i]<<std::endl;
 				// }
+				
+				newton_solves +=1;
+	
+				dV.resize(nnodes);
+				for(int i=0; i<nnodes; i++){
+					dV[i] = delta[ordV(i)] * P._colscaling[0];
+					//std::cout<<"dV = "<<dV[i]<<std::endl;
+				}
 
-				// dF.resize(indexingF.size());
-				// for(unsigned i=0; i<indexingF.size(); i++){
-					// dF[i] = delta[indexingF[i]] * P._colscaling[2];
-					// //std::cout<<"dF = "<<dF[i]<<std::endl;
-				// }
+				dn.resize(nnodes);
+				for(int i=0; i<nnodes; i++){
+					dn[i] = delta[ordn(i)] * P._colscaling[1];	
+					//std::cout<<"dn = "<<dn[i]<<std::endl;
+				}
 
-				// dI.resize(indexingI.size());
-				// for(unsigned i=0; i<indexingI.size(); i++){
-					// dI[i] = delta[indexingI[i]] * P._colscaling[3];
-					// //std::cout<<"dI = "<<dI[i]<<std::endl;
-				// }
-				// delta.clear();
+				dF.resize(indexingF.size());
+				for(unsigned i=0; i<indexingF.size(); i++){
+					dF[i] = delta[indexingF[i]] * P._colscaling[2];
+					//std::cout<<"dF = "<<dF[i]<<std::endl;
+				}
+
+				dI.resize(indexingI.size());
+				for(unsigned i=0; i<indexingI.size(); i++){
+					dI[i] = delta[indexingI[i]] * P._colscaling[3];
+					//std::cout<<"dI = "<<dI[i]<<std::endl;
+				}
+				delta.clear();
 				
 				// V2.clear(); n2.clear(); F2.clear(); I2.clear();
 				// // calcolo la nuova soluzione al passo corrente (vettori _2)
