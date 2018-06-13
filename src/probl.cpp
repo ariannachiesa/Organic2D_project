@@ -482,11 +482,33 @@ Probl::Probl(	int maxcycle,
 	b = 10;
 	N = 1e6+1;
 	step = (b-a)/(N-1);
-	_data_phi_lumo.resize(N);
-	for(auto i=a; i<=b; i+=step){
-		_data_phi_lumo[j] = ( i );
-		j++;
-	}
+	
+	
+	//_data_phi_lumo.resize(N);
+	// for(auto i=a; i<=b; i+=step){
+		// //_data_phi_lumo[j] = ( i );
+		// //j++;
+		
+	// }
+	
+	///
+	    //std::ofstream File("interpolation_table.txt", std::ios_base::out | std::ios_base::trunc);
+		std::ofstream File("interpolation_table.txt", "w");
+		
+        if (File.is_open())
+        {
+            //while (getline(iFile, line) && oFile.good())
+			for(auto i=a; i<=b; i+=step){
+				fprintf(File, "%d\n", i); 
+			}
+                     
+            File.close();
+        }
+		else{
+			perror("Errore in apertura del file");
+			exit(1);
+		}
+	///
 	
 	Constants(T0);
 	Material(PhiB, sigman, mu0n);
