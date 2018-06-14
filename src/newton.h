@@ -134,6 +134,12 @@ class Newton{
 			
 	void
 	saveJAC (int nrows, int ncols, std::vector<double>& vals);
+	
+	void
+	saveVn(std::vector<double>& V, std::vector<double>& n, const char* FileName);
+	
+	void
+	saveRES(std::vector<double>& res, const char* FileName);
 };
 
 #endif	// NEWTON_H

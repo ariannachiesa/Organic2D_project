@@ -476,8 +476,8 @@ Probl::Probl(	int maxcycle,
 				std::array<int,2> pins, std::array<int,2> contacts, double section, double Vdrain)
 {	
 	///	Calculation of the interpolation table
-	double	N, num = 0;
-	N = 1e6+1;	
+	double	N = 1e6+1, 
+			num = 0;
 	
 	_data_phi_lumo.resize(N);
 	_data_n.resize(_data_phi_lumo.size());

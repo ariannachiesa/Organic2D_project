@@ -265,7 +265,7 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 		for(unsigned j=0; j<rr.size(); j++){
 			s += resn[rr[j]];
 		}
-		res[indexingI[i]] -= -section * q * s;
+		res[indexingI[i]] += section * q * s;
 	}	
 	rr.clear();
 	sum1.clear();
@@ -1805,5 +1805,45 @@ Newton::saveJAC (int nrows, int ncols, std::vector<double>& vals)
   // Save to filename.
   assert (octave_io_open (FileName, m, &m) == 0);
   assert (octave_save ("jac", octave_value (the_map)) == 0);
+  assert (octave_io_close () == 0);
+};
+
+
+void
+Newton::saveVn(std::vector<double>& V, std::vector<double>& n, const char* FileName)
+{
+  ColumnVector oct_V (V.size (), 0.0);
+  ColumnVector oct_n (n.size (), 0.0);
+
+  std::copy_n (V.begin (), V.size (), oct_V.fortran_vec ());
+  std::copy_n (n.begin (), n.size (), oct_n.fortran_vec ());
+  
+  octave_scalar_map the_map;
+  the_map.assign ("V", oct_V);
+  the_map.assign ("n", oct_n);
+  
+  octave_io_mode m = gz_write_mode;
+  
+  // Save to filename.
+  assert (octave_io_open (FileName, m, &m) == 0);
+  assert (octave_save ("Newt", octave_value (the_map)) == 0);
+  assert (octave_io_close () == 0);
+};
+
+void
+Newton::saveRES(std::vector<double>& res, const char* FileName)
+{
+  ColumnVector oct_res (res.size (), 0.0);
+
+  std::copy_n (res.begin (), res.size (), oct_res.fortran_vec ());
+  
+  octave_scalar_map the_map;
+  the_map.assign ("res", oct_res);
+  
+  octave_io_mode m = gz_write_mode;
+  
+  // Save to filename.
+  assert (octave_io_open (FileName, m, &m) == 0);
+  assert (octave_save ("Res", octave_value (the_map)) == 0);
   assert (octave_io_close () == 0);
 };
