@@ -476,70 +476,38 @@ Probl::Probl(	int maxcycle,
 				std::array<int,2> pins, std::array<int,2> contacts, double section, double Vdrain)
 {	
 	///	Calculation of the interpolation table
-	int j = 0;
-	double	a, b, N, step;
-	a = -10;
-	b = 10;
-	N = 1e6+1;
-	step = (b-a)/(N-1);
+	double	N, num = 0;
+	N = 1e6+1;	
 	
-	
-	//_data_phi_lumo.resize(N);
-	// for(auto i=a; i<=b; i+=step){
-		// //_data_phi_lumo[j] = ( i );
-		// //j++;
+	_data_phi_lumo.resize(N);
+	_data_n.resize(_data_phi_lumo.size());
 		
-	// }
+	std::ifstream f("interpolation_table.txt");
+
+	while(num < N){
+		f >> _data_phi_lumo[num];
+		if(f.eof()) 
+			break;
+		num++;
+	}
+	f.close();
 	
-	///
-	    //std::ofstream File("interpolation_table.txt", std::ios_base::out | std::ios_base::trunc);
-		std::ofstream File("interpolation_table.txt", "w");
-		
-        if (File.is_open())
-        {
-            //while (getline(iFile, line) && oFile.good())
-			for(auto i=a; i<=b; i+=step){
-				fprintf(File, "%d\n", i); 
-			}
-                     
-            File.close();
-        }
-		else{
-			perror("Errore in apertura del file");
-			exit(1);
-		}
-	///
+	std::ifstream F("interpolated_values.txt");
+	num = 0;
+	while(num < N){
+		F >> _data_n[num];
+		if(F.eof()) 
+			break;
+		num++;
+	}
+	F.close();
 	
 	Constants(T0);
 	Material(PhiB, sigman, mu0n);
 	Quad(nq);
 	Algor(pmaxit, maxit, maxit_mnewton, nsteps_check, maxnpincr, ptoll, toll, dt0, dtcut, dtmax, dtmin, maxdtincr);
 	Device(Vshift, Csb, t_semic, t_ins, L, ins, pins, contacts, section, Vdrain, maxcycle);
-	
-	///	Calculation of interpolated n
-    std::vector<double> coeff(_data_phi_lumo.size(),0.0),
-						n(_data_phi_lumo.size(),0.0),
-						gx = _gx,
-						gw = _gw;
-						
-    double	q = _q,
-			kT = _Kb * _T0,
-			N0 = _N0,
-			denom;
-	
-	_data_n.resize(_data_phi_lumo.size());
-    for(unsigned i=0; i<gx.size(); i++){
-        for(unsigned j=0; j<_data_phi_lumo.size(); j++){		
-            coeff[j] = (sqrt(2) * _sigman * gx[i] - q * _data_phi_lumo[j]) / kT ;
-            denom = 1+exp(coeff[j]);
-			n[j] += N0 / sqrt(M_PI) * gw[i] / denom;
-			_data_n[j] = -q*n[j];
-        }
-    }
 
-	gx.clear();
-	gw.clear();
-	coeff.clear();	
 };
 
 std::vector<double>& Probl::get_data_phi_lumo(){
