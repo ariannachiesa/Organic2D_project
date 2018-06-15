@@ -12,7 +12,6 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
         modified_newton_solves = 0,
 		rejected = 0,
 		j = 0,
-		clamp = 0,
 		lastsaved = 0,
 		nsaves = 0,
 		nsteps_check = P._nsteps_check,
@@ -24,6 +23,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 			dt0 = P._dt0,
 			dtmax = P._dtmax,
 			dtmin = P._dtmin,
+			clamp = 0,
 			tauk = 0,
 			incr0, incrlast, incr1, incrk,
 			incr0v = 0, incr0n = 0, incr0F = 0, incr0I = 0,
@@ -354,9 +354,9 @@ unsigned n_fix_tstep = firstfixtstep;
 				if(incr0==incr0F) whichone = 2;
 				if(incr0==incr0I) whichone = 3;
 				
-				for(unsigned i=0; i<vecincr.size(); i++){
-					std::cout<<"vecincr = "<<vecincr[i]<<std::endl;
-				}
+				// for(unsigned i=0; i<vecincr.size(); i++){
+					// std::cout<<"vecincr = "<<vecincr[i]<<std::endl;
+				// }
 				
 				if (incr0 > P._maxnpincr && dt > P._dtmin){
 					MAXINCR_MSG (tstep, t, in, whichone, incr0, resall, P);

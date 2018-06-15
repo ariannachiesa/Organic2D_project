@@ -1469,7 +1469,7 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
 									std::vector<double>& dV, std::vector<double>& dn, std::vector<double>& dF, std::vector<double>& dI,
 									Probl& P,
 									std::vector<double>& V, std::vector<double>& n, std::vector<double>& F, std::vector<double>& I,
-									int& clamp, double& tauk	)
+									double& clamp, double& tauk	)
 {
 	double	tk = 1.0,
 			min;
@@ -1488,24 +1488,10 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
 		}
 	}
 	
-	// int s = 0 , length = 0;
-	// for(unsigned i=0; i<scnodes.size(); i++){
-		// if(scnodes[i] == 1){
-			// s++;
-			// if(where[i] == 1){
-				// length++;
-			// }
-		// }
-	// }
-	//int length = std::accumulate( where.begin(), where.end(), 0.0);
 	int s = std::accumulate( scnodes.begin(), scnodes.end(), 0.0);
 	where.resize(s);
-	
-	// if ( length == s){
+
 	if ( any(where) ){
-		//Min.resize(length);
-		// for(unsigned i=0; i<scnodes.size(); i++){
-			// if(scnodes[i]==1){
 		for(unsigned i=0; i<where.size(); i++){
 				if(where[i]==1){
 					min = n0[i]/std::abs(dn[i]);
@@ -1514,10 +1500,8 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
 					}
 				}
 		}
-		//tk = 0.9 * (*std::min_element(Min.begin(),Min.end()));
 		tk *= 0.9;
 	}
-	std::cout<<"tk = "<<tk<<std::endl;
 
   clamp = 1;
 
@@ -1526,7 +1510,7 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
     if (any(dV)){
 		clamp = std::fmin (1, clamping[0] / infnorm(dV));
     }
-
+	
     // n
     std::vector<double> dn2(dn.size(),0),
 						dn3(dn.size(),0);
@@ -1560,6 +1544,7 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
     if (any(dI)){
       clamp = std::fmin (clamp, clamping[3] / infnorm (dI));
     }
+	
   }
   else{
     std::cout<<"No clamping applied"<<std::endl;
@@ -1644,7 +1629,7 @@ Newton::CONV_MSG (int tstep, int Nstep, int mNstep, double t, std::string reason
   std::cout<<"at time step "<<tstep<<std::endl;
   std::cout<<"fixed point iteration "<<Nstep-1<<", modified Newton iteration "<<mNstep-1<<", model time "<<t   //
             <<": convergence reached ("<<reason<<")"<<std::endl;
-  std::cout<<"incr ("<<field<<") = "<<incr<<" residual = [ ";
+  std::cout<<"incr ("<<field+1<<") = "<<incr<<" residual = [ ";
 
   for(unsigned i=0; i<res.size()-1; i++){
     std::cout<<res[i]<<" ";
@@ -1660,15 +1645,15 @@ Newton::MAXINCR_MSG (int tstep, double t, int Nstep, int field, double incr, std
   std::cout<<" "<<std::endl;
   std::cout<<"at time step "<<tstep<<" model time "<<t<<std::endl;
   std::cout<<"fixed point iteration "<<Nstep-1;
-  std::cout<<" the increment in field "<<field<<" has grown too large: "<<std::endl;
+  std::cout<<" the increment in field "<<(field+1)<<" has grown too large: "<<std::endl;
   std::cout<<" "<<incr<<" > "<<P._maxnpincr<<std::endl;
-  std::cout<<"incr0 ( "<<field<<" ) = "<<incr<<" residual = [ ";
+  std::cout<<"incr0 ( "<<field+1<<" ) = "<<incr<<" residual = [ ";
 
   for(unsigned i=0; i<res.size()-1; i++){
     std::cout<<res[i]<<" ";
   }
 
-  std::cout<<"]"<<res.back()<<std::endl;
+  std::cout<<res.back()<<" ]"<<std::endl;
   std::cout<<" "<<std::endl;
 };
 
@@ -1679,9 +1664,9 @@ Newton::DIV_MSG (	int tstep, double t, int Nstep, int field, std::vector<double>
   std::cout<<" "<<std::endl;
   std::cout<<"at time step "<<tstep<<" model time "<<t<<std::endl;
   std::cout<<"fixed point iteration "<<Nstep<<", the Newton algorithm is diverging: "<<std::endl;
-  std::cout<<"the increment in field "<<field<<" is not decreasing : "<<std::endl;
+  std::cout<<"the increment in field "<<field+1<<" is not decreasing : "<<std::endl;
   std::cout<<incrhist[Nstep-1]<<" > "<<incrhist[Nstep - nsteps_check-1]<<std::endl;
-  std::cout<<"incr ("<<field<<") = "<<incr<<" residual = [ ";
+  std::cout<<"incr ("<<field+1<<") = "<<incr<<" residual = [ ";
 
   for(unsigned i=0; i<res.size()-1; i++){
     std::cout<<res[i]<<" ";
@@ -1698,9 +1683,9 @@ Newton::DIV_MN_MSG (	int tstep, int t, int Nstep, int mNstep, int field, std::ve
   std::cout<<"at time step "<<tstep<<"model time "<<t<<std::endl;
   std::cout<<"fixed point iteration "<<Nstep<<", modified Newton iteration "<<mNstep<<std::endl;
   std::cout<<"the Modified Newton algorithm is diverging: "<<std::endl;
-  std::cout<<"the increment in field "<<field<<" is not decreasing : "<<std::endl;
+  std::cout<<"the increment in field "<<field+1<<" is not decreasing : "<<std::endl;
   std::cout<<incrhist[mNstep-1]<<" > "<<incrhist[mNstep - nsteps_check-1]<<std::endl;
-  std::cout<<"incr ("<<field<<") = "<<incr<<" residual = [ ";
+  std::cout<<"incr ("<<field+1<<") = "<<incr<<" residual = [ ";
 
   for(unsigned i=0; i<res.size()-1; i++){
     std::cout<<res[i]<<" ";

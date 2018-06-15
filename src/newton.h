@@ -76,7 +76,7 @@ class Newton{
 								std::vector<double>& dV, std::vector<double>& dn, std::vector<double>& dF, std::vector<double>& dI,
 								Probl& P,
 								std::vector<double>& V, std::vector<double>& n, std::vector<double>& F, std::vector<double>& I,
-								int& clamp, double& tauk);
+								double& clamp, double& tauk);
 								
 	double
 	infnorm(std::vector<double>& in);
