@@ -82,6 +82,9 @@ class Newton{
 	infnorm(std::vector<double>& in);
 	
 	bool
+	any(std::vector<int>& v);
+
+	bool
 	any(std::vector<double>& v);
 								
 	void

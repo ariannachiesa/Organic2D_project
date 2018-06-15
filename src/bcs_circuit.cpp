@@ -9,11 +9,11 @@ BCS_CIRC::BCS_CIRC(	double freq, int voltage, double Csb, double Vshift, std::ve
 	_A.resize(4);
 	_B.resize(4);
 
-	// _A[0][2] = 1;
-	// _B[0][3] = -1;
-	// _B[1][0] = 1;
-	// _B[2][1] = 1;
-	// _B[3][2] = 1;	
+	_A[0][2] = 1;
+	_B[0][3] = -1;
+	_B[1][0] = 1;
+	_B[2][1] = 1;
+	_B[3][2] = 1;	
 	
 	_F = F;
 
@@ -21,9 +21,9 @@ BCS_CIRC::BCS_CIRC(	double freq, int voltage, double Csb, double Vshift, std::ve
 	
 	_r.resize(4);
 	
-	// _r[0][0] = 1;
-	// _r[1][0] = Rg;
-	// _r[2][1] = Rb;
+	_r[0][0] = 1;
+	_r[1][0] = Rg;
+	_r[2][1] = Rb;
 	
 	_amp = amp;
 	_freq = freq;

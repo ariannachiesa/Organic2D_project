@@ -1469,10 +1469,11 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
 									std::vector<double>& dV, std::vector<double>& dn, std::vector<double>& dF, std::vector<double>& dI,
 									Probl& P,
 									std::vector<double>& V, std::vector<double>& n, std::vector<double>& F, std::vector<double>& I,
-									int& clamp, double& tauk)
+									int& clamp, double& tauk	)
 {
-	double tk = 1;
-	std::vector<double>	Min, n0_2;
+	double	tk = 1.0,
+			min;
+	std::vector<double>	n0_2;
 	std::vector<int>	scnodes = P._scnodes,
 						clamping = P._clamping,
 						where(n0.size(),0);
@@ -1481,31 +1482,42 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
 		std::cout<<"error: org_secs_safe_increment, vectors with different size"<<std::endl;
 	}
 	for(unsigned i=0; i<n0.size(); i++){
-		if(n0[i]+dn[i] <= 0)
-			where[i] = 1;
-	}
-	int s = 0 , length = 0;
-	for(unsigned i=0; i<scnodes.size(); i++){
 		if(scnodes[i] == 1){
-			s++;
-			if(where[i] == 1){
-				length++;
-			}
+			if(n0[i]+dn[i] <= 0)
+				where[i] = 1;
 		}
 	}
-
-	if ( length == s){
-		Min.resize(length);
-		for(unsigned i=0; i<scnodes.size(); i++){
-			if(scnodes[i]==1){
+	
+	// int s = 0 , length = 0;
+	// for(unsigned i=0; i<scnodes.size(); i++){
+		// if(scnodes[i] == 1){
+			// s++;
+			// if(where[i] == 1){
+				// length++;
+			// }
+		// }
+	// }
+	//int length = std::accumulate( where.begin(), where.end(), 0.0);
+	int s = std::accumulate( scnodes.begin(), scnodes.end(), 0.0);
+	where.resize(s);
+	
+	// if ( length == s){
+	if ( any(where) ){
+		//Min.resize(length);
+		// for(unsigned i=0; i<scnodes.size(); i++){
+			// if(scnodes[i]==1){
+		for(unsigned i=0; i<where.size(); i++){
 				if(where[i]==1){
-					Min[i] = n0[i]/std::abs(dn[i]);
+					min = n0[i]/std::abs(dn[i]);
+					if(tk > min){
+						tk = min;
+					}
 				}
-			}
 		}
-		tk = 0.9 * (*std::min_element(Min.begin(),Min.end()));
-		Min.clear();
+		//tk = 0.9 * (*std::min_element(Min.begin(),Min.end()));
+		tk *= 0.9;
 	}
+	std::cout<<"tk = "<<tk<<std::endl;
 
   clamp = 1;
 
@@ -1602,7 +1614,7 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
     std::cout<<"Relaxation parameter is too small: tau = "<<tk<<std::endl;
     std::cout<<" reducing time step!"<<std::endl;
   }
-
+  else{
   n0_2.resize(s);
   int j=0;
   for(unsigned i=0; i<scnodes.size(); i++){
@@ -1621,7 +1633,8 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
   //if (any (n(_scnodes) <= 0))
 	if(any(n0_2)){
 		std::cout<<"error: org_secs_safe_increment, negative charge density"<<std::endl;
-	}	
+	}
+  }	
 };
 
 void
@@ -1772,14 +1785,34 @@ Newton::infnorm(std::vector<double>& in){
 };
 
 bool
+Newton::any(std::vector<int>& v)
+{
+	// int l=0;
+	// for(unsigned i=0; i<v.size(); i++){
+		// if(v[i]!=0)
+			// l++;
+	// }
+	int l = std::accumulate( v.begin(), v.end(), 0.0);
+	
+	// if( (unsigned)l == v.size())
+	if( l > 0 )
+		return true;
+	else
+		return false;
+};
+
+bool
 Newton::any(std::vector<double>& v)
 {
-	int l=0;
-	for(unsigned i=0; i<v.size(); i++){
-		if(v[i]!=0)
-			l++;
-	}
-	if( (unsigned)l == v.size())
+	// int l=0;
+	// for(unsigned i=0; i<v.size(); i++){
+		// if(v[i]!=0)
+			// l++;
+	// }
+	int l = std::accumulate( v.begin(), v.end(), 0.0);
+	
+	// if( (unsigned)l == v.size())
+	if( l > 0 )
 		return true;
 	else
 		return false;
