@@ -135,12 +135,10 @@ unsigned n_fix_tstep = firstfixtstep;
 			
 			incr0 = 4 * P._maxnpincr;
 			
-			bcs.assign(t, P._Vshift, P._Csb, _F);		/// ?
+			bcs.assign(t, P._Vshift, P._Csb, _F);
 			
 			org_secs_state_predict (P, Vold, nold, Fold, Iold, Voldold, noldold, Foldold, Ioldold, tstep, _tout, V0, n0, F0, I0);
 			
-			// _2 sono i nuovi vettori al passo corrente
-			// per tstep < 3 è tutto giusto;
 			/// controllare che funzioni org_state predict quando tstep>2
 			V2 = V0;
 			n2 = n0;
@@ -179,12 +177,9 @@ unsigned n_fix_tstep = firstfixtstep;
 						Vshift = P._Vshift,
 						Vgate = P._VG;
 				std::tuple<int, int, func_quad>	tupla1(0,2,[&PhiB,&V2](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																		{return 0.0;}),
-																	//{return (PhiB-V2[quad->gt(i)]);}),				// impongo PhiB
+																	{return (PhiB-V2[quad->gt(i)]);}),				// impongo PhiB
 												tupla2(indexT,3,[&Vgate,&Vshift,&V2](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																	//{return (PhiB-V2[quad->gt(i)]);});
-																	//{return (Vgate+Vshift-V2[quad->gt(i)]);});		// impongo Vshift + Vgate
-																		{return 0.0;});
+																	{return (Vgate+Vshift-V2[quad->gt(i)]);});		// impongo Vshift + Vgate
 																			
 				dirichlet_bcs_quad	bcsV;
 				bcsV.push_back(tupla1);
@@ -213,20 +208,14 @@ unsigned n_fix_tstep = firstfixtstep;
 					whichone = 0;
 					compute_residual_norm (resnrm[0],whichone,resall,_res,nnodes,ordV,ordn,indexingF,indexingI);
 					
-					// for(unsigned i=0; i<resall.size(); i++){
-						// std::cout<<"resall = "<<resall[i]<<std::endl;
-					// }
-					// std::cout<<"resnrm = "<<resnrm[0]<<std::endl;
-					
 					if(P._rowscaling.size() == resall.size()){
 						for(unsigned i=0; i<P._rowscaling.size(); i++){
 							P._rowscaling[i] = P._rowscaling[i] * (resall[i]+1);
-							// std::cout<<"P._rowscaling[i] = "<<P._rowscaling[i]<<std::endl;
 						}
 					}
 					else{
 						std::cout<<"error: dimensions mismatch"<<std::endl;
-						///break;
+						break;
 					}
 					
 					_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, ordV, ordn, indexingF, indexingI);
@@ -250,10 +239,6 @@ unsigned n_fix_tstep = firstfixtstep;
 		
 				delta.resize(_res.size());
 				delta = _res;
-				
-				// for(unsigned i=0; i<delta.size(); i++){
-					// std::cout<<"delta PRIMA = "<<delta[i]<<std::endl;
-				// }
 		
 				mumps mumps_solver;
       
@@ -275,33 +260,27 @@ unsigned n_fix_tstep = firstfixtstep;
 				mumps_solver.factorize ();
 		
 				mumps_solver.solve ();
-				
-				// saveRES(delta, "delta");
 		
-				// // for(unsigned i=0; i<delta.size(); i++){
-					// // std::cout<<"delta = "<<delta[i]<<std::endl;
-				// // }
-				
-				for(int i=0; i<nnodes; i++){
-					V2[i] += delta[ordV(i)];
-					//std::cout<<"V DOPO = "<<V2[i]<<std::endl;
-				}
-				for(int i=0; i<nnodes; i++){
-					n2[i] += delta[ordn(i)];
-					//std::cout<<"n DOPO = "<<n2[i]<<std::endl;
-				}
-				for(unsigned i=0; i<indexingF.size(); i++){
-					F2[i] += delta[indexingF[i]];
-					// std::cout<<"F = "<<F2[i]<<std::endl;
-				}
-				for(unsigned i=0; i<indexingI.size(); i++){
-					I2[i] += delta[indexingI[i]];
-					// std::cout<<"I = "<<I2[i]<<std::endl;
+				for(unsigned i=0; i<delta.size(); i++){
+					std::cout<<"delta = "<<delta[i]<<std::endl;
 				}
 				
-				// saveVn(V2, n2, "soluz");
-
-				// saveNEWT(Vold, nold, Fold, Iold, told, V2, n2, F2, I2, _res, t, dt, nsaves, newton_solves, modified_newton_solves, freq);
+				// for(int i=0; i<nnodes; i++){
+					// V2[i] += delta[ordV(i)];
+					// //std::cout<<"V DOPO = "<<V2[i]<<std::endl;
+				// }
+				// for(int i=0; i<nnodes; i++){
+					// n2[i] += delta[ordn(i)];
+					// //std::cout<<"n DOPO = "<<n2[i]<<std::endl;
+				// }
+				// for(unsigned i=0; i<indexingF.size(); i++){
+					// F2[i] += delta[indexingF[i]];
+					// // std::cout<<"F = "<<F2[i]<<std::endl;
+				// }
+				// for(unsigned i=0; i<indexingI.size(); i++){
+					// I2[i] += delta[indexingI[i]];
+					// // std::cout<<"I = "<<I2[i]<<std::endl;
+				// }
 				
 				newton_solves +=1;
 	
@@ -331,19 +310,13 @@ unsigned n_fix_tstep = firstfixtstep;
 				delta.clear();
 				
 				V2.clear(); n2.clear(); F2.clear(); I2.clear();
-				// calcolo la nuova soluzione al passo corrente (vettori _2)
-				// _1 tiene sempre memoria di quella al passo corrente all'inizio del metodo di newton
 				org_secs_safe_increment (V1, n1, F1, I1, dV, dn, dF, dI, P, V2, n2, F2, I2, clamp, tauk);
-
-				// std::cout<<"clamp = "<<clamp<<std::endl;
-				// std::cout<<"tauk = "<<tauk<<std::endl;
 												
 				if ((clamp <= 0) || (tauk <= 0)){
 					reject = true;
 					break;
 				}
 		
-				// _0 passo corrente prima del NEWTstep e passo corrente durante NEWT _2
 				compute_variation ( V0, n0, F0, I0, V2, n2, F2, I2, P, std::fmin (clamp, tauk), incr0v, incr0n, incr0F, incr0I);
 									
 				vecincr[0] = incr0v;
@@ -399,8 +372,8 @@ unsigned n_fix_tstep = firstfixtstep;
 					break;
 				}
 
-				std::cout<<"incr ("<<whichone<<") = "<<incr1<<std::endl;
-				std::cout<<"residual = [ "<<resall[0]<<" "<<resall[1]<<" "<<resall[2]<<" "<<resall[3]<<" ] "<<std::endl;
+				std::cout<<"incr ("<<whichone<<") = "<<incr1;
+				std::cout<<"   residual = [ "<<resall[0]<<" "<<resall[1]<<" "<<resall[2]<<" "<<resall[3]<<" ] "<<std::endl;
 				
 				if (incr1 < P._toll ){
 					CONV_MSG(tstep, in, 1, t, "incr", whichone, incr1, resall);
@@ -417,7 +390,7 @@ unsigned n_fix_tstep = firstfixtstep;
 				rejectmnewton = false;
 				convergedmnewton = false;
 				
-				incnrmk.resize(P._maxit_mnewton+1);	/// inserire dimensioni più intelligenti?
+				incnrmk.resize(P._maxit_mnewton+1);
 				inck_clamp.resize(P._maxit_mnewton+1);
 				resnrmk.resize(P._maxit_mnewton+1);
 				
@@ -430,7 +403,7 @@ unsigned n_fix_tstep = firstfixtstep;
 					Fk = F2;
 					Ik = I2;
 		
-					bcs.assign(t, P._Vshift, P._Csb, F2);
+					bcs.assign(t, P._Vshift, P._Csb, F2);					
 
 					_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, ordV, ordn, indexingF, indexingI);
 					
@@ -465,9 +438,9 @@ unsigned n_fix_tstep = firstfixtstep;
 	  
 					modified_newton_solves +=1;
 					
-					// for(unsigned i=0; i<delta.size(); i++){
-						// std::cout<<"delta = "<<delta[i]<<std::endl;
-					// }
+					for(unsigned i=0; i<delta.size(); i++){
+						std::cout<<"delta MN = "<<delta[i]<<std::endl;
+					}
 					
 					// for(int i=0; i<nnodes; i++){
 						// V2[i] += delta[ordV(i)];
@@ -595,7 +568,6 @@ unsigned n_fix_tstep = firstfixtstep;
 			if (reject){
 				++rejected;
 				tstep -= 1;
-				//t = _tout [tstep];
 				t = _tout [1];	// riporto t al passo told
 				dt = dt * P._dtcut;
 

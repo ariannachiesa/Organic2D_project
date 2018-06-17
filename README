@@ -16,7 +16,11 @@ Build and execution of the program:
 
 3. Makefile
 
-4. file input: the data set named "input_data.csv"
+4. input files:	the data set named "input_data.csv"
+
+				"interpolation_table.txt"
+				
+				"interpolated_values.txt"
 
 5. libraries Bim++ and p4est must be installed.
 
@@ -34,7 +38,7 @@ N.B. Now a 'build' folder should have been created in the root folder.
 
 	How to execute the code:
 	
-1. place the data set (4) in the new folder 'build'.
+1. place the input files (4) in the new folder 'build'.
   
 2. 'cd' to the 'build' directory.
   

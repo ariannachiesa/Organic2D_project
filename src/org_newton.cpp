@@ -20,7 +20,7 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 			q = P._q,
 			Vth = P._Vth,
 			section = P._section,
-			s = 0;
+			s = 0.0;
 	unsigned int	numcontacts;
 	bool	ins = P._ins;
 	std::array<int,2>	pins = P._pins;
@@ -184,7 +184,9 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	for(unsigned i=0; i<F.size(); i++){
 		diff[i] = (F[i]-F0[i])/deltat;
 	}
+	
 	resF = A*diff;
+	
 	diff.clear();
 	
 	for(unsigned i=0; i<C.size(); i++){
@@ -215,6 +217,7 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	}
 	
 	for(unsigned i=0; i<numcontacts; i++){
+		
 		rr.resize(dnodes[pins[i]].size());
 		rr = dnodes[pins[i]];
 
@@ -237,7 +240,7 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 			s += sum1[j];
 		}
 		sum1.clear();
-		 res[indexingI[i]] -= section * s / deltat;
+		res[indexingI[i]] -= (section * s / deltat);
 
 		diff.clear();
 		diff.resize(n.size());
@@ -257,7 +260,6 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 			s += sum1[j];
 		}
 		sum1.clear();
-
 		res[indexingI[i]] -= section * s / deltat;
 
 		// Electron current.
