@@ -26,7 +26,6 @@ int main(int argc, char** argv){
 	/// n. refinement cycles : 1
 	/// the mesh is constituted only by two rows of quadrants along the y-axis
 	Probl P(1);	
-	//P.set_T0(295);
 
 	tstart_probl = clock() - tstart_probl;
 	std::cout<<"Construction class Probl run time: "<<tstart_probl<<" , ("<<((float)tstart_probl)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
@@ -92,8 +91,8 @@ int main(int argc, char** argv){
 	/// Circuit boundary conditions and initial condition.
 	/// Full circuit.
 		
-	// Fin[0] = - P._Vshift;
-	// Fin[2] = - P._Vshift * P._Csb;
+	Fin[0] = - P._Vshift;
+	Fin[2] = - P._Vshift * P._Csb;
 		
 	tstart_simul = clock();
 		

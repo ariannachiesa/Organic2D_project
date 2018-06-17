@@ -40,7 +40,7 @@ void BCS_CIRC::assign(double t, double  Vshift, double Csb, std::vector<double>&
 	d3 = (t >=   0);
   
 	//VG =(_voltage * (t + 90) / 40) * d1 + _voltage * d2 + (_voltage + _amp * sin (2 * M_PI * _freq * t)) * d3;
-	VG = _voltage * d1 + _voltage * d2 + (_voltage + _amp * sin (2 * M_PI * _freq * t)) * d3;	// VG costante
+	VG = _voltage * d1 + _voltage * d2 + _voltage * d3;	// VG costante
 	VG = VG - Vshift;
 	
 	s[1] = -VG;

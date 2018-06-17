@@ -300,15 +300,13 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 {
 	int	nnodes = P.get_msh_nodes(),
 		nelements = P.get_msh_elem(),
-        numcontacts, ndofs, numscnodes = 0, j = 0;
+        numcontacts, ndofs, j = 0;
 		
 	double	eps_semic = P._eps_semic,
 			eps_ins = P._eps_ins,
 			q = P._q,
 			Vth = P._Vth,
-			section = P._section,
-			PhiB = P._PhiB,
-			Vshift = P._Vshift;
+			section = P._section;
 			
 	bool	ins = P._ins;
 			
@@ -327,7 +325,7 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 						
 	sparse_matrix 	A, B, r;
 	
-	numscnodes = std::accumulate( scnodes.begin(), scnodes.end(), 0.0);
+	//numscnodes = std::accumulate( scnodes.begin(), scnodes.end(), 0.0);
 	
 	numcontacts = pins.size();
 	ndofs =  2 * nnodes + F.size() + numcontacts;	
@@ -569,7 +567,7 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 		}
 		if(J != jacobian[i].end ()){
 		for(int j=0; j<nnodes; j++){
-			if( jacobian.col_idx(J) == ordV(j) ){
+			if( (unsigned)jacobian.col_idx(J) == ordV(j) ){
 				jacobian[i][ordV(j)] *= colscaling[0];
 				J++;
 				while( jacobian.col_idx(J)%2 != 0){
@@ -594,7 +592,7 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 		}
 		if(J != jacobian[i].end ()){
 		for(int j=0; j<nnodes; j++){
-			if( jacobian.col_idx(J) == ordn(j) ){
+			if( (unsigned)jacobian.col_idx(J) == ordn(j) ){
 				jacobian[i][ordn(j)] *= colscaling[1];
 				J++;
 				while( jacobian.col_idx(J)%2 == 0 ){
@@ -622,7 +620,7 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 			if( jacobian.col_idx(J) == indexingF[j] ){
 				jacobian[i][indexingF[j]] *= colscaling[2];
 				J++;
-				if( J == jacobian[i].end () || jacobian.col_idx(J) > indexingF.size() ){
+				if( J == jacobian[i].end () || (unsigned)jacobian.col_idx(J) > indexingF.size() ){
 					break;
 				}
 			}
@@ -1676,7 +1674,7 @@ Newton::DIV_MSG (	int tstep, double t, int Nstep, int field, std::vector<double>
 };
 
 void
-Newton::DIV_MN_MSG (	int tstep, int t, int Nstep, int mNstep, int field, std::vector<double>& incrhist,	//
+Newton::DIV_MN_MSG (	int tstep, double t, int Nstep, int mNstep, int field, std::vector<double>& incrhist,	//
 						double incr, std::vector<double>& res, int nsteps_check)
 {
   std::cout<<" "<<std::endl;

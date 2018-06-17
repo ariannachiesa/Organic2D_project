@@ -58,12 +58,10 @@ class Newton{
 	MAXINCR_MSG (int tstep, double t, int Nstep, int field, double incr, std::vector<double>& res, Probl& P);
 	
 	void
-	DIV_MSG (	int tstep, double t, int Nstep, int field, std::vector<double>& incrhist, double incr, 
-				std::vector<double>& res, int nsteps_check);
+	DIV_MSG (	int tstep, double t, int Nstep, int field, std::vector<double>& incrhist, double incr, std::vector<double>& res, int nsteps_check);
 
 	void
-	DIV_MN_MSG (int tstep, int t, int Nstep, int mNstep, int field, std::vector<double>& incrhist, double incr, 
-				std::vector<double>& res, int nsteps_check);
+	DIV_MN_MSG (int tstep, double t, int Nstep, int mNstep, int field, std::vector<double>& incrhist, double incr, std::vector<double>& res, int nsteps_check);
 							
 	void
 	org_secs_state_predict (Probl& P, std::vector<double>& Vold, std::vector<double>& nold, std::vector<double>& Fold, std::vector<double>& Iold,

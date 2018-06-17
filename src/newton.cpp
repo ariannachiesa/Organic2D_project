@@ -117,7 +117,7 @@ Newton::Newton(	Probl& P, std::vector<double>& Vin, std::vector<double>& nin,
 unsigned n_fix_tstep = firstfixtstep;
 		t = tspan[n_fix_tstep - 2];
 		
-//		while (t < tspan[n_fix_tstep-1]){ /// TIME STEP
+		while (t < tspan[n_fix_tstep-1]){ /// TIME STEP
 			std::cout<<"--"<<std::endl;
 		
 			tstep++;
@@ -157,8 +157,9 @@ unsigned n_fix_tstep = firstfixtstep;
 			inc_clamp.resize(maxit);
 			resnrm.resize(maxit);
 			
-			// while (!reject && (in < P._maxit)){ /// NEWTON STEP
+			while (!reject && (in < P._maxit)){ /// NEWTON STEP
 				in += 1;
+				std::cout << "in = "<<in<<std::endl;
 
 				// tengo memoria dei valori al passo temporale corrente nel caso poi debba rifiutare il passo
 				V1 = V2;
@@ -178,10 +179,12 @@ unsigned n_fix_tstep = firstfixtstep;
 						Vshift = P._Vshift,
 						Vgate = P._VG;
 				std::tuple<int, int, func_quad>	tupla1(0,2,[&PhiB,&V2](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																	{return (PhiB-V2[quad->gt(i)]);}),				// impongo PhiB
+																		{return 0.0;}),
+																	//{return (PhiB-V2[quad->gt(i)]);}),				// impongo PhiB
 												tupla2(indexT,3,[&Vgate,&Vshift,&V2](tmesh::quadrant_iterator quad, tmesh::idx_t i)
 																	//{return (PhiB-V2[quad->gt(i)]);});
-																	{return (Vgate+Vshift-V2[quad->gt(i)]);});		// impongo Vshift + Vgate
+																	//{return (Vgate+Vshift-V2[quad->gt(i)]);});		// impongo Vshift + Vgate
+																		{return 0.0;});
 																			
 				dirichlet_bcs_quad	bcsV;
 				bcsV.push_back(tupla1);
@@ -332,12 +335,12 @@ unsigned n_fix_tstep = firstfixtstep;
 				// _1 tiene sempre memoria di quella al passo corrente all'inizio del metodo di newton
 				org_secs_safe_increment (V1, n1, F1, I1, dV, dn, dF, dI, P, V2, n2, F2, I2, clamp, tauk);
 
-				std::cout<<"clamp = "<<clamp<<std::endl;
-				std::cout<<"tauk = "<<tauk<<std::endl;
+				// std::cout<<"clamp = "<<clamp<<std::endl;
+				// std::cout<<"tauk = "<<tauk<<std::endl;
 												
 				if ((clamp <= 0) || (tauk <= 0)){
 					reject = true;
-					///break;
+					break;
 				}
 		
 				// _0 passo corrente prima del NEWTstep e passo corrente durante NEWT _2
@@ -362,10 +365,9 @@ unsigned n_fix_tstep = firstfixtstep;
 					MAXINCR_MSG (tstep, t, in, whichone, incr0, resall, P);
 					reject = true;
 					// infowhyfinished[tstep-1] = -3;
-					///break;
+					break;
 				}
 
-				// _1 passo corrente all'inizio del NEWTstep e passo corrente durante NEWT _2
 				compute_variation (	V1, n1, F1, I1, V2, n2, F2, I2, P, std::fmin (clamp, tauk), incr1v, incr1n, incr1F, incr1I);
 										
 				vecincr[0] = incr1v;
@@ -386,7 +388,7 @@ unsigned n_fix_tstep = firstfixtstep;
 				if (resnrm[in-1] < P._toll ){
 					CONV_MSG (tstep, in, 1, t, "res", whichone, incr1, resall);
 					// infowhyfinished[tstep-1] = 1;
-					///break;
+					break;
 				}
 
 				if (in > P._nsteps_check && incnrm[in-1] > incnrm[in - P._nsteps_check -1]	//
@@ -394,7 +396,7 @@ unsigned n_fix_tstep = firstfixtstep;
 					DIV_MSG (tstep, t, in, whichone, incnrm, incr1, resall, nsteps_check);
 					reject = true;
 					// infowhyfinished[tstep-1] = -4;
-					///break;
+					break;
 				}
 
 				std::cout<<"incr ("<<whichone<<") = "<<incr1<<std::endl;
@@ -403,256 +405,254 @@ unsigned n_fix_tstep = firstfixtstep;
 				if (incr1 < P._toll ){
 					CONV_MSG(tstep, in, 1, t, "incr", whichone, incr1, resall);
 					// infowhyfinished[tstep-1] = 2;
-					///break;
+					break;
 				}
 				
-				// /// MODIFIED NEWTON
-				// V1 = V2;
-				// n1 = n2;
-				// F1 = F2;
-				// I1 = I2;
+				/// MODIFIED NEWTON
+				V1 = V2;
+				n1 = n2;
+				F1 = F2;
+				I1 = I2;
 
-				// rejectmnewton = false;
-				// convergedmnewton = false;
+				rejectmnewton = false;
+				convergedmnewton = false;
 				
-				// incnrmk.resize(P._maxit_mnewton+1);	/// inserire dimensioni più intelligenti?
-				// inck_clamp.resize(P._maxit_mnewton+1);
-				// resnrmk.resize(P._maxit_mnewton+1);
+				incnrmk.resize(P._maxit_mnewton+1);	/// inserire dimensioni più intelligenti?
+				inck_clamp.resize(P._maxit_mnewton+1);
+				resnrmk.resize(P._maxit_mnewton+1);
 				
-				// //for (int imn = 1; imn<P._maxit_mnewton+1; imn++) {	/// MODIFIED NEWTON STEP 
-				// int imn = 1;
-					// iimn = imn;
+				for (int imn = 1; imn<P._maxit_mnewton+1; imn++) {	/// MODIFIED NEWTON STEP 
+
+					iimn = imn;
 		
-					// Vk = V2;
-					// nk = n2;
-					// Fk = F2;
-					// Ik = I2;
+					Vk = V2;
+					nk = n2;
+					Fk = F2;
+					Ik = I2;
 		
-					// bcs.assign(t, P._Csb, P._Vshift, F2);
-	  
-					// /// definire cosa sono i vettori old
-					// _res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, ordV, ordn, indexingF, indexingI);
+					bcs.assign(t, P._Vshift, P._Csb, F2);
+
+					_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, ordV, ordn, indexingF, indexingI);
 					
-					// /// Dirichlet BCs on V:
-					// bim2a_dirichlet_bc (P._msh, bcsV, _jac, _res, ordV);
+					/// Dirichlet BCs on V:
+					bim2a_dirichlet_bc (P._msh, bcsV, _jac, _res, ordV);
 					
-					// /// Dirichlet BCs on n:
-					// //std::vector<double>	rho, nimposed;
-					// rho.clear();
-					// org_gaussian_charge_n(V2, P, rho);
+					/// Dirichlet BCs on n:
+					rho.clear();
+					org_gaussian_charge_n(V2, P, rho);
 	
-					// nimposed = rho;
-					// for(unsigned i=0; i<nimposed.size(); i++){
-						// nimposed[i] *= (-1)/P._q;
-					// }
+					nimposed = rho;
+					for(unsigned i=0; i<nimposed.size(); i++){
+						nimposed[i] *= (-1)/P._q;
+					}
 	
-					// bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn);
+					bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn);
 														
-					// resall.resize(4);
-					// compute_residual_norm (resnrmk[imn-1], whichone, resall, _res, nnodes, ordV, ordn, indexingF, indexingI);
+					resall.resize(4);
+					compute_residual_norm (resnrmk[imn-1], whichone, resall, _res, nnodes, ordV, ordn, indexingF, indexingI);
 				
-					// /// Solve non linear system.
-					// std::cout << "Solving linear system - Modified Newton."<<std::endl;
+					/// Solve non linear system.
+					std::cout << "Solving linear system - Modified Newton."<<std::endl;
 		
-					// delta = _res;
-					// // for(unsigned i=0; i<delta.size(); i++){
-						// // std::cout<<"delta PRIMA = "<<delta[i]<<std::endl;
-					// // }
+					delta = _res;
+					// for(unsigned i=0; i<delta.size(); i++){
+						// std::cout<<"delta PRIMA = "<<delta[i]<<std::endl;
+					// }
 					
-					// mumps_solver.set_rhs (delta);
+					mumps_solver.set_rhs (delta);
 					
-					// mumps_solver.solve ();
+					mumps_solver.solve ();
 	  
-					// modified_newton_solves +=1;
+					modified_newton_solves +=1;
 					
-					// // for(unsigned i=0; i<delta.size(); i++){
-						// // std::cout<<"delta = "<<delta[i]<<std::endl;
-					// // }
-					
-					// // for(int i=0; i<nnodes; i++){
-						// // V2[i] += delta[ordV(i)];
-						// // std::cout<<"V DOPO = "<<V2[i]<<std::endl;
-					// // }
-					// // for(int i=0; i<nnodes; i++){
-						// // n2[i] += delta[ordn(i)];
-						// // std::cout<<"n DOPO = "<<n2[i]<<std::endl;
-					// // }
-					// // for(unsigned i=0; i<indexingF.size(); i++){
-						// // F2[i] += delta[indexingF[i]];
-						// // std::cout<<"F = "<<F2[i]<<std::endl;
-					// // }
-					// // for(unsigned i=0; i<indexingI.size(); i++){
-						// // I2[i] += delta[indexingI[i]];
-						// // std::cout<<"I = "<<I2[i]<<std::endl;
-					// // }
+					// for(unsigned i=0; i<delta.size(); i++){
+						// std::cout<<"delta = "<<delta[i]<<std::endl;
+					// }
 					
 					// for(int i=0; i<nnodes; i++){
-						// dV[i] = delta[ordV(i)] * P._colscaling[0];
+						// V2[i] += delta[ordV(i)];
+						// std::cout<<"V DOPO = "<<V2[i]<<std::endl;
 					// }
 					// for(int i=0; i<nnodes; i++){
-						// dn[i] = delta[ordn(i)] * P._colscaling[1];
+						// n2[i] += delta[ordn(i)];
+						// std::cout<<"n DOPO = "<<n2[i]<<std::endl;
 					// }
 					// for(unsigned i=0; i<indexingF.size(); i++){
-						// dF[i] = delta[indexingF[i]] * P._colscaling[2];
+						// F2[i] += delta[indexingF[i]];
+						// std::cout<<"F = "<<F2[i]<<std::endl;
 					// }
 					// for(unsigned i=0; i<indexingI.size(); i++){
-						// dI[i] = delta[indexingI[i]] * P._colscaling[3];
+						// I2[i] += delta[indexingI[i]];
+						// std::cout<<"I = "<<I2[i]<<std::endl;
 					// }
-
-					// V2.clear(); n2.clear(); F2.clear(); I2.clear();	  
-					// org_secs_safe_increment (Vk, nk, Fk, Ik, dV, dn, dF, dI, P, V2, n2, F2, I2, clamp, tauk);
 					
-					// if ((tauk <=0) || (clamp <= 0)){
-						// reject = true;
-						// // infowhyfinished[tstep-1] = -5;
-						// ///break;
-					// }
-		  
-					// compute_variation(Vk, nk, Fk, Ik, V2, n2, F2, I2, P, std::fmin (clamp, tauk), incrkv, incrkn, incrkF, incrkI);
-		
-					// vecincr[0] = incrkv;
-					// vecincr[1] = incrkn;
-					// vecincr[2] = incrkF;
-					// vecincr[3] = incrkI;
-		
-					// incrk = *std::max_element(vecincr.begin(),vecincr.end());
+					for(int i=0; i<nnodes; i++){
+						dV[i] = delta[ordV(i)] * P._colscaling[0];
+					}
+					for(int i=0; i<nnodes; i++){
+						dn[i] = delta[ordn(i)] * P._colscaling[1];
+					}
+					for(unsigned i=0; i<indexingF.size(); i++){
+						dF[i] = delta[indexingF[i]] * P._colscaling[2];
+					}
+					for(unsigned i=0; i<indexingI.size(); i++){
+						dI[i] = delta[indexingI[i]] * P._colscaling[3];
+					}
 
-					// if(incrk==incrkv) whichone = 0;
-					// if(incrk==incrkn) whichone = 1;
-					// if(incrk==incrkF) whichone = 2;
-					// if(incrk==incrkI) whichone = 3;
+					V2.clear(); n2.clear(); F2.clear(); I2.clear();	  
+					org_secs_safe_increment (Vk, nk, Fk, Ik, dV, dn, dF, dI, P, V2, n2, F2, I2, clamp, tauk);
 					
-					// incnrmk[imn - 1] = incrk;
-					// inck_clamp[imn - 1] = incrk / clamp;
-					// incrlast = incrk;
-
-					// if (resnrmk[imn - 1] < P._toll){
-						// CONV_MSG (tstep, in, imn, t, "res", whichone, incrk, resall);
-						// // infowhyfinished[tstep-1] = 3;
-						// rejectmnewton = false;
-						// convergedmnewton = true;
-						// ///break;
-					// }
-
-					// if (imn > P._nsteps_check && (resnrmk[imn - 1] > resnrmk[imn - P._nsteps_check - 1])
-						// && (incnrmk[imn - 1] > incnrmk[imn - P._nsteps_check - 1])){
-						// DIV_MN_MSG (tstep, t, in, imn, whichone, incnrmk, incrk, resall, nsteps_check);
-						// rejectmnewton = true;
-						// convergedmnewton = false;
-						// rejmn++;
-						// ///break;
-					// }		  
+					if ((tauk <=0) || (clamp <= 0)){
+						reject = true;
+						// infowhyfinished[tstep-1] = -5;
+						break;
+					}
 		  
-					// std::cout<<"incr ("<<whichone<<") = "<<incrk;
-					// std::cout<<"residual = [ "<<resall[0]<<" "<<resall[1]<<" "<<resall[2]<<" "<<resall[3]<<" ] * "<<std::endl;
+					compute_variation(Vk, nk, Fk, Ik, V2, n2, F2, I2, P, std::fmin (clamp, tauk), incrkv, incrkn, incrkF, incrkI);
+		
+					vecincr[0] = incrkv;
+					vecincr[1] = incrkn;
+					vecincr[2] = incrkF;
+					vecincr[3] = incrkI;
+		
+					incrk = *std::max_element(vecincr.begin(),vecincr.end());
 
-					// if (incrk < P._toll){
-						// CONV_MSG (tstep, in, imn, t, "incr", whichone, incrk, resall);
-						// // infowhyfinished[tstep-1] = 4;
-						// rejectmnewton = false;
-						// convergedmnewton = true;
-						// ///break;
-					// }
-				// //} /// END MODIFIED NEWTON
+					if(incrk==incrkv) whichone = 0;
+					if(incrk==incrkn) whichone = 1;
+					if(incrk==incrkF) whichone = 2;
+					if(incrk==incrkI) whichone = 3;
+					
+					incnrmk[imn - 1] = incrk;
+					inck_clamp[imn - 1] = incrk / clamp;
+					incrlast = incrk;
+
+					if (resnrmk[imn - 1] < P._toll){
+						CONV_MSG (tstep, in, imn, t, "res", whichone, incrk, resall);
+						// infowhyfinished[tstep-1] = 3;
+						rejectmnewton = false;
+						convergedmnewton = true;
+						break;
+					}
+
+					if (imn > P._nsteps_check && (resnrmk[imn - 1] > resnrmk[imn - P._nsteps_check - 1])
+						&& (incnrmk[imn - 1] > incnrmk[imn - P._nsteps_check - 1])){
+						DIV_MN_MSG (tstep, t, in, imn, whichone, incnrmk, incrk, resall, nsteps_check);
+						rejectmnewton = true;
+						convergedmnewton = false;
+						rejmn++;
+						break;
+					}		  
+		  
+					std::cout<<"incr ("<<whichone<<") = "<<incrk;
+					std::cout<<"   residual = [ "<<resall[0]<<" "<<resall[1]<<" "<<resall[2]<<" "<<resall[3]<<" ] * "<<std::endl;
+
+					if (incrk < P._toll){
+						CONV_MSG (tstep, in, imn, t, "incr", whichone, incrk, resall);
+						// infowhyfinished[tstep-1] = 4;
+						rejectmnewton = false;
+						convergedmnewton = true;
+						break;
+					}
+				} /// END MODIFIED NEWTON
 				
-				// incnrmk.resize(iimn);
-				// inck_clamp.resize(iimn);
-				// resnrmk.resize(iimn);
+				incnrmk.resize(iimn);
+				inck_clamp.resize(iimn);
+				resnrmk.resize(iimn);
 				
-				// totmn += iimn;
+				totmn += iimn;
         
-				// if (reject){
-					// ///break;
-				// }
+				if (reject){
+					break;
+				}
 
-				// if (rejectmnewton == true){
-					// V2 = V1;
-					// n2 = n1;
-					// F2 = F1;
-					// I2 = I1;
-				// }
-				// else{
-					// if (convergedmnewton == true){
-						// ///break;
-					// }
-				// }
+				if (rejectmnewton == true){
+					V2 = V1;
+					n2 = n1;
+					F2 = F1;
+					I2 = I1;
+				}
+				else{
+					if (convergedmnewton == true){
+						break;
+					}
+				}
 				
-				// if (in >= P._maxit){
-					// std::cout<<"maximum number of Newton iterations reached,"<<std::endl;
-					// std::cout<<"try reducing timestep..."<<std::endl;
-					// if (dt > dtmin){
-						// reject = true;
-						// // infowhyfinished[tstep-1] = -6;
-						// ///break;
-					// }
-				// }
-			// } /// END NEWTON STEP
+				if (in >= P._maxit){
+					std::cout<<"maximum number of Newton iterations reached,"<<std::endl;
+					std::cout<<"try reducing timestep..."<<std::endl;
+					if (dt > dtmin){
+						reject = true;
+						// infowhyfinished[tstep-1] = -6;
+						break;
+					}
+				}
+			} /// END NEWTON STEP
 			
-			// incnrm.resize(in);
-			// inc_clamp.resize(in);
-			// resnrm.resize(in);
+			incnrm.resize(in);
+			inc_clamp.resize(in);
+			resnrm.resize(in);
 			
-			// if (reject){
-				// ++rejected;
-				// tstep -= 1;
-				// //t = _tout [tstep];
-				// t = _tout [1];	// riporto t al passo told
-				// dt = dt * P._dtcut;
+			if (reject){
+				++rejected;
+				tstep -= 1;
+				//t = _tout [tstep];
+				t = _tout [1];	// riporto t al passo told
+				dt = dt * P._dtcut;
 
-				// std::cout<<"reverting to time step "<<tstep<<std::endl;
-				// std::cout<<"reducing time step: ";
-				// std::cout<<"model time "<<t<<" s, ";
-				// std::cout<<"new dt "<<dt<<" s"<<std::endl;
-			// }
-			// else{
-				// // aggiorno la soluzione al passo corrente con quella appena calcolata
-				// Voldold = Vold;
-				// noldold = nold;
-				// Foldold = Fold;
-				// Ioldold = Iold;
+				std::cout<<"reverting to time step "<<tstep<<std::endl;
+				std::cout<<"reducing time step: ";
+				std::cout<<"model time "<<t<<" s, ";
+				std::cout<<"new dt "<<dt<<" s"<<std::endl;
+			}
+			else{
+				// aggiorno la soluzione al passo corrente con quella appena calcolata
+				Voldold = Vold;
+				noldold = nold;
+				Foldold = Fold;
+				Ioldold = Iold;
 				
-				// Vold = _V;
-				// nold = _n;
-				// Fold = _F;
-				// Iold = _I;
+				Vold = _V;
+				nold = _n;
+				Fold = _F;
+				Iold = _I;
 				
-				// _V = V2;
-				// _n = n2;
-				// _F = F2;
-				// _I = I2;
+				_V = V2;
+				_n = n2;
+				_F = F2;
+				_I = I2;
 				
-				// _tout[0] = _tout[1];
-				// _tout[1] = _tout[2];
+				_tout[0] = _tout[1];
+				_tout[1] = _tout[2];
 		
-				// dtfact = std::fmin(0.8 * sqrt(P._maxnpincr / incr0), P._maxdtincr);
-				// dt = std::fmax( std::fmin(dtfact * dt, dtmax), dtmin);
+				dtfact = std::fmin(0.8 * sqrt(P._maxnpincr / incr0), P._maxdtincr);
+				dt = std::fmax( std::fmin(dtfact * dt, dtmax), dtmin);
 
-				// std::cout<<" "<<std::endl;
-				// std::cout<<"t = "<<t<<" ";
-				// std::cout<<"<= "<<*std::max_element(tspan.begin(),tspan.end())<<" ;";
-				// std::cout<<" dtfact = "<<dtfact<<", estimate for next time step size: ";
-				// std::cout<<"dt = "<<dt<<" ";
-				// std::cout<<"(incr0 = "<<incr0<<")"<<std::endl;
-			// }
+				std::cout<<" "<<std::endl;
+				std::cout<<"t = "<<t<<" ";
+				std::cout<<"<= "<<*std::max_element(tspan.begin(),tspan.end())<<" ;";
+				std::cout<<" dtfact = "<<dtfact<<", estimate for next time step size: ";
+				std::cout<<"dt = "<<dt<<" ";
+				std::cout<<"(incr0 = "<<incr0<<")"<<std::endl;
+			}
 
-			// V0.clear(); n0.clear(); F0.clear(); I0.clear();
-// //		} /// END TIME STEP 
+			V0.clear(); n0.clear(); F0.clear(); I0.clear();
+		} /// END TIME STEP 
 		
-		// if (P._savedata)
-		// {
-			// lastsaved = tstep;
+		if (P._savedata)
+		{
+			lastsaved = tstep;
 	  
-			// //told = _tout[tstep - 1];
-			// told = _tout[1];
-			// nsaves++;
+			//told = _tout[tstep - 1];
+			told = _tout[1];
+			nsaves++;
 	  
-			// saveNEWT(Vold, nold, Fold, Iold, told, V2, n2, F2, I2, _res, t, dt, nsaves, newton_solves, modified_newton_solves, freq);
+			saveNEWT(Vold, nold, Fold, Iold, told, V2, n2, F2, I2, _res, t, dt, nsaves, newton_solves, modified_newton_solves, freq);
 
-			// Vold.clear();
-			// nold.clear();
-			// Fold.clear();
-			// Iold.clear();
-		// }
+			Vold.clear();
+			nold.clear();
+			Fold.clear();
+			Iold.clear();
+		}
 	// //} /// END TIME FIXED SPAN
 	
 	std::cout<<"total number of rejected time steps: "<<rejected<<std::endl;
