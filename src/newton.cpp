@@ -177,9 +177,9 @@ unsigned n_fix_tstep = firstfixtstep;
 						Vshift = P._Vshift,
 						Vgate = P._VG;
 				std::tuple<int, int, func_quad>	tupla1(0,2,[&PhiB,&V2](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																	{return (PhiB-V2[quad->gt(i)]);}),				// impongo PhiB
+														{return (PhiB-V2[quad->gt(i)]);}),				// impongo PhiB		
 												tupla2(indexT,3,[&Vgate,&Vshift,&V2](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																	{return (Vgate+Vshift-V2[quad->gt(i)]);});		// impongo Vshift + Vgate
+														{return (Vgate+Vshift-V2[quad->gt(i)]);});		// impongo Vshift + Vgate
 																			
 				dirichlet_bcs_quad	bcsV;
 				bcsV.push_back(tupla1);
@@ -261,9 +261,9 @@ unsigned n_fix_tstep = firstfixtstep;
 		
 				mumps_solver.solve ();
 		
-				for(unsigned i=0; i<delta.size(); i++){
-					std::cout<<"delta = "<<delta[i]<<std::endl;
-				}
+				// for(unsigned i=0; i<delta.size(); i++){
+					// std::cout<<"res = "<<_res[i]<<std::endl;
+				// }
 				
 				// for(int i=0; i<nnodes; i++){
 					// V2[i] += delta[ordV(i)];
@@ -428,8 +428,8 @@ unsigned n_fix_tstep = firstfixtstep;
 					std::cout << "Solving linear system - Modified Newton."<<std::endl;
 		
 					delta = _res;
-					// for(unsigned i=0; i<delta.size(); i++){
-						// std::cout<<"delta PRIMA = "<<delta[i]<<std::endl;
+					// for(int i=0; i<nnodes; i++){
+						// std::cout<<"delta PRIMA = "<<_res[ordV(i)]<<std::endl;
 					// }
 					
 					mumps_solver.set_rhs (delta);
@@ -438,25 +438,8 @@ unsigned n_fix_tstep = firstfixtstep;
 	  
 					modified_newton_solves +=1;
 					
-					for(unsigned i=0; i<delta.size(); i++){
-						std::cout<<"delta MN = "<<delta[i]<<std::endl;
-					}
-					
-					// for(int i=0; i<nnodes; i++){
-						// V2[i] += delta[ordV(i)];
-						// std::cout<<"V DOPO = "<<V2[i]<<std::endl;
-					// }
-					// for(int i=0; i<nnodes; i++){
-						// n2[i] += delta[ordn(i)];
-						// std::cout<<"n DOPO = "<<n2[i]<<std::endl;
-					// }
-					// for(unsigned i=0; i<indexingF.size(); i++){
-						// F2[i] += delta[indexingF[i]];
-						// std::cout<<"F = "<<F2[i]<<std::endl;
-					// }
-					// for(unsigned i=0; i<indexingI.size(); i++){
-						// I2[i] += delta[indexingI[i]];
-						// std::cout<<"I = "<<I2[i]<<std::endl;
+					// for(unsigned i=0; i<delta.size(); i++){
+						// std::cout<<"delta MN = "<<delta[i]<<std::endl;
 					// }
 					
 					for(int i=0; i<nnodes; i++){
