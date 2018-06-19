@@ -483,6 +483,10 @@ Probl::Probl(	int maxcycle,
 	_data_n.resize(_data_phi_lumo.size());
 		
 	std::ifstream f("interpolation_table.txt");
+	if (!f){
+		std::cerr << "Error: input file interpolation_table.txt not found!"<<std::endl;
+		exit(EXIT_FAILURE);
+	}
 
 	while(num < N){
 		f >> _data_phi_lumo[num];
@@ -493,6 +497,11 @@ Probl::Probl(	int maxcycle,
 	f.close();
 	
 	std::ifstream F("interpolated_values.txt");
+	if (!F){
+		std::cerr << "Error: input file interpolated_values.txt not found!"<<std::endl;
+		exit(EXIT_FAILURE);
+	}	
+	
 	num = 0;
 	while(num < N){
 		F >> _data_n[num];
@@ -501,6 +510,8 @@ Probl::Probl(	int maxcycle,
 		num++;
 	}
 	F.close();
+	
+	_data_n.resize(num);
 	
 	Constants(T0);
 	Material(PhiB, sigman, mu0n);

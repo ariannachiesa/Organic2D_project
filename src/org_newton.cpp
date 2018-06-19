@@ -748,10 +748,10 @@ Newton::org_secs_mobility_EGDM (double mu0, std::vector<double>& c, double C0, d
 	if (udata_n.size()==0 || ind.size()==0 || udata_phi_lumo.size()==0){
 
 		udata_n = data_n;
-		std::vector<double>::iterator it;
-		it = std::unique (udata_n.begin(), udata_n.end());			///lento
-		udata_n.resize( std::distance(udata_n.begin(),it) );		///lento
-		std::sort(udata_n.begin(), udata_n.end());					///lento
+		// std::vector<double>::iterator it;
+		// it = std::unique (udata_n.begin(), udata_n.end());			///lento
+		// udata_n.resize( std::distance(udata_n.begin(),it) );		///lento
+		// std::sort(udata_n.begin(), udata_n.end());					///lento
 		j = 0;
 		ind.resize(udata_n.size());
 		for(unsigned i=udata_n.size()-1; i>0; i--){
