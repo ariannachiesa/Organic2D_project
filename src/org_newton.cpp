@@ -739,19 +739,11 @@ Newton::org_secs_mobility_EGDM (double mu0, std::vector<double>& c, double C0, d
 	Vth = P._Vth;
 	Kb = P._Kb;
 	T0 = P._T0;
-	Efield = P._Efield;
-
-	for(unsigned i=0; i<data_n.size(); i++){
-		data_n[i] *= (-1)/q;
-	}
+	Efield = P._Efield;	
 
 	if (udata_n.size()==0 || ind.size()==0 || udata_phi_lumo.size()==0){
 
 		udata_n = data_n;
-		// std::vector<double>::iterator it;
-		// it = std::unique (udata_n.begin(), udata_n.end());			///lento
-		// udata_n.resize( std::distance(udata_n.begin(),it) );		///lento
-		// std::sort(udata_n.begin(), udata_n.end());					///lento
 		j = 0;
 		ind.resize(udata_n.size());
 		for(unsigned i=udata_n.size()-1; i>0; i--){
@@ -780,6 +772,7 @@ Newton::org_secs_mobility_EGDM (double mu0, std::vector<double>& c, double C0, d
 		for(unsigned i=0; i<ind.size(); i++){
 			udata_phi_lumo[i] = P.get_data_phi_lumo()[ ind[i] ] ;
 		}
+		
 	}
 	for(unsigned i=0; i<c.size(); i++){
 		phi_lumo[i] = interp1( udata_n, udata_phi_lumo, c[i], true );

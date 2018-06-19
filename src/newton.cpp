@@ -221,8 +221,8 @@ unsigned n_fix_tstep = firstfixtstep;
 					_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, ordV, ordn, indexingF, indexingI);
 					
 					// re-impongo le BC sul nuovo vettore residuo
-					bim2a_dirichlet_bc (P._msh, bcsV, _jac, _res, ordV);
-					bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn);
+					bim2a_dirichlet_bc (P._msh, bcsV, _jac, _res, ordV,true);
+					bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn,true);
 				}				
 				
 				resall.resize(4);
@@ -403,12 +403,24 @@ unsigned n_fix_tstep = firstfixtstep;
 					Fk = F2;
 					Ik = I2;
 		
-					bcs.assign(t, P._Vshift, P._Csb, F2);					
+					bcs.assign(t, P._Vshift, P._Csb, F2);
+					for(unsigned i=0; i<F2.size(); i++){
+						std::cout<<"F2 = "<<F2[i]<<std::endl;
+					}
+					for(unsigned i=0; i<Fold.size(); i++){
+						std::cout<<"Fold = "<<Fold[i]<<std::endl;
+					}
+					for(unsigned i=0; i<I2.size(); i++){
+						std::cout<<"I2 = "<<I2[i]<<std::endl;
+					}
+					for(unsigned i=0; i<Iold.size(); i++){
+						std::cout<<"Iold = "<<Iold[i]<<std::endl;
+					}					
 
 					_res = org_secs2d_newton_residual(P, V2, n2, F2, I2, Vold, nold, Fold, Iold, dt, bcs, ordV, ordn, indexingF, indexingI);
 					
 					/// Dirichlet BCs on V:
-					bim2a_dirichlet_bc (P._msh, bcsV, _jac, _res, ordV);
+					bim2a_dirichlet_bc (P._msh, bcsV, _jac, _res, ordV, true);
 					
 					/// Dirichlet BCs on n:
 					rho.clear();
@@ -419,7 +431,7 @@ unsigned n_fix_tstep = firstfixtstep;
 						nimposed[i] *= (-1)/P._q;
 					}
 	
-					bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn);
+					bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn, true);
 														
 					resall.resize(4);
 					compute_residual_norm (resnrmk[imn-1], whichone, resall, _res, nnodes, ordV, ordn, indexingF, indexingI);
@@ -429,7 +441,7 @@ unsigned n_fix_tstep = firstfixtstep;
 		
 					delta = _res;
 					// for(int i=0; i<nnodes; i++){
-						// std::cout<<"delta PRIMA = "<<_res[ordV(i)]<<std::endl;
+						// std::cout<<"deltaV PRIMA = "<<_res[ordV(i)]<<std::endl;
 					// }
 					
 					mumps_solver.set_rhs (delta);
