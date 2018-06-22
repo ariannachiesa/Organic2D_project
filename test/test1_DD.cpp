@@ -8,10 +8,9 @@
   \brief Test: Non Linear Poisson + Drift-Diffusion , fixed frequency
 */
 
-#include "bcs_circuit.h"
 #include "csvread.h"
 #include "interp1.h"
-#include "newton.h"
+#include "newton12.h"
 #include "probl.h"
 
 #include <iostream>
@@ -58,9 +57,7 @@ int main(int argc, char** argv){
 			a, b, step, freq, tmin, tmax, eps_ins_r;
 	int		j, N;
 	std::complex<double> complx(0.0,1.0);
-	std::vector<double>	tspan,
-						Fin(4,0.0),
-						Iin(2,0.0);
+	std::vector<double>	tspan;
 	
 	clock_t tstart_simul;	
 
@@ -87,20 +84,11 @@ int main(int argc, char** argv){
 		tspan[j] = h ;
 		j++;
 	}		
-
-	/// Circuit boundary conditions and initial condition.
-	/// Full circuit.
-		
-	Fin[0] = - P._Vshift;
-	Fin[2] = - P._Vshift * P._Csb;
 		
 	tstart_simul = clock();
 		
-	/// Enforcing boundary conditions of the attached control circuit
-	BCS_CIRC	bcs(freq, P._VG, P._Csb, P._Vshift, Fin, 0, 0, 0);	// VG costante
-		
 	/// Newton's algorithm
-	Newton	newt(P, P.Vin, P.nin, tspan, Fin, Iin, bcs, freq);
+	Newton	newt(P, P.Vin, P.nin, tspan, freq);
 		
 	tstart_simul = clock() - tstart_simul;
 	std::cout<<"Simulation run time: "<<tstart_simul<<" , ("<<((float)tstart_simul)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;

@@ -27,6 +27,7 @@ BCS_CIRC::BCS_CIRC(	double freq, int voltage, double Csb, double Vshift, std::ve
 	
 	_amp = amp;
 	_freq = freq;
+	_voltage = voltage;
 };
 
 void BCS_CIRC::assign(double t, double  Vshift, double Csb, std::vector<double>& F){
