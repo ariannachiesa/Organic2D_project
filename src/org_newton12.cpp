@@ -91,7 +91,7 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 			exit(EXIT_FAILURE);
 		}
 		else{
-			resV[i] = -sum1[i] + sum2[i];
+			resV[i] = sum1[i] + sum2[i];
 		}
 	}
 

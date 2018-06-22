@@ -134,6 +134,9 @@ unsigned n_fix_tstep = firstfixtstep;
 				// for(unsigned i=0; i<nnodes; i++){
 					// std::cout<<"resn = "<<_res[ordn(i)]<<std::endl;
 				// }
+					// for(unsigned i=0; i<nnodes; i++){
+						// std::cout<<"resV = "<<_res[ordV(i)]<<std::endl;
+					// }				
 				
 				org_secs2d_newton_jacobian(	P, V2, n2, dt, ordV, ordn, _jac);
 				
@@ -168,7 +171,11 @@ unsigned n_fix_tstep = firstfixtstep;
 				dirichlet_bcs_quad	bcsn;
 				bcsn.push_back(tuplan);
 	
-				bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn);			
+				bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn);
+
+					// for(unsigned i=0; i<nnodes; i++){
+						// std::cout<<"resV = "<<_res[ordV(i)]<<std::endl;
+					// }				
 				
 				if (in == 1){
 					whichone = 0;
@@ -237,7 +244,7 @@ unsigned n_fix_tstep = firstfixtstep;
 				
 				// for(int i=0; i<nnodes; i++){
 					// V2[i] += delta[ordV(i)];
-					// //std::cout<<"V DOPO = "<<V2[i]<<std::endl;
+					// std::cout<<"V DOPO = "<<V2[i]<<std::endl;
 				// }
 				//saveRES(V2, "Vout");
 				// for(int i=0; i<nnodes; i++){
@@ -348,6 +355,10 @@ unsigned n_fix_tstep = firstfixtstep;
 
 					_res = org_secs2d_newton_residual(P, V2, n2, Vold, nold, dt, ordV, ordn);
 					
+					for(unsigned i=0; i<nnodes; i++){
+						//std::cout<<"resV = "<<_res[ordV(i)]<<std::endl;
+					}					
+					
 					/// Dirichlet BCs on V:
 					bim2a_dirichlet_bc (P._msh, bcsV, _jac, _res, ordV, true);
 					
@@ -361,9 +372,20 @@ unsigned n_fix_tstep = firstfixtstep;
 					}
 	
 					bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn, true);
+					
+					for(unsigned i=0; i<nnodes; i++){
+						//std::cout<<"resV = "<<_res[ordV(i)]<<std::endl;
+						//std::cout<<"V2 = "<<V2[i]<<std::endl;
+						//std::cout<<"Vout = "<<(V2[i]+_res[ordV(i)])<<std::endl;
+					}
 														
 					resall.resize(2);
 					compute_residual_norm (resnrmk[imn-1], whichone, resall, _res, nnodes, ordV, ordn);
+					
+					for(unsigned i=0; i<resall.size(); i++){
+						std::cout<<"resall = "<<resall[i]<<std::endl;
+					}
+					std::cout<<"resnrm = "<<resnrmk[imn-1]<<std::endl;					
 				
 					/// Solve non linear system.
 					std::cout << "Solving linear system - Modified Newton."<<std::endl;
