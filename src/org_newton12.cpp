@@ -95,7 +95,15 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 		}
 	}
 
+	// int numscnodes = std::accumulate(scnodes.begin(),scnodes.end(),0.0);
+	// for(int i=0; i<numscnodes; i++){
+		// std::cout<<"diff = "<<(sum1[i]+sum2[i])<<std::endl;
+	// }
+	
 	for(int i=0; i<nnodes; i++){
+		//std::cout<<"sum1 = "<<sum1[i]<<std::endl;
+		//std::cout<<"sum2 = "<<sum2[i]<<std::endl;
+		//std::cout<<"diff = "<<(sum1[i]+sum2[i])<<std::endl;
 		res[ordV(i)] = resV[i];
 	}
 	resV.clear();
@@ -134,7 +142,7 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 
 	for(unsigned i=0; i<scnodes.size(); i++){
 		if(scnodes[i] == 1){
-			beta[i] = alphan[i]*V[i]/Vth;
+			beta[i] = *V[i]/Vth;
 		}
 	}
 	bim2a_advection_diffusion (	P._msh, alpha, beta, A22);
@@ -144,18 +152,6 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	}
 	
 	bim2a_reaction (P._msh, not_ins, ones, A22);
-	
-				// mumps mumps_solver;
-      
-				// std::vector<double> vals(nnodes,0.0);
-				// std::vector<int> 	irow(nnodes,0),
-									// jcol(nnodes,0);
-							
-				// mumps_solver.init();
-	  
-				// A22.aij(vals, irow, jcol, mumps_solver.get_index_base ());
-				// saveJAC (nnodes, nnodes, vals);
-				// std::cout<<"saved"<<std::endl;
 	
 	resn = A22 * n;
 
@@ -1099,6 +1095,12 @@ Newton::compute_variation (	std::vector<double>& Va, std::vector<double>& na,
   }
   
 	incrV = infnorm(diff) / (infnorm(Va) * clamping + cl[0]);
+	std::cout<<"infnorm(Va) = "<<infnorm(Va)<<std::endl;
+	std::cout<<"clamping = "<<clamping<<std::endl;
+	std::cout<<"infnorm(Va) * clamping = "<<infnorm(Va) * clamping<<std::endl;
+	std::cout<<"cl[0] = "<<cl[0]<<std::endl;
+	std::cout<<"infnorm(diff) = "<<infnorm(diff)<<std::endl;
+	std::cout<<"incrV = "<<incrV<<std::endl;
 
   // incrn = constants.Vth * norm (log (nb(sc) ./ na(sc)), inf) / ...
   //         (norm (Va(sc) - constants.Vth * log (na(sc) ./ ni), inf) * clamping + c[1]);
@@ -1142,21 +1144,21 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
 	double	tk = 1.0,
 			min;
 	std::vector<double>	n0_2;
-	std::vector<int>	scnodes = P._scnodes,
-						clamping = P._clamping,
+	std::vector<int>	clamping = P._clamping,
 						where(n0.size(),0);
 
 	if (n0.size() != dn.size()){
 		std::cout<<"error: org_secs_safe_increment, vectors with different size"<<std::endl;
 	}
 	for(unsigned i=0; i<n0.size(); i++){
-		if(scnodes[i] == 1){
-			if(n0[i]+dn[i] <= 0)
+		if(P._scnodes[i] == 1){
+			if(n0[i]+dn[i] <= 0){
 				where[i] = 1;
+			}
 		}
 	}
 	
-	int s = std::accumulate( scnodes.begin(), scnodes.end(), 0.0);
+	int s = std::accumulate( P._scnodes.begin(), P._scnodes.end(), 0.0);
 	where.resize(s);
 
 	if ( any(where) ){
@@ -1170,7 +1172,7 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
 		}
 		tk *= 0.9;
 	}
-
+	
   clamp = 1;
 
   if (P._clampOnOff){
@@ -1207,7 +1209,7 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
     std::cout<<"No clamping applied"<<std::endl;
   }
   
-  tauk = tk;
+  tauk = tk; 
   tk = std::fmin (tauk, clamp);
 
   if(V0.size() != dV.size()){
@@ -1217,7 +1219,7 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
 	V.resize(dV.size());
     for(unsigned i=0; i<dV.size(); i++){
         V[i] = (V0[i] + tk * dV[i]);
-    }
+    }	
   }
   
   if(n0.size() != dn.size()){
@@ -1238,8 +1240,8 @@ Newton::org_secs_safe_increment (	std::vector<double>& V0, std::vector<double>& 
   else{
   n0_2.resize(s);
   int j=0;
-  for(unsigned i=0; i<scnodes.size(); i++){
-	if(scnodes[i]==1){
+  for(unsigned i=0; i<P._scnodes.size(); i++){
+	if(P._scnodes[i]==1){
 		if(n[i] <= 0){
             n0_2[j] = 1;
 			j++;

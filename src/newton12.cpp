@@ -128,15 +128,10 @@ unsigned n_fix_tstep = firstfixtstep;
 				// tengo memoria dei valori al passo temporale corrente nel caso poi debba rifiutare il passo
 				V1 = V2;
 				n1 = n2;
+					saveRES(V2, "V2");
+					std::cout<<"saved"<<std::endl;				
 				
-				_res = org_secs2d_newton_residual(P, V2, n2, Vold, nold, dt, ordV, ordn);
-				
-				// for(unsigned i=0; i<nnodes; i++){
-					// std::cout<<"resn = "<<_res[ordn(i)]<<std::endl;
-				// }
-					// for(unsigned i=0; i<nnodes; i++){
-						// std::cout<<"resV = "<<_res[ordV(i)]<<std::endl;
-					// }				
+				_res = org_secs2d_newton_residual(P, V2, n2, Vold, nold, dt, ordV, ordn);				
 				
 				org_secs2d_newton_jacobian(	P, V2, n2, dt, ordV, ordn, _jac);
 				
@@ -157,38 +152,38 @@ unsigned n_fix_tstep = firstfixtstep;
 				bim2a_dirichlet_bc (P._msh, bcsV, _jac, _res, ordV);
 				
 				/// Dirichlet BCs on n:
-				std::vector<double>	rho, nimposed;
+				//std::vector<double>	rho, nimposed;
+				double rho, nimposed;
 
-				org_gaussian_charge_n(V2, P, rho);
+				// org_gaussian_charge_n(V2, P, rho);
+				rho = org_gaussian_charge_n( V2[0], P);
 	
-				nimposed = rho;
-				for(unsigned i=0; i<nimposed.size(); i++){
-					nimposed[i] *= (-1)/P._q;
-				}
+				nimposed = rho * (-1)/P._q ;
+				// for(unsigned i=0; i<nimposed.size(); i++){
+					// nimposed[i] *= (-1)/P._q;
+				// }
 	
 				std::tuple<int, int, func_quad>	tuplan(0,2,[&nimposed,&n2](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																{return (nimposed[quad->gt(i)]-n2[quad->gt(i)]);});
+																//{return (nimposed[quad->gt(i)]-n2[quad->gt(i)]);});
+																{return (nimposed-n2[quad->gt(i)]);});
 				dirichlet_bcs_quad	bcsn;
 				bcsn.push_back(tuplan);
 	
-				bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn);
-
-					// for(unsigned i=0; i<nnodes; i++){
-						// std::cout<<"resV = "<<_res[ordV(i)]<<std::endl;
-					// }				
+				bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn);			
 				
 				if (in == 1){
 					whichone = 0;
 					compute_residual_norm (resnrm[0],whichone,resall,_res,nnodes,ordV,ordn);
 					
-				for(unsigned i=0; i<resall.size(); i++){
-					std::cout<<"resall = "<<resall[i]<<std::endl;
-				}
-				std::cout<<"resnrm = "<<resnrm[in-1]<<std::endl;
+					for(unsigned i=0; i<resall.size(); i++){
+						std::cout<<"resall = "<<resall[i]<<std::endl;
+					}
+					std::cout<<"resnrm = "<<resnrm[in-1]<<std::endl;
 					
 					if(P._rowscaling.size() == resall.size()){
 						for(unsigned i=0; i<P._rowscaling.size(); i++){
 							P._rowscaling[i] = P._rowscaling[i] * (resall[i]+1);
+							std::cout<<"P._rowscaling[i] = "<<P._rowscaling[i]<<std::endl;
 						}
 					}
 					else{
@@ -210,6 +205,7 @@ unsigned n_fix_tstep = firstfixtstep;
 					std::cout<<"resall = "<<resall[i]<<std::endl;
 				}
 				std::cout<<"resnrm = "<<resnrm[in-1]<<std::endl;
+
 				
 				/// Solve non.linear system.
 				std::cout << "Solving linear system."<<std::endl;
@@ -238,15 +234,17 @@ unsigned n_fix_tstep = firstfixtstep;
 		
 				mumps_solver.solve ();
 		
-				// for(unsigned i=0; i<delta.size(); i++){
-					// std::cout<<"res = "<<_res[i]<<std::endl;
-				// }
+				for(unsigned i=0; i<delta.size(); i++){
+					delta[i] *= (-1);
+				}
 				
 				// for(int i=0; i<nnodes; i++){
 					// V2[i] += delta[ordV(i)];
 					// std::cout<<"V DOPO = "<<V2[i]<<std::endl;
+					// std::cout<<"res NEWT = "<<_res[ordV(i)]<<std::endl;
 				// }
-				//saveRES(V2, "Vout");
+					// saveRES(V2, "Vout");
+					// std::cout<<"saved"<<std::endl;
 				// for(int i=0; i<nnodes; i++){
 					// n2[i] += delta[ordn(i)];
 					// //std::cout<<"n DOPO = "<<n2[i]<<std::endl;
@@ -257,18 +255,20 @@ unsigned n_fix_tstep = firstfixtstep;
 				dV.resize(nnodes);
 				for(int i=0; i<nnodes; i++){
 					dV[i] = delta[ordV(i)] * P._colscaling[0];
-					//std::cout<<"dV = "<<dV[i]<<std::endl;
-				}
+				}				
 
 				dn.resize(nnodes);
 				for(int i=0; i<nnodes; i++){
-					dn[i] = delta[ordn(i)] * P._colscaling[1];	
-					//std::cout<<"dn = "<<dn[i]<<std::endl;
+					dn[i] = delta[ordn(i)] * P._colscaling[1];
 				}
 				delta.clear();
 				
 				V2.clear(); n2.clear();
 				org_secs_safe_increment (V1, n1, dV, dn, P, V2, n2, clamp, tauk);
+					saveRES(V2, "V2safe");
+					std::cout<<"saved"<<std::endl;
+				std::cout<<"clamp = "<<clamp<<std::endl;
+				std::cout<<"tauk = "<<tauk<<std::endl;
 												
 				if ((clamp <= 0) || (tauk <= 0)){
 					reject = true;
@@ -284,9 +284,9 @@ unsigned n_fix_tstep = firstfixtstep;
 				if(incr0==incr0v) whichone = 0;
 				if(incr0==incr0n) whichone = 1;
 				
-				// for(unsigned i=0; i<vecincr.size(); i++){
-					// std::cout<<"vecincr0 = "<<vecincr[i]<<std::endl;
-				// }
+				for(unsigned i=0; i<vecincr.size(); i++){
+					std::cout<<"vecincr0 = "<<vecincr[i]<<std::endl;
+				}
 				
 				if (incr0 > P._maxnpincr && dt > P._dtmin){
 					MAXINCR_MSG (tstep, t, in, whichone, incr0, resall, P);
@@ -300,9 +300,9 @@ unsigned n_fix_tstep = firstfixtstep;
 				vecincr[0] = incr1v;
 				vecincr[1] = incr1n;
 				
-				// for(unsigned i=0; i<vecincr.size(); i++){
-					// std::cout<<"vecincr1 = "<<vecincr[i]<<std::endl;
-				// }
+				for(unsigned i=0; i<vecincr.size(); i++){
+					std::cout<<"vecincr1 = "<<vecincr[i]<<std::endl;
+				}
 
 				incr1 = *std::max_element(vecincr.begin(),vecincr.end());
 				if(incr1==incr1v) whichone = 0;
@@ -351,13 +351,20 @@ unsigned n_fix_tstep = firstfixtstep;
 					iimn = imn;
 		
 					Vk = V2;
-					nk = n2;				
+					nk = n2;
+					saveRES(V2, "Vmn");
+					saveRES(n2, "Nmn");
+					std::cout<<"MODIFIED NEWTON"<<std::endl;
 
+					// for(unsigned i=0; i<nnodes; i++){
+						// std::cout<<"V2 = "<<V2[i]<<std::endl;
+					// }					
+					
 					_res = org_secs2d_newton_residual(P, V2, n2, Vold, nold, dt, ordV, ordn);
 					
-					for(unsigned i=0; i<nnodes; i++){
-						//std::cout<<"resV = "<<_res[ordV(i)]<<std::endl;
-					}					
+					// for(unsigned i=0; i<nnodes; i++){
+						// std::cout<<"resV = "<<_res[ordV(i)]<<std::endl;
+					// }				
 					
 					/// Dirichlet BCs on V:
 					bim2a_dirichlet_bc (P._msh, bcsV, _jac, _res, ordV, true);
@@ -373,11 +380,11 @@ unsigned n_fix_tstep = firstfixtstep;
 	
 					bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn, true);
 					
-					for(unsigned i=0; i<nnodes; i++){
+					//for(unsigned i=0; i<nnodes; i++){
 						//std::cout<<"resV = "<<_res[ordV(i)]<<std::endl;
 						//std::cout<<"V2 = "<<V2[i]<<std::endl;
 						//std::cout<<"Vout = "<<(V2[i]+_res[ordV(i)])<<std::endl;
-					}
+					//}
 														
 					resall.resize(2);
 					compute_residual_norm (resnrmk[imn-1], whichone, resall, _res, nnodes, ordV, ordn);
