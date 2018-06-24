@@ -15,19 +15,16 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 			eps_ins = P._eps_ins,
 			q = P._q,
 			Vth = P._Vth,
-			section = P._section,
 			s = 0.0;
-	unsigned int	numcontacts;
+	
 	bool	ins = P._ins;
-	std::array<int,2>	pins = P._pins;
-	std::vector< std::vector<int> >	dnodes = P._dnodes;
+	
 	std::vector<int> 	insulator = P._insulator,
 						scnodes = P._scnodes;
 	std::vector<double>	epsilon(insulator.size(),eps_semic),
 						rowscaling = P._rowscaling,
 						res;
 	
-	numcontacts = pins.size();
 	ndofs = 2 * nnodes;		
 	
 	/// COMPUTING COEFFICIENTS
@@ -113,12 +110,8 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	std::vector<double>	resn(nnodes,0.0),
 						rhs(nnodes, 0.0),
 						alpha(insulator.size(),0.0),
-						Eta(insulator.size(),0.0),
 						a_el(insulator.size(),0.0),
-						eta(scnodes.size(),0.0),
-						beta(nnodes,0.0),
-						gamma(scnodes.size(),1.0),
-						mob_nodes(scnodes.size(),0.0);
+						beta(nnodes,0.0);
   
 	A22.resize(nnodes);
 	
@@ -129,20 +122,20 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 		if(insulator[quadrant->get_global_quad_idx ()]==0){
 
 			for(int i=0; i<4; i++){
-				Eta[quadrant->get_global_quad_idx ()] += alphan[ quadrant->gt(i) ];
+				a_el[quadrant->get_global_quad_idx ()] += alphan[ quadrant->gt(i) ];
 			}		
-			Eta[quadrant->get_global_quad_idx ()] /= 4;
+			a_el[quadrant->get_global_quad_idx ()] /= 4;
 		}
 	}
 	for(unsigned i=0; i<insulator.size(); i++){
 		if(insulator[i] == 0){
-			alpha[i] = Eta[i]*mobn[i]*Vth;
+			alpha[i] = a_el[i]*mobn[i]*Vth;
 		}
 	}
 
 	for(unsigned i=0; i<scnodes.size(); i++){
 		if(scnodes[i] == 1){
-			beta[i] = *V[i]/Vth;
+			beta[i] = V[i]/Vth;
 		}
 	}
 	bim2a_advection_diffusion (	P._msh, alpha, beta, A22);
@@ -160,6 +153,7 @@ Newton::org_secs2d_newton_residual(	Probl& P, std::vector<double>& V, std::vecto
 	// Avoid cancellation errors.
 	
 	for(unsigned i=0; i<rhs.size(); i++){
+		//std::cout<<"resn = "<<resn[i]<<std::endl;
 		resn[i] -= rhs[i]*n0[i];
 	}
 	rhs.clear();
@@ -195,34 +189,22 @@ Newton::org_secs2d_newton_jacobian(	Probl& P, std::vector<double>& V, std::vecto
 {
 	int	nnodes = P.get_msh_nodes(),
 		nelements = P.get_msh_elem(),
-        numcontacts, ndofs, j = 0;
+        ndofs, j = 0;
 		
 	double	eps_semic = P._eps_semic,
 			eps_ins = P._eps_ins,
 			q = P._q,
-			Vth = P._Vth,
-			section = P._section;
+			Vth = P._Vth;
 			
 	bool	ins = P._ins;
-			
-	std::vector<int>::iterator it;
-	
-	std::vector< std::vector<int> >	dnodes = P._dnodes;
 	
 	std::vector<double>	epsilon(nelements,eps_semic),
 						rowscaling = P._rowscaling,
 						colscaling = P._colscaling;
-						
-	std::array<int,2>	pins = P._pins;
 	
 	std::vector<int>	scnodes = P._scnodes,
 						insulator = P._insulator;
-						
-	sparse_matrix 	A, B, r;
-	
-	//numscnodes = std::accumulate( scnodes.begin(), scnodes.end(), 0.0);
-	
-	numcontacts = pins.size();
+
 	ndofs =  2 * nnodes;	
 
 	jacobian.resize(ndofs);
@@ -414,7 +396,7 @@ Newton::org_physical_models2d (	std::vector<double>& n, Probl& P,
  {
 	std::vector<double>	nm,
 						out;
-	int vpe = 4;	//3;
+	int vpe = 4;
 	int nelements = P.get_msh_elem();
 	double	s = 0, j = 0, i;
 
@@ -450,7 +432,7 @@ Newton::org_physical_models2d (	std::vector<double>& n, Probl& P,
 {
 	std::vector<double>	nm,
 						out;
-	int vpe = 4;	//3;
+	int vpe = 4;
 	int nelements = P.get_msh_elem();
 	double	s = 0, j = 0, i;
 
@@ -941,16 +923,13 @@ Newton::org_secs_state_predict (	Probl& P, std::vector<double>& Vold, std::vecto
 
 	int	length, j;
     double  dt, difft;
-    std::vector<double> it(2,0), t(2,0), dndt, dlndt, dVdt, lnold, lnoldold;
+    std::vector<double> t(2,0), dndt, dlndt, dVdt, lnold, lnoldold;
 
-    it[0] = (tstep - 2);
-    it[1] = (tstep - 1);
+	t[0] = (tout[0] - tout[0]);
+	t[1] = (tout[1] - tout[0]);
 
-    t[0] = (tout[it[0]] - tout[tstep - 2]);
-    t[1] = (tout[it[1]] - tout[tstep - 2]);
+	dt = tout[2] - tout[1];
 	
-    dt = tout[tstep] - tout[tstep - 1];
-
 	dndt.resize(nold.size());
 	for(unsigned i=0; i<nold.size(); i++){
         dndt[i] = (nold[i] - noldold[i]);
@@ -1095,12 +1074,12 @@ Newton::compute_variation (	std::vector<double>& Va, std::vector<double>& na,
   }
   
 	incrV = infnorm(diff) / (infnorm(Va) * clamping + cl[0]);
-	std::cout<<"infnorm(Va) = "<<infnorm(Va)<<std::endl;
-	std::cout<<"clamping = "<<clamping<<std::endl;
-	std::cout<<"infnorm(Va) * clamping = "<<infnorm(Va) * clamping<<std::endl;
-	std::cout<<"cl[0] = "<<cl[0]<<std::endl;
-	std::cout<<"infnorm(diff) = "<<infnorm(diff)<<std::endl;
-	std::cout<<"incrV = "<<incrV<<std::endl;
+	// // std::cout<<"infnorm(Va) = "<<infnorm(Va)<<std::endl;
+	// // std::cout<<"clamping = "<<clamping<<std::endl;
+	// // std::cout<<"infnorm(Va) * clamping = "<<infnorm(Va) * clamping<<std::endl;
+	// // std::cout<<"cl[0] = "<<cl[0]<<std::endl;
+	// // std::cout<<"infnorm(diff) = "<<infnorm(diff)<<std::endl;
+	// // std::cout<<"incrV = "<<incrV<<std::endl;
 
   // incrn = constants.Vth * norm (log (nb(sc) ./ na(sc)), inf) / ...
   //         (norm (Va(sc) - constants.Vth * log (na(sc) ./ ni), inf) * clamping + c[1]);
@@ -1319,7 +1298,7 @@ Newton::DIV_MN_MSG (	int tstep, double t, int Nstep, int mNstep, int field, std:
 						double incr, std::vector<double>& res, int nsteps_check)
 {
   std::cout<<" "<<std::endl;
-  std::cout<<"at time step "<<tstep<<"model time "<<t<<std::endl;
+  std::cout<<"at time step "<<tstep<<" model time "<<t<<std::endl;
   std::cout<<"fixed point iteration "<<Nstep<<", modified Newton iteration "<<mNstep<<std::endl;
   std::cout<<"the Modified Newton algorithm is diverging: "<<std::endl;
   std::cout<<"the increment in field "<<field+1<<" is not decreasing : "<<std::endl;
@@ -1399,14 +1378,8 @@ Newton::infnorm(std::vector<double>& in){
 bool
 Newton::any(std::vector<int>& v)
 {
-	// int l=0;
-	// for(unsigned i=0; i<v.size(); i++){
-		// if(v[i]!=0)
-			// l++;
-	// }
 	int l = std::accumulate( v.begin(), v.end(), 0.0);
-	
-	// if( (unsigned)l == v.size())
+
 	if( l > 0 )
 		return true;
 	else
@@ -1416,14 +1389,8 @@ Newton::any(std::vector<int>& v)
 bool
 Newton::any(std::vector<double>& v)
 {
-	// int l=0;
-	// for(unsigned i=0; i<v.size(); i++){
-		// if(v[i]!=0)
-			// l++;
-	// }
 	int l = std::accumulate( v.begin(), v.end(), 0.0);
-	
-	// if( (unsigned)l == v.size())
+
 	if( l > 0 )
 		return true;
 	else
