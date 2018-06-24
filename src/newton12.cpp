@@ -88,26 +88,22 @@ unsigned n_fix_tstep = firstfixtstep;
 		t = tspan[n_fix_tstep - 2];
 		
 		while (t < tspan[n_fix_tstep-1]){ /// TIME STEP
+		//while (tstep < 14){ /// TIME STEP
+			
 			std::cout<<"--"<<std::endl;
 		
 			tstep++;
 
-			//_tout[tstep] = std::fmin (t + dt, tspan[n_fix_tstep - 1]);
 			_tout[2] = std::fmin (t + dt, tspan[n_fix_tstep - 1]);
 
-			//t = _tout[tstep];
 			t = _tout[2];
 
-			//dt = t - _tout[tstep - 1];
 			dt = t - _tout[1];
-			
-			/// tutti gli incr?
 			
 			incr0 = 4 * P._maxnpincr;
 			
 			org_secs_state_predict (P, Vold, nold, Voldold, noldold, tstep, _tout, V0, n0);
 			
-			/// controllare che funzioni org_state predict quando tstep>2
 			V2 = V0;
 			n2 = n0;
 			
@@ -121,17 +117,17 @@ unsigned n_fix_tstep = firstfixtstep;
 			inc_clamp.resize(maxit);
 			resnrm.resize(maxit);
 			
+			std::cout << "new Newton step = "<<std::endl;
+			std::cout << "tstep = "<<tstep<<std::endl;
+			
 			while (!reject && (in < P._maxit)){ /// NEWTON STEP
 				in += 1;
 				std::cout << "in = "<<in<<std::endl;
 
-				// tengo memoria dei valori al passo temporale corrente nel caso poi debba rifiutare il passo
 				V1 = V2;
-				n1 = n2;
-					saveRES(V2, "V2");
-					std::cout<<"saved"<<std::endl;				
+				n1 = n2;					
 				
-				_res = org_secs2d_newton_residual(P, V2, n2, Vold, nold, dt, ordV, ordn);				
+				_res = org_secs2d_newton_residual(P, V2, n2, Vold, nold, dt, ordV, ordn);
 				
 				org_secs2d_newton_jacobian(	P, V2, n2, dt, ordV, ordn, _jac);
 				
@@ -152,38 +148,35 @@ unsigned n_fix_tstep = firstfixtstep;
 				bim2a_dirichlet_bc (P._msh, bcsV, _jac, _res, ordV);
 				
 				/// Dirichlet BCs on n:
-				//std::vector<double>	rho, nimposed;
 				double rho, nimposed;
 
-				// org_gaussian_charge_n(V2, P, rho);
 				rho = org_gaussian_charge_n( V2[0], P);
-	
 				nimposed = rho * (-1)/P._q ;
-				// for(unsigned i=0; i<nimposed.size(); i++){
-					// nimposed[i] *= (-1)/P._q;
-				// }
 	
 				std::tuple<int, int, func_quad>	tuplan(0,2,[&nimposed,&n2](tmesh::quadrant_iterator quad, tmesh::idx_t i)
-																//{return (nimposed[quad->gt(i)]-n2[quad->gt(i)]);});
 																{return (nimposed-n2[quad->gt(i)]);});
 				dirichlet_bcs_quad	bcsn;
 				bcsn.push_back(tuplan);
 	
-				bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn);			
+				bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn);
+				
+				// for(int i=0; i<nnodes; i++){
+					// std::cout<<"resV = "<<_res[ordn(i)]<<std::endl;
+				// }				
 				
 				if (in == 1){
 					whichone = 0;
 					compute_residual_norm (resnrm[0],whichone,resall,_res,nnodes,ordV,ordn);
 					
-					for(unsigned i=0; i<resall.size(); i++){
-						std::cout<<"resall = "<<resall[i]<<std::endl;
-					}
-					std::cout<<"resnrm = "<<resnrm[in-1]<<std::endl;
+					// for(unsigned i=0; i<resall.size(); i++){
+						// std::cout<<"resall = "<<resall[i]<<std::endl;
+					// }
+					// std::cout<<"resnrm = "<<resnrm[in-1]<<std::endl;
 					
 					if(P._rowscaling.size() == resall.size()){
 						for(unsigned i=0; i<P._rowscaling.size(); i++){
 							P._rowscaling[i] = P._rowscaling[i] * (resall[i]+1);
-							std::cout<<"P._rowscaling[i] = "<<P._rowscaling[i]<<std::endl;
+							// std::cout<<"P._rowscaling[i] = "<<P._rowscaling[i]<<std::endl;
 						}
 					}
 					else{
@@ -198,13 +191,17 @@ unsigned n_fix_tstep = firstfixtstep;
 					bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn,true);
 				}				
 				
+				// for(int i=0; i<nnodes; i++){
+					// std::cout<<"resV = "<<_res[ordV(i)]<<std::endl;
+				// }				
+				
 				resall.resize(2);
 				compute_residual_norm (resnrm[in-1],whichone,resall,_res,nnodes,ordV,ordn);
 					
-				for(unsigned i=0; i<resall.size(); i++){
-					std::cout<<"resall = "<<resall[i]<<std::endl;
-				}
-				std::cout<<"resnrm = "<<resnrm[in-1]<<std::endl;
+				// for(unsigned i=0; i<resall.size(); i++){
+					// std::cout<<"resall = "<<resall[i]<<std::endl;
+				// }
+				// std::cout<<"resnrm = "<<resnrm[in-1]<<std::endl;
 
 				
 				/// Solve non.linear system.
@@ -238,18 +235,6 @@ unsigned n_fix_tstep = firstfixtstep;
 					delta[i] *= (-1);
 				}
 				
-				// for(int i=0; i<nnodes; i++){
-					// V2[i] += delta[ordV(i)];
-					// std::cout<<"V DOPO = "<<V2[i]<<std::endl;
-					// std::cout<<"res NEWT = "<<_res[ordV(i)]<<std::endl;
-				// }
-					// saveRES(V2, "Vout");
-					// std::cout<<"saved"<<std::endl;
-				// for(int i=0; i<nnodes; i++){
-					// n2[i] += delta[ordn(i)];
-					// //std::cout<<"n DOPO = "<<n2[i]<<std::endl;
-				// }
-				
 				newton_solves +=1;
 	
 				dV.resize(nnodes);
@@ -265,10 +250,9 @@ unsigned n_fix_tstep = firstfixtstep;
 				
 				V2.clear(); n2.clear();
 				org_secs_safe_increment (V1, n1, dV, dn, P, V2, n2, clamp, tauk);
-					saveRES(V2, "V2safe");
-					std::cout<<"saved"<<std::endl;
-				std::cout<<"clamp = "<<clamp<<std::endl;
-				std::cout<<"tauk = "<<tauk<<std::endl;
+
+				// std::cout<<"clamp = "<<clamp<<std::endl;
+				// std::cout<<"tauk = "<<tauk<<std::endl;
 												
 				if ((clamp <= 0) || (tauk <= 0)){
 					reject = true;
@@ -284,14 +268,13 @@ unsigned n_fix_tstep = firstfixtstep;
 				if(incr0==incr0v) whichone = 0;
 				if(incr0==incr0n) whichone = 1;
 				
-				for(unsigned i=0; i<vecincr.size(); i++){
-					std::cout<<"vecincr0 = "<<vecincr[i]<<std::endl;
-				}
+				// for(unsigned i=0; i<vecincr.size(); i++){
+					// std::cout<<"vecincr0 = "<<vecincr[i]<<std::endl;
+				// }
 				
 				if (incr0 > P._maxnpincr && dt > P._dtmin){
 					MAXINCR_MSG (tstep, t, in, whichone, incr0, resall, P);
 					reject = true;
-					// infowhyfinished[tstep-1] = -3;
 					break;
 				}
 
@@ -300,9 +283,9 @@ unsigned n_fix_tstep = firstfixtstep;
 				vecincr[0] = incr1v;
 				vecincr[1] = incr1n;
 				
-				for(unsigned i=0; i<vecincr.size(); i++){
-					std::cout<<"vecincr1 = "<<vecincr[i]<<std::endl;
-				}
+				// for(unsigned i=0; i<vecincr.size(); i++){
+					// std::cout<<"vecincr1 = "<<vecincr[i]<<std::endl;
+				// }
 
 				incr1 = *std::max_element(vecincr.begin(),vecincr.end());
 				if(incr1==incr1v) whichone = 0;
@@ -314,7 +297,6 @@ unsigned n_fix_tstep = firstfixtstep;
 	
 				if (resnrm[in-1] < P._toll ){
 					CONV_MSG (tstep, in, 1, t, "res", whichone, incr1, resall);
-					// infowhyfinished[tstep-1] = 1;
 					break;
 				}
 
@@ -322,7 +304,6 @@ unsigned n_fix_tstep = firstfixtstep;
 					&& resnrm[in-1] > resnrm[in - P._nsteps_check -1] && dt > dtmin){
 					DIV_MSG (tstep, t, in, whichone, incnrm, incr1, resall, nsteps_check);
 					reject = true;
-					// infowhyfinished[tstep-1] = -4;
 					break;
 				}
 
@@ -331,7 +312,6 @@ unsigned n_fix_tstep = firstfixtstep;
 				
 				if (incr1 < P._toll ){
 					CONV_MSG(tstep, in, 1, t, "incr", whichone, incr1, resall);
-					// infowhyfinished[tstep-1] = 2;
 					break;
 				}
 				
@@ -352,9 +332,6 @@ unsigned n_fix_tstep = firstfixtstep;
 		
 					Vk = V2;
 					nk = n2;
-					saveRES(V2, "Vmn");
-					saveRES(n2, "Nmn");
-					std::cout<<"MODIFIED NEWTON"<<std::endl;
 
 					// for(unsigned i=0; i<nnodes; i++){
 						// std::cout<<"V2 = "<<V2[i]<<std::endl;
@@ -370,47 +347,29 @@ unsigned n_fix_tstep = firstfixtstep;
 					bim2a_dirichlet_bc (P._msh, bcsV, _jac, _res, ordV, true);
 					
 					/// Dirichlet BCs on n:
-					rho.clear();
-					org_gaussian_charge_n(V2, P, rho);
-	
-					nimposed = rho;
-					for(unsigned i=0; i<nimposed.size(); i++){
-						nimposed[i] *= (-1)/P._q;
-					}
+					rho = org_gaussian_charge_n(V2[0], P);
+					nimposed = rho * (-1)/P._q;
 	
 					bim2a_dirichlet_bc (P._msh, bcsn, _jac, _res, ordn, true);
-					
-					//for(unsigned i=0; i<nnodes; i++){
-						//std::cout<<"resV = "<<_res[ordV(i)]<<std::endl;
-						//std::cout<<"V2 = "<<V2[i]<<std::endl;
-						//std::cout<<"Vout = "<<(V2[i]+_res[ordV(i)])<<std::endl;
-					//}
 														
 					resall.resize(2);
 					compute_residual_norm (resnrmk[imn-1], whichone, resall, _res, nnodes, ordV, ordn);
 					
-					for(unsigned i=0; i<resall.size(); i++){
-						std::cout<<"resall = "<<resall[i]<<std::endl;
-					}
-					std::cout<<"resnrm = "<<resnrmk[imn-1]<<std::endl;					
+					// for(unsigned i=0; i<resall.size(); i++){
+						// std::cout<<"resall = "<<resall[i]<<std::endl;
+					// }
+					// std::cout<<"resnrm = "<<resnrmk[imn-1]<<std::endl;					
 				
 					/// Solve non linear system.
 					std::cout << "Solving linear system - Modified Newton."<<std::endl;
 		
 					delta = _res;
-					// for(int i=0; i<nnodes; i++){
-						// std::cout<<"deltaV PRIMA = "<<_res[ordV(i)]<<std::endl;
-					// }
 					
 					mumps_solver.set_rhs (delta);
 					
 					mumps_solver.solve ();
 	  
 					modified_newton_solves +=1;
-					
-					// for(unsigned i=0; i<delta.size(); i++){
-						// std::cout<<"delta MN = "<<delta[i]<<std::endl;
-					// }
 					
 					for(int i=0; i<nnodes; i++){
 						dV[i] = delta[ordV(i)] * P._colscaling[0];
@@ -424,7 +383,6 @@ unsigned n_fix_tstep = firstfixtstep;
 					
 					if ((tauk <=0) || (clamp <= 0)){
 						reject = true;
-						// infowhyfinished[tstep-1] = -5;
 						break;
 					}
 		  
@@ -444,7 +402,6 @@ unsigned n_fix_tstep = firstfixtstep;
 
 					if (resnrmk[imn - 1] < P._toll){
 						CONV_MSG (tstep, in, imn, t, "res", whichone, incrk, resall);
-						// infowhyfinished[tstep-1] = 3;
 						rejectmnewton = false;
 						convergedmnewton = true;
 						break;
@@ -464,7 +421,6 @@ unsigned n_fix_tstep = firstfixtstep;
 
 					if (incrk < P._toll){
 						CONV_MSG (tstep, in, imn, t, "incr", whichone, incrk, resall);
-						// infowhyfinished[tstep-1] = 4;
 						rejectmnewton = false;
 						convergedmnewton = true;
 						break;
@@ -496,7 +452,6 @@ unsigned n_fix_tstep = firstfixtstep;
 					std::cout<<"try reducing timestep..."<<std::endl;
 					if (dt > dtmin){
 						reject = true;
-						// infowhyfinished[tstep-1] = -6;
 						break;
 					}
 				}
@@ -522,14 +477,14 @@ unsigned n_fix_tstep = firstfixtstep;
 				Voldold = Vold;
 				noldold = nold;
 				
-				Vold = _V;
-				nold = _n;
+				Vold = V2;
+				nold = n2;
 				
 				_V = V2;
 				_n = n2;
 				
 				_tout[0] = _tout[1];
-				_tout[1] = _tout[2];
+				_tout[1] = t;
 		
 				dtfact = std::fmin(0.8 * sqrt(P._maxnpincr / incr0), P._maxdtincr);
 				dt = std::fmax( std::fmin(dtfact * dt, dtmax), dtmin);
@@ -545,14 +500,20 @@ unsigned n_fix_tstep = firstfixtstep;
 			V0.clear(); n0.clear();
 		} /// END TIME STEP 
 		
+		saveRES(V2, "V2");
+		saveRES(n2, "n2");
+		
 		if (P._savedata)
 		{
 			lastsaved = tstep;
-	  
-			//told = _tout[tstep - 1];
+
 			told = _tout[1];
 			nsaves++;
-	  
+
+			_V = V2;
+			_n = n2;
+			_tout[2] = t;
+			
 			saveNEWT(Vold, nold, told, V2, n2, _res, t, dt, nsaves, newton_solves, modified_newton_solves, freq);
 
 			Vold.clear();
