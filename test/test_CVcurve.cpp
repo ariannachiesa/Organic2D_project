@@ -28,7 +28,7 @@ int main(int argc, char** argv){
 	double	VG_min = -10.0,
 			VG_max = 20.0,
 			dV = 1.0,
-			areaS = P._L * std::abs(P._t_semic);
+			areaS = P._L * std::abs(P._t_ins - P._t_semic);
 			
 	int	nnodes = P._msh.num_global_nodes(),
 		length = std::abs(VG_max-VG_min)/dV;
