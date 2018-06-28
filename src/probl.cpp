@@ -1022,11 +1022,13 @@ Probl::dn_dV_approx(std::vector<double>& V)
 };
 
 
-std::vector<double>
+double
 Probl::CVcurve(std::vector<double>& phi){
     
     int nnodes = _msh.num_global_nodes(),
         nelements = _msh.num_global_quadrants();
+		
+	double dQ, sum, C;
     
     std::vector<double>	epsilon(nelements,_eps_semic),
                         dphi(nnodes,0.0),
@@ -1036,13 +1038,17 @@ Probl::CVcurve(std::vector<double>& phi){
 						ecoeff(nelements,0.0),
 						ncoeff(nnodes,1.0),
 						f(nnodes,0.0),
-						dQ(_dnodes[1].size(),0.0);
+						S(_dnodes[1].size(),0.0);
+						
+	sparse_matrix::col_iterator J;
     
-    sparse_matrix   A1, M, A2;
+    sparse_matrix   A1, M1, A2, M2, jac;
    
 	A1.resize(nnodes);
 	A2.resize(nnodes);
-	M.resize(nnodes);
+	M1.resize(nnodes);
+	M2.resize(nnodes);
+	jac.resize(nnodes);
     
     /// Assemble system matrices
     if(_ins){
@@ -1059,8 +1065,26 @@ Probl::CVcurve(std::vector<double>& phi){
 			ecoeff[i] = 1;
 		}
 	}
-	bim2a_reaction (_msh, ecoeff, ncoeff, M, default_ord);
+	bim2a_reaction (_msh, ecoeff, ncoeff, M1, default_ord);
+
+    org_gaussian_charge_n(phi, rhon, drhon_dV);
+    rhon.clear();
     
+	// for(int i=0; i<nnodes; i++){
+		// if(_scnodes[i] == 0){
+			// drhon_dV[i] = 0;
+		// }
+    // }
+	
+	// f = M*drhon_dV;
+	
+	jac = A1;
+	for(int i=0; i<nnodes; i++){
+		for(J = jac[i].begin(); J!= jac[i].end(); ++J){
+				jac[i][jac.col_idx(J)] += (-1) * M1[i][jac.col_idx(J)]*drhon_dV[jac.col_idx(J)];
+		}
+	}
+
     int indexT = _nTrees-1;
     std::tuple<int, int, func_quad> tupla1(0,2,[](tmesh::quadrant_iterator quad, tmesh::idx_t i){return 0.0;}),
                                     tupla2(indexT,3,[](tmesh::quadrant_iterator quad, tmesh::idx_t i){return 1.0;});
@@ -1068,20 +1092,9 @@ Probl::CVcurve(std::vector<double>& phi){
     dirichlet_bcs_quad  bcs;
     bcs.push_back(tupla1);
     bcs.push_back(tupla2);
-
-    org_gaussian_charge_n(phi, rhon, drhon_dV);
-    rhon.clear();
-    
-	for(int i=0; i<nnodes; i++){
-		if(_scnodes[i] == 0){
-			drhon_dV[i] = 0;
-		}
-    }
 	
-	f = M*drhon_dV;
-
 	/// BCs Dirichlet type: dphi(-t_semic) = 0 ; dphi(t_ins) = 1;
-	bim2a_dirichlet_bc (_msh, bcs, A1, f, default_ord);
+	bim2a_dirichlet_bc (_msh, bcs, jac, f, default_ord);
 	
 	/// Assembling rhs term:
 	dphi = f;
@@ -1092,9 +1105,9 @@ Probl::CVcurve(std::vector<double>& phi){
 	std::vector<int> 	irow(nnodes,0),
 						jcol(nnodes,0);
 	  
-	A1.aij(vals, irow, jcol, mumps_solver.get_index_base ());
+	jac.aij(vals, irow, jcol, mumps_solver.get_index_base ());
 	  
-	mumps_solver.set_lhs_structure (A1.rows(), irow, jcol);
+	mumps_solver.set_lhs_structure (jac.rows(), irow, jcol);
 		
 	mumps_solver.analyze ();
 	mumps_solver.set_lhs_data (vals);
@@ -1105,17 +1118,32 @@ Probl::CVcurve(std::vector<double>& phi){
       
 	mumps_solver.solve ();
 	mumps_solver.cleanup ();
-
 	
 	/// Riassemblo le matrici
 	bim2a_advection_diffusion (_msh, epsilon, psi, A2, default_ord);
+	bim2a_reaction (_msh, ecoeff, ncoeff, M2, default_ord);
 	
-	dphi = A2*dphi;
-	
-	/// Selecting only values on the boundary nodes (insulator)
-	for(unsigned i=0; i<_dnodes[1].size(); i++){
-		dQ[i] = dphi[_dnodes[1][i]];
+	jac = A2;
+	for(int i=0; i<nnodes; i++){
+		for(J = jac[i].begin(); J!= jac[i].end(); ++J){
+				jac[i][jac.col_idx(J)] += (-1) * M2[i][jac.col_idx(J)]*drhon_dV[jac.col_idx(J)];
+		}
 	}
 	
-	return dQ;
+	for(unsigned i=0; i<_dnodes[1].size(); i++){
+		sum = 0;
+		for(J = jac[i].begin(); J!= jac[i].end(); ++J){
+			sum += jac[i][jac.col_idx(J)]*dphi[jac.col_idx(J)];
+		}
+		S[i] = sum;
+	}
+	
+	dQ = 0;
+	for(unsigned i=0; i<S.size(); i++){
+		dQ += S[i];
+	}
+	
+	C = _L*dQ;
+	
+	return C;
 };

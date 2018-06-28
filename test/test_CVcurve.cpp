@@ -25,9 +25,10 @@ int main(int argc, char** argv){
 	tstart_probl = clock() - tstart_probl;
 	std::cout<<"Construction class Probl run time: "<<tstart_probl<<" , ("<<((float)tstart_probl)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
 	
-	double	VG_min = -10.0,
-			VG_max = 10.0,
-			dV = 1.0;
+	double	VG_min = -35.0,
+			VG_max = 35.0,
+			dV = 1.0,
+			c;
 			
 	int	nnodes = P._msh.num_global_nodes(),
 		length = std::abs(VG_max-VG_min)/dV;
@@ -49,10 +50,9 @@ int main(int argc, char** argv){
 		/// Solve Non Linear Poisson
 		P.NonLinearPoisson(Vguess);
 		P.savePoisson(P.Vin, P.nin, P.niter, P.resnrm, "NLPoisson_output.gz");
-		
-		Q = P.CVcurve(P.Vin);
-		std::cout<<"Q = "<<Q[1]<<std::endl;
-		C[i] = P._L*Q[1];
+
+		c = P.CVcurve(P.Vin);
+		C[i] = c;
 		
 	}
 	P.saveCV(V, C, "CVcurve");

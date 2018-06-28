@@ -147,7 +147,7 @@ class Probl
 	std::vector<double> n_approx(  std::vector<double>& V);
 	std::vector<double> dn_dV_approx(  std::vector<double>& V);
 	
-	std::vector<double> CVcurve(std::vector<double>& phi);
+	double CVcurve(std::vector<double>& phi);
 	
 	/// save methods
 	void savePoisson(std::vector<double>& V, std::vector<double>& n, double niter, std::vector<double>& resnrm, const char* FileName);
