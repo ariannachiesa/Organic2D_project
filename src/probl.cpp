@@ -420,7 +420,7 @@ Probl::Device(	double Vshift, double Csb, double t_semic, double t_ins, double L
 				x = quadrant->p(0, ii);
 				y = quadrant->p(1, ii);
 			
-				if(x >= 0 && x <= L && y >= -t_semic && y <= 0){
+				if(x >= 0 && x <= L && y >= -t_semic && (y < 0.0 || y == 0.0)){
 					smc++;
 					row1.push_back( quadrant->gt(ii) );
 				}
@@ -509,15 +509,35 @@ Probl::Probl(	int maxcycle,
 			break;
 		num++;
 	}
-	F.close();
+	F.close();	
 	
 	_data_n.resize(num);
-	
+
 	Constants(T0);
 	Material(PhiB, sigman, mu0n);
 	Quad(nq);
 	Algor(pmaxit, maxit, maxit_mnewton, nsteps_check, maxnpincr, ptoll, toll, dt0, dtcut, dtmax, dtmin, maxdtincr);
 	Device(Vshift, Csb, t_semic, t_ins, L, ins, pins, contacts, section, Vdrain, maxcycle);
+	
+		// for(unsigned i=0; i<_data_n.size(); i++){
+		// _data_n[i] *= (-1)/_q;
+	// }
+	
+		// std::vector<double>::iterator it;
+		// it = std::unique (_data_n.begin(), _data_n.end());			///lento
+		// _data_n.resize( std::distance(_data_n.begin(),it) );		///lento
+		// std::sort(_data_n.begin(), _data_n.end());					///lento	
+	
+	// std::ofstream Fout("out.txt");
+	// for(unsigned i=0; i<_data_n.size(); i++){
+		// Fout<<_data_n[i]<<std::endl;
+	// }
+	// Fout.close();
+	
+		// std::cout<<"data n size = "<<_data_n.size()<<std::endl;
+	// for(int i=0; i<20; i++){
+		// std::cout<<"data n = "<<_data_n[i]<<std::endl;
+	// }
 
 };
 
@@ -833,6 +853,8 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 	nin = nout;
 	niter = iter;
 	resnrm.resize(iter);
+	
+	savePoisson(Vin, nin, niter, resnrm, "NLPoissonResults");
 };
 
 
@@ -858,6 +880,28 @@ Probl::savePoisson(std::vector<double>& V, std::vector<double>& n, double niter,
   // Save to filename.
   assert (octave_io_open (FileName, m, &m) == 0);
   assert (octave_save ("Poisson", octave_value (the_map)) == 0);
+  assert (octave_io_close () == 0);
+};
+
+
+void
+Probl::saveCV(std::vector<double>& V, std::vector<double>& C, const char* FileName)
+{
+  ColumnVector oct_V (V.size (), 0.0);
+  ColumnVector oct_C (C.size (), 0.0);
+
+  std::copy_n (V.begin (), V.size (), oct_V.fortran_vec ());
+  std::copy_n (C.begin (), C.size (), oct_C.fortran_vec ());
+  
+  octave_scalar_map the_map;
+  the_map.assign ("V", oct_V);
+  the_map.assign ("C", oct_C);
+  
+  octave_io_mode m = gz_write_mode;
+  
+  // Save to filename.
+  assert (octave_io_open (FileName, m, &m) == 0);
+  assert (octave_save ("CVcurve", octave_value (the_map)) == 0);
   assert (octave_io_close () == 0);
 };
 
@@ -975,4 +1019,103 @@ Probl::dn_dV_approx(std::vector<double>& V)
     }
 	coeff.clear();
 	return dn_dV;
+};
+
+
+std::vector<double>
+Probl::CVcurve(std::vector<double>& phi){
+    
+    int nnodes = _msh.num_global_nodes(),
+        nelements = _msh.num_global_quadrants();
+    
+    std::vector<double>	epsilon(nelements,_eps_semic),
+                        dphi(nnodes,0.0),
+                        rhon(nnodes,0.0),
+                        drhon_dV(nnodes,0.0),
+						psi(nnodes,0.0),
+						ecoeff(nelements,0.0),
+						ncoeff(nnodes,1.0),
+						f(nnodes,0.0),
+						dQ(_dnodes[1].size(),0.0);
+    
+    sparse_matrix   A1, M, A2;
+   
+	A1.resize(nnodes);
+	A2.resize(nnodes);
+	M.resize(nnodes);
+    
+    /// Assemble system matrices
+    if(_ins){
+        for(unsigned i=0; i<_insulator.size(); i++){
+            if(_insulator[i]==1){
+                epsilon[i] = _eps_ins;
+            }
+        }       
+    }
+    bim2a_advection_diffusion (_msh, epsilon, psi, A1, default_ord);
+	
+	for (unsigned i=0; i<_insulator.size(); i++){
+		if(_insulator[i]==0){
+			ecoeff[i] = 1;
+		}
+	}
+	bim2a_reaction (_msh, ecoeff, ncoeff, M, default_ord);
+    
+    int indexT = _nTrees-1;
+    std::tuple<int, int, func_quad> tupla1(0,2,[](tmesh::quadrant_iterator quad, tmesh::idx_t i){return 0.0;}),
+                                    tupla2(indexT,3,[](tmesh::quadrant_iterator quad, tmesh::idx_t i){return 1.0;});
+                                                
+    dirichlet_bcs_quad  bcs;
+    bcs.push_back(tupla1);
+    bcs.push_back(tupla2);
+
+    org_gaussian_charge_n(phi, rhon, drhon_dV);
+    rhon.clear();
+    
+	for(int i=0; i<nnodes; i++){
+		if(_scnodes[i] == 0){
+			drhon_dV[i] = 0;
+		}
+    }
+	
+	f = M*drhon_dV;
+
+	/// BCs Dirichlet type: dphi(-t_semic) = 0 ; dphi(t_ins) = 1;
+	bim2a_dirichlet_bc (_msh, bcs, A1, f, default_ord);
+	
+	/// Assembling rhs term:
+	dphi = f;
+	
+	mumps mumps_solver;
+      
+	std::vector<double> vals(nnodes,0);
+	std::vector<int> 	irow(nnodes,0),
+						jcol(nnodes,0);
+	  
+	A1.aij(vals, irow, jcol, mumps_solver.get_index_base ());
+	  
+	mumps_solver.set_lhs_structure (A1.rows(), irow, jcol);
+		
+	mumps_solver.analyze ();
+	mumps_solver.set_lhs_data (vals);
+      
+	mumps_solver.factorize ();
+
+	mumps_solver.set_rhs (dphi);
+      
+	mumps_solver.solve ();
+	mumps_solver.cleanup ();
+
+	
+	/// Riassemblo le matrici
+	bim2a_advection_diffusion (_msh, epsilon, psi, A2, default_ord);
+	
+	dphi = A2*dphi;
+	
+	/// Selecting only values on the boundary nodes (insulator)
+	for(unsigned i=0; i<_dnodes[1].size(); i++){
+		dQ[i] = dphi[_dnodes[1][i]];
+	}
+	
+	return dQ;
 };

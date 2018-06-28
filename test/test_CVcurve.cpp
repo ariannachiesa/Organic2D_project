@@ -26,9 +26,8 @@ int main(int argc, char** argv){
 	std::cout<<"Construction class Probl run time: "<<tstart_probl<<" , ("<<((float)tstart_probl)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
 	
 	double	VG_min = -10.0,
-			VG_max = 20.0,
-			dV = 1.0,
-			areaS = P._L * std::abs(P._t_ins - P._t_semic);
+			VG_max = 10.0,
+			dV = 1.0;
 			
 	int	nnodes = P._msh.num_global_nodes(),
 		length = std::abs(VG_max-VG_min)/dV;
@@ -52,11 +51,10 @@ int main(int argc, char** argv){
 		P.savePoisson(P.Vin, P.nin, P.niter, P.resnrm, "NLPoisson_output.gz");
 		
 		Q = P.CVcurve(P.Vin);
-		
-		C[i] = areaS*Q[1];
+		std::cout<<"Q = "<<Q[1]<<std::endl;
+		C[i] = P._L*Q[1];
 		
 	}
-	
 	P.saveCV(V, C, "CVcurve");
 
 	

@@ -105,7 +105,7 @@ class Probl
 	std::vector<int> _insulator;				/**< vector of 1s and 0s; 0 = element in the semiconductor, 1 = element in the insulator */
 	std::array<int,2> _pins;					/**< [Bulk, gate] : region 1 = semiconductor , region 0 = insulator */
 	std::array<int,2> _contacts;				/**< number of the geometrical border containing the side edges where the contacts are :
-												*   edge 0 of tree 0, edge 1 of tree 1
+												*   edge 2 of tree 0, edge 3 of last tree
 												*/
 	std::vector<int> _alldnodes;				/**< vector of all boundary nodes on bulk and gate */
 	std::vector< std::vector<int> > _dnodes;	/**< vector with gate nodes + vector with bulk nodes */
@@ -124,8 +124,9 @@ class Probl
 			int pmaxit = 1000, int maxit = 5, int maxit_mnewton = 30, int nsteps_check = 3, double maxnpincr = 1e-3, double ptoll = 1e-10, 
 			double toll = 1e-4, double dt0 = 1e-10, double dtcut = 0.25, double dtmax = 1, double dtmin = 1e-12, double maxdtincr = 2,		// Algor
 			double Vshift = 1.79738, double Csb = 1.16183675549126e-11, double t_semic = 3.49436549222355e-8, double t_ins = 4.41e-7, 
-			double L = 1e-5, bool ins = true,																								// Device
-			std::array<int,2> pins = {1, 0}, std::array<int,2> contacts = {0, 1}, double section = 0.00000081, double Vdrain = 5);			// constructor
+			// double L = 1e-5, bool ins = true,																								// Device
+			double L = 1.4e-3, bool ins = true,
+			std::array<int,2> pins = {1, 0}, std::array<int,2> contacts = {2, 3}, double section = 0.00000081, double Vdrain = 5);			// constructor
 
     /// METHODS
 
@@ -146,9 +147,12 @@ class Probl
 	std::vector<double> n_approx(  std::vector<double>& V);
 	std::vector<double> dn_dV_approx(  std::vector<double>& V);
 	
+	std::vector<double> CVcurve(std::vector<double>& phi);
+	
 	/// save methods
 	void savePoisson(std::vector<double>& V, std::vector<double>& n, double niter, std::vector<double>& resnrm, const char* FileName);
 	void saveMat (int nrows, int ncols, std::vector<double>& vals);
+	void saveCV(std::vector<double>& V, std::vector<double>& C, const char* FileName);
 
 	/// Compute the (Inf,L2,H1) norm of a piecewise linear function.
 	void bim2a_norm (tmesh& msh, const std::vector<double>& v, double& norm, norm_type type);
