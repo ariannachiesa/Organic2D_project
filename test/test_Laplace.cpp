@@ -27,7 +27,7 @@ int main(int argc, char** argv){
 	/// Solve Laplace
 	tstart_p = clock();
 	P.Laplace();
-	P.savePoisson(P.Vin, P.nin, P.niter, P.resnrm, "Laplace_output.gz");
+	P.savePoisson(P.Vin, P.nin, P.niter, P.resnrm, "Laplace_output");
 	tstart_p = clock() - tstart_p;
 	std::cout<<"Laplace run time: "<<tstart_p<<" , ("<<((float)tstart_p)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
 	

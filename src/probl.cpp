@@ -16,161 +16,6 @@ Probl::set_T0(double T0){
 	_sigman_kT = _sigman / (_Kb * _T0);
 };
 
-/// Method which sets eps_ins_r
-void 
-Probl::set_eps_ins_r(double eps_ins_r){
-	_eps_ins_r = eps_ins_r;
-};
-
-/// Method which sets eps_ins
-void 
-Probl::set_eps_ins(double eps_ins){
-	_eps_ins = eps_ins;
-};
-
-/// Method which sets PhiB
-void 
-Probl::set_PhiB(double PhiB){
-	_PhiB = PhiB;
-};
-
-/// Method which sets sigman
-void 
-Probl::set_sigman(double sigman){
-	_sigman = sigman;
-};
-
-/// Method which sets sigman_kT
-void 
-Probl::set_sigmankT(double sigmankT){
-	_sigman_kT = sigmankT;
-};
-
-/// Method which sets mu0n
-void 
-Probl::set_mu0n(double mu0n){
-	_mu0n = mu0n;
-};
-
-/// Method which sets ni
-void 
-Probl::set_ni(double ni){
-	_ni = ni;
-};
-
-/// Method which sets pmaxit
-void 
-Probl::set_pmaxit(int pmaxit){
-	_pmaxit = pmaxit;
-};
-
-/// Method which sets maxit
-void 
-Probl::set_maxit(int maxit){
-	_maxit = maxit;
-};
-
-/// Method which sets maxit_mnewton
-void 
-Probl::set_maxit_mnewton(int maxit_mnewton){
-	_maxit_mnewton = maxit_mnewton;
-};
-
-/// Method which sets nsteps_check
-void 
-Probl::set_nsteps_check(int nsteps_check){
-	_nsteps_check = nsteps_check;
-};
-
-/// Method which sets maxnpincr
-void 
-Probl::set_maxnpincr(double maxnpincr){
-	_maxnpincr = maxnpincr;
-};
-
-/// Method which sets ptoll
-void 
-Probl::set_ptoll(double ptoll){
-	_ptoll = ptoll;
-};
-
-/// Method which sets toll
-void 
-Probl::set_toll(double toll){
-	_toll = toll;
-};
-
-/// Method which sets dt0
-void 
-Probl::set_dt0(double dt0){
-	_dt0 = dt0;
-};
-
-/// Method which sets dtcut
-void 
-Probl::set_dtcut(double dtcut){
-	_dtcut = dtcut;
-};
-
-/// Method which sets dtmax
-void 
-Probl::set_dtmax(double dtmax){
-	_dtmax = dtmax;
-};
-
-/// Method which sets dtmin
-void 
-Probl::set_dtmin(double dtmin){
-	_dtmin = dtmin;
-};
-
-/// Method which sets maxdtincr
-void 
-Probl::set_maxdtincr(double maxdtincr){
-	_maxdtincr = maxdtincr;
-};
-	
-
-/// Method which sets Vshift
-void 
-Probl::set_Vshift(double Vshift){
-	_Vshift = Vshift;
-};
-
-/// Method which sets Csb
-void 
-Probl::set_Csb(double Csb){
-	_Csb = Csb;
-};
-
-/// Method which sets Vdrain and compute value of Efield
-void 
-Probl::set_Vdrain(double Vdrain){
-	_Efield = Vdrain / _L;
-};
-
-/// Method which sets section
-void 
-Probl::set_section(double section){
-	_section = section;
-};
-
-/// Method which sets voltage at the gate contact
-void
-Probl::set_VG(double Vg){
-	_VG = Vg;
-};
-
-tmesh::idx_t
-Probl::get_msh_nodes(){
-	return _msh.num_global_nodes();
-};
-
-tmesh::idx_t
-Probl::get_msh_elem(){
-	return _msh.num_global_quadrants();
-};
-
 void 
 Probl::Constants(double T0){
 	_Kb   = 1.380648813131e-23;
@@ -210,34 +55,15 @@ Probl::Quad(int n){
 };
 
 void
-Probl::Algor(	int pmaxit, int maxit, int maxit_mnewton, int nsteps_check, double maxnpincr, double ptoll, 
-				double toll, double dt0, double dtcut, double dtmax, double dtmin, double maxdtincr){
+Probl::Algor(int pmaxit, double ptoll)
+{	
 	_pmaxit = pmaxit;
-	_maxit = maxit;
-	_maxit_mnewton = maxit_mnewton;
-	_nsteps_check = nsteps_check;
-	_maxnpincr = maxnpincr;
-	_ptoll = ptoll;
-	_toll = toll;
-	_dt0 = dt0;
-	_dtcut = dtcut;
-	_dtmax = dtmax;
-	_dtmin = dtmin;
-	_maxdtincr = maxdtincr;
-
-	// Scaling and clamping coefficients
-	for (int i=0; i<4; i++){
-		_colscaling.push_back(1);
-		_rowscaling.push_back(1);
-		_clamping.push_back(1);
-	}
-	_clampOnOff = true;
-	_savedata = true;
+	_ptoll = ptoll;	
 };
 
 void
 Probl::Device(	double Vshift, double Csb, double t_semic, double t_ins, double L, bool ins, std::array<int,2>& pins, 
-				std::array<int,2>& contacts, double section, double Vdrain, int maxcycle)
+				std::array<int,2>& contacts, double section, double Vdrain, double VG, double VB, int maxcycle)
 {
 	int	recursive, partforcoarsen;
 
@@ -255,7 +81,8 @@ Probl::Device(	double Vshift, double Csb, double t_semic, double t_ins, double L
 		_t_ins = 0;
 	}
 
-	_VG = 0;
+	_VG = VG;
+	_VB = VB;
 	_Vshift = Vshift;
 	_Csb = Csb;
 	_t_semic = t_semic;
@@ -469,84 +296,18 @@ Probl::Probl(	int maxcycle,
 				double T0,																						// Constants
 				double PhiB, double sigman, double mu0n,														// Material
 				int nq,																							// Quad
-				int pmaxit, int maxit, int maxit_mnewton, int nsteps_check, double maxnpincr, double ptoll,
-				double toll, double dt0, double dtcut, double dtmax, double dtmin, double maxdtincr,			// Algor
+				int pmaxit, double ptoll,																		// Algor
 				double Vshift, double Csb, double t_semic, double t_ins,
 				double L, bool ins,																				// Device
-				std::array<int,2> pins, std::array<int,2> contacts, double section, double Vdrain)
-{	
-	///	Calculation of the interpolation table
-	double	N = 1e6+1, 
-			num = 0;
+				std::array<int,2> pins, std::array<int,2> contacts, double section, double Vdrain, double VG, double VB)
+{
 	
-	_data_phi_lumo.resize(N);
-	_data_n.resize(_data_phi_lumo.size());
-		
-	std::ifstream f("interpolation_table.txt");
-	if (!f){
-		std::cerr << "Error: input file interpolation_table.txt not found!"<<std::endl;
-		exit(EXIT_FAILURE);
-	}
-
-	while(num < N){
-		f >> _data_phi_lumo[num];
-		if(f.eof()) 
-			break;
-		num++;
-	}
-	f.close();
-	
-	std::ifstream F("interpolated_values.txt");
-	if (!F){
-		std::cerr << "Error: input file interpolated_values.txt not found!"<<std::endl;
-		exit(EXIT_FAILURE);
-	}	
-	
-	num = 0;
-	while(num < N){
-		F >> _data_n[num];
-		if(F.eof()) 
-			break;
-		num++;
-	}
-	F.close();	
-	
-	_data_n.resize(num);
-
 	Constants(T0);
 	Material(PhiB, sigman, mu0n);
 	Quad(nq);
-	Algor(pmaxit, maxit, maxit_mnewton, nsteps_check, maxnpincr, ptoll, toll, dt0, dtcut, dtmax, dtmin, maxdtincr);
-	Device(Vshift, Csb, t_semic, t_ins, L, ins, pins, contacts, section, Vdrain, maxcycle);
-	
-		// for(unsigned i=0; i<_data_n.size(); i++){
-		// _data_n[i] *= (-1)/_q;
-	// }
-	
-		// std::vector<double>::iterator it;
-		// it = std::unique (_data_n.begin(), _data_n.end());			///lento
-		// _data_n.resize( std::distance(_data_n.begin(),it) );		///lento
-		// std::sort(_data_n.begin(), _data_n.end());					///lento	
-	
-	// std::ofstream Fout("out.txt");
-	// for(unsigned i=0; i<_data_n.size(); i++){
-		// Fout<<_data_n[i]<<std::endl;
-	// }
-	// Fout.close();
-	
-		// std::cout<<"data n size = "<<_data_n.size()<<std::endl;
-	// for(int i=0; i<20; i++){
-		// std::cout<<"data n = "<<_data_n[i]<<std::endl;
-	// }
+	Algor(pmaxit, ptoll);
+	Device(Vshift, Csb, t_semic, t_ins, L, ins, pins, contacts, section, Vdrain, VG, VB, maxcycle);
 
-};
-
-std::vector<double>& Probl::get_data_phi_lumo(){
-	return _data_phi_lumo;
-};
-
-std::vector<double> Probl::get_data_n(){
-	return _data_n;
 };
 
 
@@ -577,8 +338,8 @@ Probl::Laplace(){
 	bim2a_advection_diffusion (_msh, epsilon, psi, A, default_ord);
 	
 	int indexT = _nTrees-1;
-	std::tuple<int, int, func_quad>	tupla1(0,2,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _PhiB;}),
-									tupla2(indexT,3,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _Vshift;});
+	std::tuple<int, int, func_quad>	tupla1(0,2,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _PhiB + _VB;}),
+									tupla2(indexT,3,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _Vshift + _VG;});
 												
 	dirichlet_bcs_quad	bcs;
 	bcs.push_back(tupla1);
@@ -658,8 +419,8 @@ Probl::LinearPoisson(){
 	bim2a_reaction (_msh, ecoeff, ncoeff, M, default_ord);
 	
 	int indexT = _nTrees-1;	
-	std::tuple<int, int, func_quad>	tupla1(0,2,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _PhiB;}),
-									tupla2(indexT,3,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _Vshift;});
+	std::tuple<int, int, func_quad>	tupla1(0,2,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _PhiB + _VB;}),
+									tupla2(indexT,3,[&](tmesh::quadrant_iterator quad, tmesh::idx_t i){return _Vshift + _VG;});
 												
 	dirichlet_bcs_quad	bcs;
 	bcs.push_back(tupla1);
@@ -751,14 +512,14 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
             }
         }
     }
-	bim2a_advection_diffusion (_msh, epsilon, psi, A, default_ord);
+	bim2a_advection_diffusion (_msh, epsilon, psi, A, default_ord, default_ord);
 	
 	for (unsigned i=0; i<_insulator.size(); i++){
 		if(_insulator[i]==0){
 			ecoeff[i] = 1;
 		}
 	}
-	bim2a_reaction (_msh, ecoeff, ncoeff, M, default_ord);	
+	bim2a_reaction (_msh, ecoeff, ncoeff, M, default_ord, default_ord);	
 	
 	int indexT = _nTrees-1;
 	double	Vshift = _Vshift,
@@ -825,7 +586,7 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 		}
 		
 		double norm;
-		bim2a_norm (_msh,dphi,norm,Inf);
+		Norm (_msh,dphi,norm,Inf);
 		resnrm[iter-1] = norm;
 		std::cout<<"norm = "<<norm<<std::endl;
 		
@@ -853,8 +614,7 @@ Probl::NonLinearPoisson(std::vector<double>& phi0){
 	nin = nout;
 	niter = iter;
 	resnrm.resize(iter);
-	
-	savePoisson(Vin, nin, niter, resnrm, "NLPoissonResults");
+
 };
 
 
@@ -907,7 +667,7 @@ Probl::saveCV(std::vector<double>& V, std::vector<double>& C, const char* FileNa
 
 
 void
-Probl::bim2a_norm (tmesh& msh, const std::vector<double>& v, double& norm, norm_type type)
+Probl::Norm (tmesh& msh, const std::vector<double>& v, double& norm, norm_type type)
 {
   if (type == Inf)
     {
@@ -938,32 +698,6 @@ Probl::bim2a_norm (tmesh& msh, const std::vector<double>& v, double& norm, norm_
     }
 };
 
-
-void
-Probl::saveMat (int nrows, int ncols, std::vector<double>& vals)
-{
-  Matrix oct_jac (nrows, ncols, 0.0);
-  
-  std::copy_n (vals.begin (), vals.size (), oct_jac.fortran_vec ());
-  
-  octave_scalar_map the_map;
-  the_map.assign ("jac", oct_jac);
-  the_map.assign ("nrows", nrows);
-  the_map.assign ("ncols", ncols);
-  
-  octave_io_mode m = gz_write_mode;
-  
-    // Define filename.
-  char FileName[255] = "";
-  sprintf(FileName,"NEWT_jac.gz");
-  
-  // Save to filename.
-  assert (octave_io_open (FileName, m, &m) == 0);
-  assert (octave_save ("jac", octave_value (the_map)) == 0);
-  assert (octave_io_close () == 0);
-};
-
-
 void
 Probl::org_gaussian_charge_n(std::vector<double>& V, std::vector<double>& rhon, std::vector<double>& drhon_dV)
 {
@@ -974,6 +708,17 @@ Probl::org_gaussian_charge_n(std::vector<double>& V, std::vector<double>& rhon, 
 		rhon[i] *= -_q;
     }
 
+    std::vector<double> dn_dV = dn_dV_approx(V);
+	
+	drhon_dV = dn_dV;
+    for(unsigned i=0; i<dn_dV.size(); i++){
+		drhon_dV[i] *= -_q;
+    }
+};
+
+void
+Probl::org_gaussian_charge_n(std::vector<double>& V, std::vector<double>& drhon_dV)
+{
     std::vector<double> dn_dV = dn_dV_approx(V);
 	
 	drhon_dV = dn_dV;
@@ -1038,7 +783,7 @@ Probl::CVcurve(std::vector<double>& phi){
 						ecoeff(nelements,0.0),
 						ncoeff(nnodes,1.0),
 						f(nnodes,0.0),
-						S(_dnodes[1].size(),0.0);
+						S((_dnodes.size()*_dnodes[1].size()),0.0);
 						
 	sparse_matrix::col_iterator J;
     
@@ -1058,32 +803,22 @@ Probl::CVcurve(std::vector<double>& phi){
             }
         }       
     }
-    bim2a_advection_diffusion (_msh, epsilon, psi, A1, default_ord);
+    bim2a_advection_diffusion (_msh, epsilon, psi, A1);
 	
 	for (unsigned i=0; i<_insulator.size(); i++){
 		if(_insulator[i]==0){
 			ecoeff[i] = 1;
 		}
 	}
-	bim2a_reaction (_msh, ecoeff, ncoeff, M1, default_ord);
+	bim2a_reaction (_msh, ecoeff, ncoeff, M1);
 
     org_gaussian_charge_n(phi, rhon, drhon_dV);
     rhon.clear();
-    
-	// for(int i=0; i<nnodes; i++){
-		// if(_scnodes[i] == 0){
-			// drhon_dV[i] = 0;
-		// }
-    // }
-	
-	// f = M*drhon_dV;
 	
 	jac = A1;
 	for(int i=0; i<nnodes; i++){
-		for(J = jac[i].begin(); J!= jac[i].end(); ++J){
-				jac[i][jac.col_idx(J)] += (-1) * M1[i][jac.col_idx(J)]*drhon_dV[jac.col_idx(J)];
-		}
-	}
+		jac[i][i] -= M1[i][i]*drhon_dV[i];
+	}	
 
     int indexT = _nTrees-1;
     std::tuple<int, int, func_quad> tupla1(0,2,[](tmesh::quadrant_iterator quad, tmesh::idx_t i){return 0.0;}),
@@ -1119,15 +854,17 @@ Probl::CVcurve(std::vector<double>& phi){
 	mumps_solver.solve ();
 	mumps_solver.cleanup ();
 	
+	for(int i=0; i<nnodes; i++){
+		dphi[i] *= (-1);
+	}	
+	
 	/// Riassemblo le matrici
-	bim2a_advection_diffusion (_msh, epsilon, psi, A2, default_ord);
-	bim2a_reaction (_msh, ecoeff, ncoeff, M2, default_ord);
+	bim2a_advection_diffusion (_msh, epsilon, psi, A2);
+	bim2a_reaction (_msh, ecoeff, ncoeff, M2);
 	
 	jac = A2;
 	for(int i=0; i<nnodes; i++){
-		for(J = jac[i].begin(); J!= jac[i].end(); ++J){
-				jac[i][jac.col_idx(J)] += (-1) * M2[i][jac.col_idx(J)]*drhon_dV[jac.col_idx(J)];
-		}
+		jac[i][i] -= M2[i][i]*drhon_dV[i];
 	}
 	
 	for(unsigned i=0; i<_dnodes[1].size(); i++){

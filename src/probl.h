@@ -21,17 +21,13 @@
 /**
  * class Probl :
  * It groups all other parameters classes (Constants, Material, Quad, Algor, Device) 
- *	as it contains pointers to them + stores an interpolation table needed when performing Newton's algorithm
- *	Input parameter for its constructor: number of refinement cycles for the mesh.
+ *	Among the input parameters for its constructor: number of refinement cycles for the mesh.
  *	N.B : if n.cycles = 0 then the mesh will be constitute by a single row of elements on the y-axis
  *	otherwise it will be refined n.cycles times and will have 2*n.cycles elements on both the x-axis and the y-axis
  */
 class Probl
 {
 	public:
-		
-	std::vector<double>	_data_phi_lumo;		/**< interpolation table */
-	std::vector<double>	_data_n;			/**< interpolated values */	
 	
 	/// Class to store physical constants
 	/// class	Constants
@@ -45,14 +41,14 @@ class Probl
 	/// class	Material
 	double _eps_semic_r;			/**< relative permittivity of semiconductor */
 	double _eps_ins_r;				/**< relative permittivity of insulator */
-	double _eps_semic;
-	double _eps_ins;
+	double _eps_semic;				/**< permittivity of semiconductor */
+	double _eps_ins;				/**< permittivity of insulator */
 	double _PhiB;					/**< Metal to semiconductor barrier. [eV] */
 	double _N0;						/**< Total number of available states (per unit volume) [m^{-3}] */
 	double _Egap;					/**< LUMO-HOMO energy gap. [eV] */
-	double _sigman;					/**< [J]	the disorder parameter */
+	double _sigman;					/**< the disorder parameter [J] */
 	double _sigman_kT;
-	double _mu0n;					/**< [m^2 V^{-1} s^{-1}] low-field and low-density charge mobility for electrons */
+	double _mu0n;					/**< low-field and low-density charge mobility for electrons [m^2 V^{-1} s^{-1}] */
 	double _ni;
 		
 	/// Stores nodes and weigths of Gauss-Hermite quadrature rules
@@ -63,24 +59,7 @@ class Probl
 	/// Stores parameters for loops
 	/// class	Algor
 	int _pmaxit;
-	int _maxit;
-	int _maxit_mnewton;
-	int _nsteps_check;
-	double _maxnpincr;
 	double _ptoll;
-	double _toll;
-	double _dt0;
-	double _dtcut;
-	double _dtmax;
-	double _dtmin;
-	double _maxdtincr;
-
-	bool _clampOnOff;
-	bool _savedata;
-	
-	std::vector<double> _colscaling;
-	std::vector<double> _rowscaling;
-	std::vector<int> _clamping;
 	
 	///	Class which stores the geomterical settings of the device,
 	///	generate the mesh and assemble vectors useful to understand
@@ -95,11 +74,12 @@ class Probl
 	
 	double _Vshift;								/**< [V] shift potential sensed at the gate terminal */
 	double _VG;									/**< [V] voltage applied at the gate terminal */
+	double _VB;									/**< [V] voltage applied at the bulk terminal */
 	double _Csb;								/**< [F] value of the capacitor of the external control circuit */
 	double _t_semic;							/**< [m] thickness of semiconductor, along y-axis */
-	double _t_ins;
-	double _L;
-	int _nTrees;
+	double _t_ins;								/**< [m] thickness of insulator, along y-axis */
+	double _L;									/**< [m] width of device, along x-axis */
+	int _nTrees;								/**< number of Trees in the mesh */
 
 	std::vector<int> _scnodes;					/**< vector of 1s and 0s; 1 = node in the semiconductor, 0 = node in the insulator */
 	std::vector<int> _insulator;				/**< vector of 1s and 0s; 0 = element in the semiconductor, 1 = element in the insulator */
@@ -107,42 +87,40 @@ class Probl
 	std::array<int,2> _contacts;				/**< number of the geometrical border containing the side edges where the contacts are :
 												*   edge 2 of tree 0, edge 3 of last tree
 												*/
-	std::vector<int> _alldnodes;				/**< vector of all boundary nodes on bulk and gate */
 	std::vector< std::vector<int> > _dnodes;	/**< vector with gate nodes + vector with bulk nodes */
 	
-	tmesh	_msh;
+	tmesh	_msh;					/**< quadrangular mesh */
 	
-	std::vector<double> Vin;		/**< Initial guess for the potential */
-	std::vector<double> nin;		/**< Initial guess for the electron density */
-	std::vector<double> resnrm;		/**< residual vector */
-	int niter;						/**< n. iterations required to compute the initial guess */
-		
+	std::vector<double> Vin;		/**< Output potential */
+	std::vector<double> nin;		/**< Output electron density */
+	std::vector<double> resnrm;		/**< residual norm */
+	int niter;						/**< n. iterations required until convergence */
+	
 	Probl(	int maxcycle,
-			double T0 = 295,																												// Constants
+			double T0 = 300,																												// Constants
 			double PhiB = 0.54, double sigman = 2.6, double mu0n = 4.29110133911508e-6,														// Material
 			int nq = 101,																													// Quad
-			int pmaxit = 1000, int maxit = 5, int maxit_mnewton = 30, int nsteps_check = 3, double maxnpincr = 1e-3, double ptoll = 1e-10, 
-			double toll = 1e-4, double dt0 = 1e-10, double dtcut = 0.25, double dtmax = 1, double dtmin = 1e-12, double maxdtincr = 2,		// Algor
+			int pmaxit = 1000, double ptoll = 1e-10,																						// Algor
 			double Vshift = 1.79738, double Csb = 1.16183675549126e-11, double t_semic = 3.49436549222355e-8, double t_ins = 4.41e-7, 
-			// double L = 1e-5, bool ins = true,																								// Device
-			double L = 1.4e-3, bool ins = true,
-			std::array<int,2> pins = {1, 0}, std::array<int,2> contacts = {2, 3}, double section = 0.00000081, double Vdrain = 5);			// constructor
+			double L = 1.4e-3, bool ins = true,																								// Device
+			std::array<int,2> pins = {1, 0}, std::array<int,2> contacts = {2, 3}, double section = 0.00000081, double Vdrain = 5, 
+			double VG = 0.0, double VB = 0.0);			// constructor
 
     /// METHODS
 
 	void Constants(double T0);
 	void Material(double PhiB, double sigman, double mu0n);
 	void Quad(int n);
-	void Algor(	int pmaxit, int maxit, int maxit_mnewton, int nsteps_check, double maxnpincr, double ptoll, 
-				double toll, double dt0, double dtcut, double dtmax, double dtmin, double maxdtincr);
+	void Algor(	int pmaxit, double ptoll);				
 	void Device(double Vshift, double Csb, double t_semic, double t_ins, double L, bool ins, 
-				std::array<int,2>& pins, std::array<int,2>& contacts, double section, double Vdrain, int maxcycle);
+				std::array<int,2>& pins, std::array<int,2>& contacts, double section, double Vdrain, double VG, double VB, int maxcycle);
 				
 	void Laplace();
 	void LinearPoisson();
 	void NonLinearPoisson(std::vector<double>& phi0);
 	
-	void org_gaussian_charge_n( std::vector<double>& V, std::vector<double>& rhon, std::vector<double>& drhon_dV);
+	void org_gaussian_charge_n(std::vector<double>& V, std::vector<double>& rhon, std::vector<double>& drhon_dV);
+	void org_gaussian_charge_n(std::vector<double>& V, std::vector<double>& drhon_dV);
 							
 	std::vector<double> n_approx(  std::vector<double>& V);
 	std::vector<double> dn_dV_approx(  std::vector<double>& V);
@@ -151,48 +129,14 @@ class Probl
 	
 	/// save methods
 	void savePoisson(std::vector<double>& V, std::vector<double>& n, double niter, std::vector<double>& resnrm, const char* FileName);
-	void saveMat (int nrows, int ncols, std::vector<double>& vals);
 	void saveCV(std::vector<double>& V, std::vector<double>& C, const char* FileName);
 
 	/// Compute the (Inf,L2,H1) norm of a piecewise linear function.
-	void bim2a_norm (tmesh& msh, const std::vector<double>& v, double& norm, norm_type type);
-	
-	/// get methods
-	std::vector<double>& get_data_phi_lumo();
-	std::vector<double> get_data_n();
+	void Norm (tmesh& msh, const std::vector<double>& v, double& norm, norm_type type);
 	
 	/// set methods
 	void set_T0(double T0);
-	
-	void set_eps_ins_r(double eps_ins_r);
-	void set_eps_ins(double eps_ins);
-	void set_PhiB(double PhiB);
-	void set_sigman(double sigman);
-	void set_sigmankT(double sigmankT);
-	void set_mu0n(double mu0n);
-	void set_ni(double ni);
-	
-	void set_pmaxit(int pmaxit);
-	void set_maxit(int maxit);
-	void set_maxit_mnewton(int maxit_mnewton);
-	void set_nsteps_check(int nsteps_check);
-	void set_maxnpincr(double maxnpincr);
-	void set_ptoll(double ptoll);
-	void set_toll(double toll);
-	void set_dt0(double dt0);
-	void set_dtcut(double dtcut);
-	void set_dtmax(double dtmax);
-	void set_dtmin(double dtmin);
-	void set_maxdtincr(double maxdtincr);
-	
-	void set_Vshift(double Vshift);
-	void set_Csb(double Csb);
-	void set_Vdrain(double Vdrain);
-	void set_section(double section);
-	void set_VG(double Vg);
-	
-	tmesh::idx_t get_msh_nodes();
-	tmesh::idx_t get_msh_elem();
+
 };
 
 #endif /* PROBL_H */

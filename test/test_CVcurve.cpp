@@ -19,8 +19,7 @@ int main(int argc, char** argv){
 	
 	/// n. refinement cycles : 1
 	/// the mesh is constituted only by two rows of quadrants along the y-axis
-	Probl P(1);	
-	P.set_T0(295);
+	Probl P(1, 295);
 
 	tstart_probl = clock() - tstart_probl;
 	std::cout<<"Construction class Probl run time: "<<tstart_probl<<" , ("<<((float)tstart_probl)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
@@ -39,23 +38,23 @@ int main(int argc, char** argv){
 						Q;
 	
 	tstart_p = clock();
-	P.set_VG( VG_min );
+	P._VG =  VG_min ;
 	for(int i=0; i<length; i++){
 		
 		std::cout<<"iter = "<<i<<std::endl;
 		
-		P.set_VG( P._VG+dV );
+		P._VG += dV ;
 		V[i] = P._VG;
 		
 		/// Solve Non Linear Poisson
 		P.NonLinearPoisson(Vguess);
-		P.savePoisson(P.Vin, P.nin, P.niter, P.resnrm, "NLPoisson_output.gz");
+		P.savePoisson(P.Vin, P.nin, P.niter, P.resnrm, "NLPoisson_output");
 
 		c = P.CVcurve(P.Vin);
 		C[i] = c;
 		
 	}
-	P.saveCV(V, C, "CVcurve");
+	P.saveCV(V, C, "CVcurve_output");
 
 	
 	tstart_p = clock() - tstart_p;
