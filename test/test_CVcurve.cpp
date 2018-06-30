@@ -33,9 +33,9 @@ int main(int argc, char** argv) {
 		length = std::abs(VG_max - VG_min) / dV;
 
 	std::vector<double>	Vguess(nnodes, P._PhiB),
-		C(length, 0.0),
-		V(length, 0.0),
-		Q;
+						C(length, 0.0),
+						V(length, 0.0),
+						Q;
 
 	tstart_p = clock();
 	P._VG = VG_min;
