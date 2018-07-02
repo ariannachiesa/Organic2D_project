@@ -1,6 +1,6 @@
 Arianna Chiesa
 
-2D Simulation of Organic Thin Film Transistors
+2D Simulation of Organic Capacitors
 
 project for the course: "Advanced Programming for Scientific Computing"
 
@@ -16,20 +16,14 @@ Build and execution of the program:
 
 3. Makefile
 
-4. input files:	the data set named "input_data.csv"
+4. latest version of libraries Bim++ and p4est must be installed.
 
-				"interpolation_table.txt"
-				
-				"interpolated_values.txt"
-
-5. libraries Bim++ and p4est must be installed.
-
-N.B. everything must be placed in a root folder, (3) and (4) outside the 'src' or 'test' folders.
+N.B. everything must be placed in a root folder, (3) outside the 'src' or 'test' folders.
 
 
 	How to build the code:
 
-1. 'cd' to the directory containing the root folder where (1), (2), (3) and (4) are.
+1. 'cd' to the directory containing the root folder where (1), (2), (3) are.
 
 2. Type 'make' to compile.
 
@@ -37,11 +31,25 @@ N.B. Now a 'build' folder should have been created in the root folder.
 
 
 	How to execute the code:
-	
-1. place the input files (4) in the new folder 'build'.
   
-2. 'cd' to the 'build' directory.
+1. 'cd' to the 'build' directory.
   
-3. type './name_of_test' to execute.
+2. type './name_of_test' to execute.
 
-N.B. output files will be created in the 'build' folder.
+
+N.B. 1: output files will be created in the 'build' folder.
+
+N.B. 2: results can be visualized in Octave by suitable Octave scripts provided in the 'test' folder.
+
+
+- 'Vguess_vis.m' is for the visualization of the initial guess provided to NLPoisson problem;
+prior to run it, output file 'Vguess_visualization' must be loaded in the Octave Workspace.
+
+- 'Poisson_visual.m' is for the visualization of Laplace/Linear Poisson/Non-Linear Poisson problem results;
+prior to run it, output file 'Laplace/LinPoisson/NLPoisson_output' must be loaded in the Octave Workspace.
+
+- 'Poisson_3D_vis.m' is for a 3D visualization of the results at the previous point;
+prior to run it, output files 'Vguess_visualization' and 'Laplace/LinPoisson/NLPoisson_output' must be loaded in the Octave Workspace.
+
+- 'CV_visual.m' is for the visualization of the computed CV curve;
+prior to run it, output file 'CVcurve_output' must be loaded in the Octave Workspace.

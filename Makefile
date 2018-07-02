@@ -5,8 +5,6 @@ all: $(BUILD_DIR)/test1_mesh $(BUILD_DIR)/test2_mesh $(BUILD_DIR)/test3_mesh $(B
 $(BUILD_DIR)/test_LinPoisson $(BUILD_DIR)/test1_NLPoisson $(BUILD_DIR)/test2_NLPoisson $(BUILD_DIR)/test_CVcurve
 
 # Directory where Bim++ is installed.
-#BIMPP_PREFIX = $(shell pwd)/../bimpp
-#BIMPP_PREFIX = ./bimpp_install
 BIMPP_PREFIX = /vagrant/bimpp_install
 
 SRCS := $(shell find $(SRC_DIRS) -name '*.cpp')

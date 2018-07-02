@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     C[i] = c;
 
   }
-  P.saveCV(V, C, "CVcurve_output	");
+  P.saveCV(V, C, "CVcurve_output");
 
 
   tstart_p = clock() - tstart_p;
