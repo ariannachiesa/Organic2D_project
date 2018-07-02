@@ -24,7 +24,7 @@ int main(int argc, char** argv){
   tstart_probl = clock() - tstart_probl;
   std::cout<<"Construction class Probl run time: "<<tstart_probl<<" , ("<<((float)tstart_probl)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
 	
-  /// Solve Laplace
+  /// Solve Laplace problem with default boundary conditions
   tstart_p = clock();
   P.Laplace();
   P.savePoisson(P.Vin, P.nin, P.niter, P.resnrm, "Laplace_output");

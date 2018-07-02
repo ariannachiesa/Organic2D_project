@@ -31,7 +31,7 @@ int main(int argc, char** argv){
   /// Export nodal field Vguess to a octbin.gz file for visualization.
   P._msh.octbin_export ("Vguess_visualization", Vguess, default_ord);
 	
-  /// Solve Linear Poisson
+  /// Solve Linear Poisson problem with default boundary conditions
   tstart_p = clock();
   P.LinearPoisson();
   P.savePoisson(P.Vin, P.nin, P.niter, P.resnrm, "LinPoisson_output");

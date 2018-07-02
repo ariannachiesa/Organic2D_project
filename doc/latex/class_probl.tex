@@ -1,0 +1,210 @@
+\hypertarget{class_probl}{}\section{Probl Class Reference}
+\label{class_probl}\index{Probl@{Probl}}
+
+
+{\ttfamily \#include $<$probl.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_probl_a692b15a88516cb52437bd60f33a8edf0}\label{class_probl_a692b15a88516cb52437bd60f33a8edf0}} 
+\mbox{\hyperlink{class_probl_a692b15a88516cb52437bd60f33a8edf0}{Probl}} (int maxcycle, double T0=300, double PhiB=0.\+54, double sigman=2.\+6, double mu0n=4.\+29110133911508e-\/6, int nq=101, int pmaxit=1000, double ptoll=1e-\/10, double Vshift=1.\+79738, double Csb=1.\+16183675549126e-\/11, double t\+\_\+semic=3.\+49436549222355e-\/8, double t\+\_\+ins=4.\+41e-\/7, double L=1.\+4e-\/3, bool ins=true, std\+::array$<$ int, 2 $>$ pins=\{1, 0\}, std\+::array$<$ int, 2 $>$ contacts=\{2, 3\}, double section=0.\+00000081, double Vdrain=5, double V\+G=0.\+0, double V\+B=0.\+0)
+\begin{DoxyCompactList}\small\item\em Constructor. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_ab73c319317dcb9cce6b491b0d13ed882}\label{class_probl_ab73c319317dcb9cce6b491b0d13ed882}} 
+void \mbox{\hyperlink{class_probl_ab73c319317dcb9cce6b491b0d13ed882}{Constants}} (double T0)
+\begin{DoxyCompactList}\small\item\em Set physical constants. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_af3f026d191bae1943873bd6cb150aedc}\label{class_probl_af3f026d191bae1943873bd6cb150aedc}} 
+void \mbox{\hyperlink{class_probl_af3f026d191bae1943873bd6cb150aedc}{Material}} (double PhiB, double sigman, double mu0n)
+\begin{DoxyCompactList}\small\item\em Set material parameters. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a20e64318e853ac58c258c4c1d20a2315}\label{class_probl_a20e64318e853ac58c258c4c1d20a2315}} 
+void \mbox{\hyperlink{class_probl_a20e64318e853ac58c258c4c1d20a2315}{Quad}} (int n)
+\begin{DoxyCompactList}\small\item\em Computes nodes and wigths for Gaussian quadrature rules. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_aef98437ee923d5ecc17e01bc85656522}\label{class_probl_aef98437ee923d5ecc17e01bc85656522}} 
+void \mbox{\hyperlink{class_probl_aef98437ee923d5ecc17e01bc85656522}{Algor}} (int pmaxit, double ptoll)
+\begin{DoxyCompactList}\small\item\em Set tolerances for Newton\textquotesingle{}s method. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a60041def522e51a75d21e172362b6944}\label{class_probl_a60041def522e51a75d21e172362b6944}} 
+void \mbox{\hyperlink{class_probl_a60041def522e51a75d21e172362b6944}{Device}} (double Vshift, double Csb, double t\+\_\+semic, double t\+\_\+ins, double L, bool ins, std\+::array$<$ int, 2 $>$ \&pins, std\+::array$<$ int, 2 $>$ \&contacts, double section, double Vdrain, double VG, double VB, int maxcycle)
+\begin{DoxyCompactList}\small\item\em Set geometrical/physical parameters of the device. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a07cc161806dfcce5e7cdf980b5e211c4}\label{class_probl_a07cc161806dfcce5e7cdf980b5e211c4}} 
+void \mbox{\hyperlink{class_probl_a07cc161806dfcce5e7cdf980b5e211c4}{Laplace}} ()
+\begin{DoxyCompactList}\small\item\em Solve Laplace problem. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a7ddf75d53dc3cd0ceaebad0e8b87c87c}\label{class_probl_a7ddf75d53dc3cd0ceaebad0e8b87c87c}} 
+void \mbox{\hyperlink{class_probl_a7ddf75d53dc3cd0ceaebad0e8b87c87c}{Linear\+Poisson}} ()
+\begin{DoxyCompactList}\small\item\em Solve Linear Poisson problem. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a1058c4e0191ea44dcbcd58426247b315}\label{class_probl_a1058c4e0191ea44dcbcd58426247b315}} 
+void \mbox{\hyperlink{class_probl_a1058c4e0191ea44dcbcd58426247b315}{Non\+Linear\+Poisson}} (std\+::vector$<$ double $>$ \&phi0)
+\begin{DoxyCompactList}\small\item\em Solve Non-\/\+Linear Poisson problem. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a057e578e917c1c45e58988b4f922e164}\label{class_probl_a057e578e917c1c45e58988b4f922e164}} 
+void \mbox{\hyperlink{class_probl_a057e578e917c1c45e58988b4f922e164}{org\+\_\+gaussian\+\_\+charge\+\_\+n}} (std\+::vector$<$ double $>$ \&V, std\+::vector$<$ double $>$ \&rhon, std\+::vector$<$ double $>$ \&drhon\+\_\+dV)
+\begin{DoxyCompactList}\small\item\em Computes electron charge density and its derivative depending on the potential. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a9c8e936ee0a8ca0323710d5fe7266491}\label{class_probl_a9c8e936ee0a8ca0323710d5fe7266491}} 
+void {\bfseries org\+\_\+gaussian\+\_\+charge\+\_\+n} (std\+::vector$<$ double $>$ \&V, std\+::vector$<$ double $>$ \&drhon\+\_\+dV)
+\item 
+\mbox{\Hypertarget{class_probl_aac72244a374b4160cd82d04d5c24d433}\label{class_probl_aac72244a374b4160cd82d04d5c24d433}} 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{class_probl_aac72244a374b4160cd82d04d5c24d433}{n\+\_\+approx}} (std\+::vector$<$ double $>$ \&V)
+\begin{DoxyCompactList}\small\item\em Computes the approximation of n with Gaussian formulas. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a716429c0b4a58817012bc0f5f6250f43}\label{class_probl_a716429c0b4a58817012bc0f5f6250f43}} 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{class_probl_a716429c0b4a58817012bc0f5f6250f43}{dn\+\_\+d\+V\+\_\+approx}} (std\+::vector$<$ double $>$ \&V)
+\begin{DoxyCompactList}\small\item\em Computes the approximation of the derivative of n with Gaussian formulas. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_ade6c6a86032c185a6043e4bf1c84b120}\label{class_probl_ade6c6a86032c185a6043e4bf1c84b120}} 
+double \mbox{\hyperlink{class_probl_ade6c6a86032c185a6043e4bf1c84b120}{C\+Vcurve}} (std\+::vector$<$ double $>$ \&phi)
+\begin{DoxyCompactList}\small\item\em Computes capacitance of the M\+IS capacitor. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_ad04cfadb29011237c97f8c5837bc0a09}\label{class_probl_ad04cfadb29011237c97f8c5837bc0a09}} 
+void \mbox{\hyperlink{class_probl_ad04cfadb29011237c97f8c5837bc0a09}{save\+Poisson}} (std\+::vector$<$ double $>$ \&V, std\+::vector$<$ double $>$ \&n, double \mbox{\hyperlink{class_probl_a316f343116c835fc18e95aeec2f87407}{niter}}, std\+::vector$<$ double $>$ \&\mbox{\hyperlink{class_probl_a8366d5132536de44debdda93a930a4cc}{resnrm}}, const char $\ast$File\+Name)
+\begin{DoxyCompactList}\small\item\em Save output of the Poisson methods. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a7a5c9f01a55b9c40bdd88bec55d2d81d}\label{class_probl_a7a5c9f01a55b9c40bdd88bec55d2d81d}} 
+void \mbox{\hyperlink{class_probl_a7a5c9f01a55b9c40bdd88bec55d2d81d}{save\+CV}} (std\+::vector$<$ double $>$ \&V, std\+::vector$<$ double $>$ \&C, const char $\ast$File\+Name)
+\begin{DoxyCompactList}\small\item\em Save output of the C\+Vcurve method. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a5f23469327dd5e2c4e9cd80e30c3f64a}\label{class_probl_a5f23469327dd5e2c4e9cd80e30c3f64a}} 
+void \mbox{\hyperlink{class_probl_a5f23469327dd5e2c4e9cd80e30c3f64a}{Norm}} (tmesh \&msh, const std\+::vector$<$ double $>$ \&v, double \&norm, norm\+\_\+type type)
+\begin{DoxyCompactList}\small\item\em Compute the (Inf,L2,H1) norm of a piecewise linear function. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{class_probl_a015de30e9e1847638ec206b7d0341d8a}{set\+\_\+\+T0}} (double T0)
+\begin{DoxyCompactList}\small\item\em Set T0 method. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_probl_a478df048bedd662ffc571c6796c39bd5}\label{class_probl_a478df048bedd662ffc571c6796c39bd5}} 
+double \mbox{\hyperlink{class_probl_a478df048bedd662ffc571c6796c39bd5}{\+\_\+\+T0}}
+\begin{DoxyCompactList}\small\item\em Absolute temperature. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a4bac9f88e5950d14cdf989dde9d8ad3a}\label{class_probl_a4bac9f88e5950d14cdf989dde9d8ad3a}} 
+double \mbox{\hyperlink{class_probl_a4bac9f88e5950d14cdf989dde9d8ad3a}{\+\_\+\+Kb}}
+\begin{DoxyCompactList}\small\item\em Boltzmann\textquotesingle{}s constant. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a3ce481ea33664bab950f0a7e5aa5514f}\label{class_probl_a3ce481ea33664bab950f0a7e5aa5514f}} 
+double \mbox{\hyperlink{class_probl_a3ce481ea33664bab950f0a7e5aa5514f}{\+\_\+q}}
+\begin{DoxyCompactList}\small\item\em Electron charge. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_ab8c2d450dab5f4b31784e4e74bc2981d}\label{class_probl_ab8c2d450dab5f4b31784e4e74bc2981d}} 
+double \mbox{\hyperlink{class_probl_ab8c2d450dab5f4b31784e4e74bc2981d}{\+\_\+eps0}}
+\begin{DoxyCompactList}\small\item\em Vacuum permittivity. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a47cf7f28843c6b59910e6f68cee8e62b}\label{class_probl_a47cf7f28843c6b59910e6f68cee8e62b}} 
+double \mbox{\hyperlink{class_probl_a47cf7f28843c6b59910e6f68cee8e62b}{\+\_\+\+Vth}}
+\begin{DoxyCompactList}\small\item\em Threshold voltage. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a88564b00d94b1dffd93e5d109707e0e8}\label{class_probl_a88564b00d94b1dffd93e5d109707e0e8}} 
+double \mbox{\hyperlink{class_probl_a88564b00d94b1dffd93e5d109707e0e8}{\+\_\+eps\+\_\+semic\+\_\+r}}
+\begin{DoxyCompactList}\small\item\em Relative permittivity of semiconductor. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a220382bc676780448992b57a9bae1a5c}\label{class_probl_a220382bc676780448992b57a9bae1a5c}} 
+double \mbox{\hyperlink{class_probl_a220382bc676780448992b57a9bae1a5c}{\+\_\+eps\+\_\+ins\+\_\+r}}
+\begin{DoxyCompactList}\small\item\em Relative permittivity of insulator. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a150be16b329bcc39d0f1dfe6fa2d090d}\label{class_probl_a150be16b329bcc39d0f1dfe6fa2d090d}} 
+double \mbox{\hyperlink{class_probl_a150be16b329bcc39d0f1dfe6fa2d090d}{\+\_\+eps\+\_\+semic}}
+\begin{DoxyCompactList}\small\item\em Permittivity of semiconductor. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a512685085ee09e514df373b4b778f7a8}\label{class_probl_a512685085ee09e514df373b4b778f7a8}} 
+double \mbox{\hyperlink{class_probl_a512685085ee09e514df373b4b778f7a8}{\+\_\+eps\+\_\+ins}}
+\begin{DoxyCompactList}\small\item\em Permittivity of insulator. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a37f80bf6f219fb96b047457e4eb25bdf}\label{class_probl_a37f80bf6f219fb96b047457e4eb25bdf}} 
+double \mbox{\hyperlink{class_probl_a37f80bf6f219fb96b047457e4eb25bdf}{\+\_\+\+PhiB}}
+\begin{DoxyCompactList}\small\item\em Metal to semiconductor barrier. \mbox{[}eV\mbox{]}. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a5be218969c9f1491b82367cf6e59d5c6}\label{class_probl_a5be218969c9f1491b82367cf6e59d5c6}} 
+double \mbox{\hyperlink{class_probl_a5be218969c9f1491b82367cf6e59d5c6}{\+\_\+\+N0}}
+\begin{DoxyCompactList}\small\item\em Total number of available states (per unit volume) \mbox{[}m$^\wedge$\{-\/3\}\mbox{]}. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a4050fa19ae8724f4f0acb0f2cc31ef39}\label{class_probl_a4050fa19ae8724f4f0acb0f2cc31ef39}} 
+double \mbox{\hyperlink{class_probl_a4050fa19ae8724f4f0acb0f2cc31ef39}{\+\_\+\+Egap}}
+\begin{DoxyCompactList}\small\item\em Energy gap. \mbox{[}eV\mbox{]}. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a8d4d09fda48331be283340d85d3656c8}\label{class_probl_a8d4d09fda48331be283340d85d3656c8}} 
+double \mbox{\hyperlink{class_probl_a8d4d09fda48331be283340d85d3656c8}{\+\_\+sigman}}
+\begin{DoxyCompactList}\small\item\em Disorder parameter \mbox{[}J\mbox{]}. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a6bc0309fcfce8cabb6703fa69bd49bb1}\label{class_probl_a6bc0309fcfce8cabb6703fa69bd49bb1}} 
+double \mbox{\hyperlink{class_probl_a6bc0309fcfce8cabb6703fa69bd49bb1}{\+\_\+sigman\+\_\+kT}}
+\begin{DoxyCompactList}\small\item\em sigman / (Kb $\ast$ T0) \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_afcdceba73c92492bea0c8c5fb13831c3}\label{class_probl_afcdceba73c92492bea0c8c5fb13831c3}} 
+double \mbox{\hyperlink{class_probl_afcdceba73c92492bea0c8c5fb13831c3}{\+\_\+mu0n}}
+\begin{DoxyCompactList}\small\item\em Low-\/field and low-\/density charge mobility for electrons \mbox{[}m$^\wedge$2 V$^\wedge$\{-\/1\} s$^\wedge$\{-\/1\}\mbox{]}. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_ac27d218a09643f35d61ef209a3413ffd}\label{class_probl_ac27d218a09643f35d61ef209a3413ffd}} 
+double \mbox{\hyperlink{class_probl_ac27d218a09643f35d61ef209a3413ffd}{\+\_\+ni}}
+\begin{DoxyCompactList}\small\item\em Intrinsic concentration of electrons. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_add30fda0d8314c3ee7fa183e732ae9de}\label{class_probl_add30fda0d8314c3ee7fa183e732ae9de}} 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{class_probl_add30fda0d8314c3ee7fa183e732ae9de}{\+\_\+gx}}
+\begin{DoxyCompactList}\small\item\em Vector of nodes for quadrature rules. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a7bd984626a448c6c78f56e1f1dad7920}\label{class_probl_a7bd984626a448c6c78f56e1f1dad7920}} 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{class_probl_a7bd984626a448c6c78f56e1f1dad7920}{\+\_\+gw}}
+\begin{DoxyCompactList}\small\item\em Vector of weigths for quadrature rules. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a2c908e7f736afa1ae46b65a06d8cde65}\label{class_probl_a2c908e7f736afa1ae46b65a06d8cde65}} 
+int \mbox{\hyperlink{class_probl_a2c908e7f736afa1ae46b65a06d8cde65}{\+\_\+pmaxit}}
+\begin{DoxyCompactList}\small\item\em Maximum allowed number of iterations. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a3ffc65598e43d2f3544ebb5ca3d30370}\label{class_probl_a3ffc65598e43d2f3544ebb5ca3d30370}} 
+double \mbox{\hyperlink{class_probl_a3ffc65598e43d2f3544ebb5ca3d30370}{\+\_\+ptoll}}
+\begin{DoxyCompactList}\small\item\em Tolerances on th residual norm of the increment. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a4d865364c4f14de03a29c80b5f17c13a}\label{class_probl_a4d865364c4f14de03a29c80b5f17c13a}} 
+bool \mbox{\hyperlink{class_probl_a4d865364c4f14de03a29c80b5f17c13a}{\+\_\+ins}}
+\begin{DoxyCompactList}\small\item\em true = (default) if insulator is present , false = if there\textquotesingle{}s only semiconductor \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a53abc767656e3839d81da3c3871a4bad}\label{class_probl_a53abc767656e3839d81da3c3871a4bad}} 
+double \mbox{\hyperlink{class_probl_a53abc767656e3839d81da3c3871a4bad}{\+\_\+section}}
+\begin{DoxyCompactList}\small\item\em Device section \mbox{[}m$^\wedge$2\mbox{]}. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_afad911eeef119fd9fd5f032c653402bb}\label{class_probl_afad911eeef119fd9fd5f032c653402bb}} 
+double \mbox{\hyperlink{class_probl_afad911eeef119fd9fd5f032c653402bb}{\+\_\+\+Efield}}
+\begin{DoxyCompactList}\small\item\em Device source-\/drain electric field \mbox{[}V / m\mbox{]}. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_ad4160e4357c48021d7f96a8499353a54}\label{class_probl_ad4160e4357c48021d7f96a8499353a54}} 
+double \mbox{\hyperlink{class_probl_ad4160e4357c48021d7f96a8499353a54}{\+\_\+\+Vshift}}
+\begin{DoxyCompactList}\small\item\em Shift potential sensed at the gate terminal \mbox{[}V\mbox{]}. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_ae52092839f1dc1dab7e6b076b0ee272b}\label{class_probl_ae52092839f1dc1dab7e6b076b0ee272b}} 
+double \mbox{\hyperlink{class_probl_ae52092839f1dc1dab7e6b076b0ee272b}{\+\_\+\+VG}}
+\begin{DoxyCompactList}\small\item\em Voltage applied at the gate terminal \mbox{[}V\mbox{]}. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_ad42ca3b122970b9782a1b76349ec4b05}\label{class_probl_ad42ca3b122970b9782a1b76349ec4b05}} 
+double \mbox{\hyperlink{class_probl_ad42ca3b122970b9782a1b76349ec4b05}{\+\_\+\+VB}}
+\begin{DoxyCompactList}\small\item\em Voltage applied at the bulk terminal \mbox{[}V\mbox{]}. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a7a8df6963bf80a8883d3818cf9b4d7e3}\label{class_probl_a7a8df6963bf80a8883d3818cf9b4d7e3}} 
+double \mbox{\hyperlink{class_probl_a7a8df6963bf80a8883d3818cf9b4d7e3}{\+\_\+\+Csb}}
+\begin{DoxyCompactList}\small\item\em Value of the capacitor of the external control circuit \mbox{[}F\mbox{]}. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_ad8663cbe5d931041ea588344559b428a}\label{class_probl_ad8663cbe5d931041ea588344559b428a}} 
+double \mbox{\hyperlink{class_probl_ad8663cbe5d931041ea588344559b428a}{\+\_\+t\+\_\+semic}}
+\begin{DoxyCompactList}\small\item\em Thickness of semiconductor, along y-\/axis \mbox{[}m\mbox{]}. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a134179787ded931e9c2bad46e43563ca}\label{class_probl_a134179787ded931e9c2bad46e43563ca}} 
+double \mbox{\hyperlink{class_probl_a134179787ded931e9c2bad46e43563ca}{\+\_\+t\+\_\+ins}}
+\begin{DoxyCompactList}\small\item\em Thickness of insulator, along y-\/axis \mbox{[}m\mbox{]}. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a5557e696aaf41becde0e346b4389136d}\label{class_probl_a5557e696aaf41becde0e346b4389136d}} 
+double \mbox{\hyperlink{class_probl_a5557e696aaf41becde0e346b4389136d}{\+\_\+L}}
+\begin{DoxyCompactList}\small\item\em Width of device, along x-\/axis \mbox{[}m\mbox{]}. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a59ad6b6c51ba6229118f0c408902aecd}\label{class_probl_a59ad6b6c51ba6229118f0c408902aecd}} 
+int \mbox{\hyperlink{class_probl_a59ad6b6c51ba6229118f0c408902aecd}{\+\_\+n\+Trees}}
+\begin{DoxyCompactList}\small\item\em Number of Trees in the mesh. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_ab1617f0da567c270428c1822f94f880c}\label{class_probl_ab1617f0da567c270428c1822f94f880c}} 
+std\+::vector$<$ int $>$ \mbox{\hyperlink{class_probl_ab1617f0da567c270428c1822f94f880c}{\+\_\+scnodes}}
+\begin{DoxyCompactList}\small\item\em Boolean vector; 1 = node in the semiconductor, 0 = node in the insulator. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a7ab8fbd54730f9963467850348056475}\label{class_probl_a7ab8fbd54730f9963467850348056475}} 
+std\+::vector$<$ int $>$ \mbox{\hyperlink{class_probl_a7ab8fbd54730f9963467850348056475}{\+\_\+insulator}}
+\begin{DoxyCompactList}\small\item\em Boolean vector; 0 = element in the semiconductor, 1 = element in the insulator. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_aacc6e8ee6e40d1a33c11de55dff8ed98}\label{class_probl_aacc6e8ee6e40d1a33c11de55dff8ed98}} 
+std\+::array$<$ int, 2 $>$ \mbox{\hyperlink{class_probl_aacc6e8ee6e40d1a33c11de55dff8ed98}{\+\_\+pins}}
+\begin{DoxyCompactList}\small\item\em \mbox{[}Bulk, gate\mbox{]} \+: region 1 = semiconductor , region 0 = insulator \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_ad0987da6c7975bf9018ff9891012695d}\label{class_probl_ad0987da6c7975bf9018ff9891012695d}} 
+std\+::array$<$ int, 2 $>$ \mbox{\hyperlink{class_probl_ad0987da6c7975bf9018ff9891012695d}{\+\_\+contacts}}
+\begin{DoxyCompactList}\small\item\em Number of the geometrical border containing the side edges where the contacts are\+: edge 2 of tree 0, edge 3 of last tree. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a8889847da2dc2951c2dfa4721eff2c37}\label{class_probl_a8889847da2dc2951c2dfa4721eff2c37}} 
+std\+::vector$<$ std\+::vector$<$ int $>$ $>$ \mbox{\hyperlink{class_probl_a8889847da2dc2951c2dfa4721eff2c37}{\+\_\+dnodes}}
+\begin{DoxyCompactList}\small\item\em Vector with gate nodes + vector with bulk nodes. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_af4f306af8b9db4fd6422ece4eb4d2fe7}\label{class_probl_af4f306af8b9db4fd6422ece4eb4d2fe7}} 
+tmesh \mbox{\hyperlink{class_probl_af4f306af8b9db4fd6422ece4eb4d2fe7}{\+\_\+msh}}
+\begin{DoxyCompactList}\small\item\em Quadrangular mesh. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a28977a40e8789bec175404c711bdcee3}\label{class_probl_a28977a40e8789bec175404c711bdcee3}} 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{class_probl_a28977a40e8789bec175404c711bdcee3}{Vin}}
+\begin{DoxyCompactList}\small\item\em Output potential. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a398affcfb0a2ac6033866f5c6a2d3d27}\label{class_probl_a398affcfb0a2ac6033866f5c6a2d3d27}} 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{class_probl_a398affcfb0a2ac6033866f5c6a2d3d27}{nin}}
+\begin{DoxyCompactList}\small\item\em Output electron density. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a8366d5132536de44debdda93a930a4cc}\label{class_probl_a8366d5132536de44debdda93a930a4cc}} 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{class_probl_a8366d5132536de44debdda93a930a4cc}{resnrm}}
+\begin{DoxyCompactList}\small\item\em Residual norm of the increment. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{class_probl_a316f343116c835fc18e95aeec2f87407}\label{class_probl_a316f343116c835fc18e95aeec2f87407}} 
+int \mbox{\hyperlink{class_probl_a316f343116c835fc18e95aeec2f87407}{niter}}
+\begin{DoxyCompactList}\small\item\em Number of iterations required until convergence. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+class \mbox{\hyperlink{class_probl}{Probl}} \+: It stores informations about the device, material parameters, physical constans, nodes and wiegths for Gaussian quadrature rules, tolerances for algorithms and methods which solve physical problems. Among the input parameters for its constructor\+: number of refinement cycles for the mesh. N.\+B \+: if n.\+cycles = 0 then the mesh will be constitute by a single row of elements on the y-\/axis otherwise it will be refined n.\+cycles-\/times and will have 2$\ast$n.cycles elements on both the x-\/axis and the y-\/axis 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{class_probl_a015de30e9e1847638ec206b7d0341d8a}\label{class_probl_a015de30e9e1847638ec206b7d0341d8a}} 
+\index{Probl@{Probl}!set\+\_\+\+T0@{set\+\_\+\+T0}}
+\index{set\+\_\+\+T0@{set\+\_\+\+T0}!Probl@{Probl}}
+\subsubsection{\texorpdfstring{set\+\_\+\+T0()}{set\_T0()}}
+{\footnotesize\ttfamily void Probl\+::set\+\_\+\+T0 (\begin{DoxyParamCaption}\item[{double}]{T0 }\end{DoxyParamCaption})}
+
+
+
+Set T0 method. 
+
+It sets T0 value and update all the other parameters that depend on the temperature\+: Vth and sigman\+\_\+kT 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+C\+:/\+Users/\+Claudio/\+Desktop/directory/codice/src/\mbox{\hyperlink{probl_8h}{probl.\+h}}\item 
+C\+:/\+Users/\+Claudio/\+Desktop/directory/codice/src/\mbox{\hyperlink{probl_8cpp}{probl.\+cpp}}\end{DoxyCompactItemize}

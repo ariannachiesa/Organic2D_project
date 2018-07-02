@@ -1,3 +1,9 @@
+/*
+  Arianna Chiesa
+  Project for the course:
+  "Advanced Programming for Scientific Computing"
+*/
+
 /*! \file probl.cpp
   \brief Class Problem
 */
@@ -8,7 +14,7 @@ static int
 uniform_refinement (tmesh::quadrant_iterator q)
 { return 1; }
 
-/// Method which sets T0 value and update Vth and sigman_kT values
+
 void 
 Probl::set_T0(double T0)
 {
@@ -47,7 +53,6 @@ Probl::Material(double PhiB, double sigman, double mu0n)
 void
 Probl::Quad(int n)
 {
-  /// Quadrature nodes and weights
   double gx[n],
          gw[n];
   webbur::hermite_compute (n, gx, gw);
@@ -220,7 +225,7 @@ Probl::Device(double Vshift, double Csb, double t_semic, double t_ins, double L,
   row1.clear();
   row2.clear();
 		
-  /// Contacts
+  // Contacts
   _pins = {pins[0], pins[1]};
   _contacts = {contacts[0], contacts[1]};
 		
@@ -298,11 +303,11 @@ Probl::Device(double Vshift, double Csb, double t_semic, double t_ins, double L,
 
 
 Probl::Probl(int maxcycle,
- 	     double T0,				                                            // Constants
-	     double PhiB, double sigman, double mu0n,                                       // Material
-	     int nq,				                                            // Quad
-	     int pmaxit, double ptoll,		                                            // Algor
-	     double Vshift, double Csb, double t_semic, double t_ins, double L, bool ins,   // Device
+ 	     double T0,				                                      
+	     double PhiB, double sigman, double mu0n,                                  
+	     int nq,				                                     
+	     int pmaxit, double ptoll,		                                         
+	     double Vshift, double Csb, double t_semic, double t_ins, double L, bool ins, 
 	     std::array<int,2> pins, std::array<int,2> contacts, double section, double Vdrain, double VG, double VB)
 {
   Constants(T0);
@@ -328,7 +333,7 @@ Probl::Laplace()
   sparse_matrix A;
   A.resize(nnodes);
 	
-  ///Assemble system matrices.	
+  // Assemble system matrices.	
   if(_ins){
     for(unsigned i=0; i<_insulator.size(); i++){
       if(_insulator[i]==1){
@@ -347,10 +352,10 @@ Probl::Laplace()
   bcs.push_back(tupla1);
   bcs.push_back(tupla2);
 	
-  /// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
+  // BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
   bim2a_dirichlet_bc (_msh,bcs,A,f, default_ord);
 	
-  /// Assembling rhs term:
+  // Assembling rhs term.
   phiout = f;
 	
   mumps mumps_solver;
@@ -373,7 +378,7 @@ Probl::Laplace()
   mumps_solver.solve ();
   mumps_solver.cleanup ();
 	
-  /// Post-processing.	
+  // Post-processing.	
   Vin = phiout;
   nin = nout;
   niter = 1;
@@ -402,7 +407,7 @@ Probl::LinearPoisson()
   A.resize(nnodes);
   M.resize(nnodes);
 	
-  ///Assemble system matrices.	
+  // Assemble system matrices.	
   if(_ins){
     for(unsigned i=0; i<_insulator.size(); i++){
       if(_insulator[i]==1){
@@ -439,10 +444,10 @@ Probl::LinearPoisson()
     f[i] *= (-1);
   }
 	
-  /// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
+  // BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
   bim2a_dirichlet_bc (_msh,bcs,A,f, default_ord);
 	
-  /// Assembling rhs term:
+  // Assembling rhs term.
   phiout = f;
 	
   mumps mumps_solver;
@@ -465,7 +470,7 @@ Probl::LinearPoisson()
   mumps_solver.solve ();
   mumps_solver.cleanup ();
 	
-  /// Post-processing.	
+  // Post-processing.	
   for(unsigned i=0; i<_scnodes.size(); i++){
     if(_scnodes[i]==1){
       nout[i] = - rho[i]/_q;
@@ -506,7 +511,7 @@ Probl::NonLinearPoisson(std::vector<double>& phi0)
   M.resize(nnodes);
   resnrm.resize(_pmaxit);
 	
-  ///Assemble system matrices.	
+  // Assemble system matrices.	
   if(_ins){
     for(unsigned i=0; i<_insulator.size(); i++){
       if(_insulator[i]==1){
@@ -557,10 +562,10 @@ Probl::NonLinearPoisson(std::vector<double>& phi0)
       jac[i][i] -= M[i][i]*drho[i];
     }
 		
-    /// BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
+    // BCs Dirichlet type: phi(-t_semic) = PhiB ; phi(t_ins) = Vgate + Vshift;
     bim2a_dirichlet_bc (_msh,bcs,jac,res, default_ord);
 	
-    /// Assembling rhs term:
+    // Assembling rhs term.
     dphi = res;
 		
     mumps mumps_solver;
@@ -600,7 +605,7 @@ Probl::NonLinearPoisson(std::vector<double>& phi0)
 	
   phiout = phi;
 
-  /// Post-processing.
+  // Post-processing.
 	
   org_gaussian_charge_n(phiout, rho,drho);
   drho.clear();
@@ -638,7 +643,6 @@ Probl::savePoisson(std::vector<double>& V, std::vector<double>& n, double niter,
   
   octave_io_mode m = gz_write_mode;
   
-  // Save to filename.
   assert (octave_io_open (FileName, m, &m) == 0);
   assert (octave_save ("Poisson", octave_value (the_map)) == 0);
   assert (octave_io_close () == 0);
@@ -660,7 +664,6 @@ Probl::saveCV(std::vector<double>& V, std::vector<double>& C, const char* FileNa
   
   octave_io_mode m = gz_write_mode;
   
-  // Save to filename.
   assert (octave_io_open (FileName, m, &m) == 0);
   assert (octave_save ("CVcurve", octave_value (the_map)) == 0);
   assert (octave_io_close () == 0);
@@ -795,7 +798,7 @@ Probl::CVcurve(std::vector<double>& phi){
   M2.resize(nnodes);
   jac.resize(nnodes);
     
-  /// Assemble system matrices
+  // Assemble system matrices.
   if(_ins){
     for(unsigned i=0; i<_insulator.size(); i++){
       if(_insulator[i]==1){
@@ -828,10 +831,10 @@ Probl::CVcurve(std::vector<double>& phi){
   bcs.push_back(tupla1);
   bcs.push_back(tupla2);
 
-  /// BCs Dirichlet type: dphi(-t_semic) = 0 ; dphi(t_ins) = 1;
+  // BCs Dirichlet type: dphi(-t_semic) = 0 ; dphi(t_ins) = 1;
   bim2a_dirichlet_bc (_msh, bcs, jac, f, default_ord);
 	
-  /// Assembling rhs term:
+  // Assembling rhs term.
   dphi = f;
 	
   mumps mumps_solver;
@@ -857,8 +860,8 @@ Probl::CVcurve(std::vector<double>& phi){
   for(int i=0; i<nnodes; i++){
     dphi[i] *= (-1);
   }	
-	
-  /// Riassemblo le matrici
+
+  // Re-assembling matrices.
   bim2a_advection_diffusion (_msh, epsilon, psi, A2);
   bim2a_reaction (_msh, ecoeff, ncoeff, M2);
 	

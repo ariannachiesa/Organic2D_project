@@ -46,10 +46,11 @@ int main(int argc, char** argv) {
     P._VG += dV;
     V[i] = P._VG;
 
-    /// Solve Non Linear Poisson
+    /// Solve Non Linear Poisson problem
     P.NonLinearPoisson(Vguess);
     P.savePoisson(P.Vin, P.nin, P.niter, P.resnrm, "NLPoisson_output");
 
+    /// Compute capacitance
     c = P.CVcurve(P.Vin);
     C[i] = c;
 

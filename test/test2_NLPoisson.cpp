@@ -4,7 +4,7 @@
   "Advanced Programming for Scientific Computing"
 */
 
-/*! \file test_NLPoisson.cpp
+/*! \file test2_NLPoisson.cpp
   \brief Test: Non Linear Poisson with applied V at gate
 */
 
@@ -32,7 +32,7 @@ int main(int argc, char** argv){
   /// Export nodal field Vguess to a octbin.gz file for visualization.
   P._msh.octbin_export ("Vguess_visualization", Vguess, default_ord);
 	
-  /// Solve Non Linear Poisson
+  /// Solve Non Linear Poisson problem with custom boundary conditions
   tstart_p = clock();
 
   P.NonLinearPoisson(Vguess);

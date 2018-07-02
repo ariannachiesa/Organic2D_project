@@ -4,7 +4,7 @@
   "Advanced Programming for Scientific Computing"
 */
 
-/*! \file test_NLPoisson.cpp
+/*! \file test1_NLPoisson.cpp
   \brief Test: Non Linear Poisson
 */
 
@@ -31,7 +31,7 @@ int main(int argc, char** argv){
   /// Export nodal field Vguess to a octbin.gz file for visualization.
   P._msh.octbin_export ("Vguess_visualization", Vguess, default_ord);
 	
-  /// Solve Non Linear Poisson
+  /// Solve Non Linear Poisson problem with default boundary conditions
   tstart_p = clock();
   P.NonLinearPoisson(Vguess);
   P.savePoisson(P.Vin, P.nin, P.niter, P.resnrm, "NLPoisson_output");

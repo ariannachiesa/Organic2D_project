@@ -1,22 +1,28 @@
-\hypertarget{probl_8h}{\section{/vagrant/codice/src/probl.h File Reference}
-\label{probl_8h}\index{/vagrant/codice/src/probl.\-h@{/vagrant/codice/src/probl.\-h}}
-}
+\hypertarget{probl_8h}{}\section{C\+:/\+Users/\+Claudio/\+Desktop/directory/codice/src/probl.h File Reference}
+\label{probl_8h}\index{C\+:/\+Users/\+Claudio/\+Desktop/directory/codice/src/probl.\+h@{C\+:/\+Users/\+Claudio/\+Desktop/directory/codice/src/probl.\+h}}
 
 
-Class Problem.  
+Class Problem It stores informations about the device, material parameters, physical constans, nodes and wiegths for Gaussian quadrature rules, tolerances for algorithms and methods which solve physical problems. Among the input parameters for its constructor\+: number of refinement cycles for the mesh. N.\+B \+: if n.\+cycles = 0 then the mesh will be constitute by a single row of elements on the y-\/axis otherwise it will be refined n.\+cycles-\/times and will have 2$\ast$n.cycles elements on both the x-\/axis and the y-\/axis.  
 
 
-{\ttfamily \#include \char`\"{}constants.\-h\char`\"{}}\\*
-{\ttfamily \#include \char`\"{}material.\-h\char`\"{}}\\*
-{\ttfamily \#include \char`\"{}quad.\-h\char`\"{}}\\*
-{\ttfamily \#include \char`\"{}algor.\-h\char`\"{}}\\*
-{\ttfamily \#include \char`\"{}device.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}bim\+\_\+sparse.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}mumps\+\_\+class.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}nonlinear\+\_\+solver.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}octave\+\_\+file\+\_\+io.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}quad\+\_\+operators.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}sandia\+\_\+rules.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}tmesh.\+h\char`\"{}}\newline
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$array$>$}\newline
+{\ttfamily \#include $<$fstream$>$}\newline
+{\ttfamily \#include $<$vector$>$}\newline
 \subsection*{Classes}
 \begin{DoxyCompactItemize}
 \item 
-class \hyperlink{classProbl}{Probl}
+class \mbox{\hyperlink{class_probl}{Probl}}
 \end{DoxyCompactItemize}
 
 
 \subsection{Detailed Description}
-Class Problem. 
+Class Problem It stores informations about the device, material parameters, physical constans, nodes and wiegths for Gaussian quadrature rules, tolerances for algorithms and methods which solve physical problems. Among the input parameters for its constructor\+: number of refinement cycles for the mesh. N.\+B \+: if n.\+cycles = 0 then the mesh will be constitute by a single row of elements on the y-\/axis otherwise it will be refined n.\+cycles-\/times and will have 2$\ast$n.cycles elements on both the x-\/axis and the y-\/axis. 
+

@@ -1,5 +1,16 @@
+/*
+  Arianna Chiesa
+  Project for the course:
+  "Advanced Programming for Scientific Computing"
+*/
+
 /*! \file probl.h
-  \brief Class Problem
+*  \brief Class Problem
+* It stores informations about the device, material parameters, physical constans, nodes and wiegths for Gaussian quadrature rules,
+* tolerances for algorithms and methods which solve physical problems. 
+* Among the input parameters for its constructor: number of refinement cycles for the mesh.
+* N.B : if n.cycles = 0 then the mesh will be constitute by a single row of elements on the y-axis
+* otherwise it will be refined n.cycles-times and will have 2*n.cycles elements on both the x-axis and the y-axis
 */
 
 #ifndef PROBL_H
@@ -21,112 +32,129 @@
 /**
  * class Probl :
  * It stores informations about the device, material parameters, physical constans, nodes and wiegths for Gaussian quadrature rules,
- * tolerances for algorithms and methods to solve physical problems. 
+ * tolerances for algorithms and methods which solve physical problems. 
  * Among the input parameters for its constructor: number of refinement cycles for the mesh.
  * N.B : if n.cycles = 0 then the mesh will be constitute by a single row of elements on the y-axis
- * otherwise it will be refined n.cycles times and will have 2*n.cycles elements on both the x-axis and the y-axis
+ * otherwise it will be refined n.cycles-times and will have 2*n.cycles elements on both the x-axis and the y-axis
  */
 class Probl
 {
 public:
 	
-  /// Physical constants
-  double _T0;			/**< absolute temperature */
-  double _Kb;			/**< Boltzmann's constant */
-  double _q;			/**< electron charge */
-  double _eps0;			/**< vacuum permittivity */
-  double _Vth;			/**< threshold voltage */
-	
-  /// Material characteristic parameters
-  double _eps_semic_r;		/**< relative permittivity of semiconductor */
-  double _eps_ins_r;	        /**< relative permittivity of insulator */
-  double _eps_semic;		/**< permittivity of semiconductor */
-  double _eps_ins;		/**< permittivity of insulator */
-  double _PhiB;		        /**< Metal to semiconductor barrier. [eV] */
-  double _N0;		        /**< Total number of available states (per unit volume) [m^{-3}] */
-  double _Egap;			/**< Energy gap. [eV] */
-  double _sigman;		/**< disorder parameter [J] */
-  double _sigman_kT;
-  double _mu0n;		        /**< low-field and low-density charge mobility for electrons [m^2 V^{-1} s^{-1}] */
-  double _ni;                   /**< intrinsic concentration of electrons */
+  double _T0;			///< Absolute temperature
+  double _Kb;			///< Boltzmann's constant 
+  double _q;			///< Electron charge 
+  double _eps0;			///< Vacuum permittivity 
+  double _Vth;			///< Threshold voltage 
+
+  
+  double _eps_semic_r;		///< Relative permittivity of semiconductor 
+  double _eps_ins_r;	        ///< Relative permittivity of insulator 
+  double _eps_semic;		///< Permittivity of semiconductor 
+  double _eps_ins;		///< Permittivity of insulator 
+  double _PhiB;		        ///< Metal to semiconductor barrier. [eV] 
+  double _N0;		        ///< Total number of available states (per unit volume) [m^{-3}] 
+  double _Egap;			///< Energy gap. [eV] 
+  double _sigman;		///< Disorder parameter [J] 
+  double _sigman_kT;            ///< sigman / (Kb * T0)
+  double _mu0n;		        ///< Low-field and low-density charge mobility for electrons [m^2 V^{-1} s^{-1}] 
+  double _ni;                   ///< Intrinsic concentration of electrons
 		
-  /// Nodes and weigths of Gauss-Hermite quadrature rules
-  std::vector<double> _gx;	/**< vectors of nodes for quad. rules */
-  std::vector<double> _gw;	/**< vectors of weigths for quad. rules */	
-	
-  /// Parameters for loops
-  int _pmaxit;
-  double _ptoll;
-	
-  ///   Geomterical settings and other informations on the device
-  bool _ins;		        /**< true = (default) if insulator is present , false = if there's only semiconductor */
-	
-  double _section;		/**< device section [m^2] */
-  double _Efield;	        /**< device source-drain electric field [V / m] */
-	
-  double _Vshift;		/**< [V] shift potential sensed at the gate terminal */
-  double _VG;			/**< [V] voltage applied at the gate terminal */
-  double _VB;			/**< [V] voltage applied at the bulk terminal */
-  double _Csb;		        /**< [F] value of the capacitor of the external control circuit */
-  double _t_semic;		/**< [m] thickness of semiconductor, along y-axis */
-  double _t_ins;		/**< [m] thickness of insulator, along y-axis */
-  double _L;			/**< [m] width of device, along x-axis */
-  int _nTrees;			/**< number of Trees in the mesh */
 
-  std::vector<int> _scnodes;	                /**< vector of 1s and 0s; 1 = node in the semiconductor, 0 = node in the insulator */
-  std::vector<int> _insulator;	                /**< vector of 1s and 0s; 0 = element in the semiconductor, 1 = element in the insulator */
-  std::array<int,2> _pins;	                /**< [Bulk, gate] : region 1 = semiconductor , region 0 = insulator */
-  std::array<int,2> _contacts;	                /**< number of the geometrical border containing the side edges where the contacts are :
-						*    edge 2 of tree 0, edge 3 of last tree
-						*/
-  std::vector< std::vector<int> > _dnodes;	/**< vector with gate nodes + vector with bulk nodes */
+  std::vector<double> _gx;	///< Vector of nodes for quadrature rules 
+  std::vector<double> _gw;	///< Vector of weigths for quadrature rules
 	
-  tmesh	_msh;					/**< quadrangular mesh */
-	
-  std::vector<double> Vin;		       /**< Output potential */
-  std::vector<double> nin;		       /**< Output electron density */
-  std::vector<double> resnrm;		       /**< residual norm */
-  int niter;			               /**< n. iterations required until convergence */
 
-  // Constructor
+  int _pmaxit;                  ///< Maximum allowed number of iterations
+  double _ptoll;                ///< Tolerances on th residual norm of the increment
+	
+
+  bool _ins;		        ///< true = (default) if insulator is present , false = if there's only semiconductor	
+  double _section;		///< Device section [m^2]
+  double _Efield;	        ///< Device source-drain electric field [V / m]	
+  double _Vshift;		///< Shift potential sensed at the gate terminal [V]
+  double _VG;			///< Voltage applied at the gate terminal [V]
+  double _VB;			///< Voltage applied at the bulk terminal [V]
+  double _Csb;		        ///< Value of the capacitor of the external control circuit [F]
+  double _t_semic;		///< Thickness of semiconductor, along y-axis [m]
+  double _t_ins;		///< Thickness of insulator, along y-axis [m]
+  double _L;			///< Width of device, along x-axis [m]
+  int _nTrees;			///< Number of Trees in the mesh
+  std::vector<int> _scnodes;	                ///< Boolean vector; 1 = node in the semiconductor, 0 = node in the insulator
+  std::vector<int> _insulator;	                ///< Boolean vector; 0 = element in the semiconductor, 1 = element in the insulator
+  std::array<int,2> _pins;	                ///< [Bulk, gate] : region 1 = semiconductor , region 0 = insulator
+  std::array<int,2> _contacts;	                ///< Number of the geometrical border containing the side edges where the contacts are: edge 2 of tree 0, edge 3 of last tree
+  std::vector< std::vector<int> > _dnodes;	///< Vector with gate nodes + vector with bulk nodes
+  tmesh	_msh;					///< Quadrangular mesh
+
+  
+  std::vector<double> Vin;		       ///< Output potential 
+  std::vector<double> nin;		       ///< Output electron density 
+  std::vector<double> resnrm;		       ///< Residual norm of the increment
+  int niter;			               ///< Number of iterations required until convergence 
+
+  
+  /// Constructor.
   Probl(int maxcycle,
-	double T0 = 300,						                                                        // Constants
-	double PhiB = 0.54, double sigman = 2.6, double mu0n = 4.29110133911508e-6,                                             // Material
-	int nq = 101,								                                                // Quad
-	int pmaxit = 1000, double ptoll = 1e-10,				                                                // Algor
-	double Vshift = 1.79738, double Csb = 1.16183675549126e-11, double t_semic = 3.49436549222355e-8,                       // Device
+	double T0 = 300,						                 
+	double PhiB = 0.54, double sigman = 2.6, double mu0n = 4.29110133911508e-6,             
+	int nq = 101,								                 
+	int pmaxit = 1000, double ptoll = 1e-10,				               
+	double Vshift = 1.79738, double Csb = 1.16183675549126e-11, double t_semic = 3.49436549222355e-8,
 	double t_ins = 4.41e-7, double L = 1.4e-3, bool ins = true, std::array<int,2> pins = {1, 0},
 	std::array<int,2> contacts = {2, 3}, double section = 0.00000081, double Vdrain = 5, double VG = 0.0, double VB = 0.0);
 
-  /// METHODS
-
+  /// Set physical constants.
   void Constants(double T0);
+
+  /// Set material parameters.
   void Material(double PhiB, double sigman, double mu0n);
+
+  /// Computes nodes and wigths for Gaussian quadrature rules.
   void Quad(int n);
-  void Algor(int pmaxit, double ptoll);				
+
+  /// Set tolerances for Newton's method.
+  void Algor(int pmaxit, double ptoll);
+
+  /// Set geometrical/physical parameters of the device.
   void Device(double Vshift, double Csb, double t_semic, double t_ins, double L, bool ins, std::array<int,2>& pins,
 	      std::array<int,2>& contacts, double section, double Vdrain, double VG, double VB, int maxcycle);
-				
+
+  /// Solve Laplace problem.
   void Laplace();
+
+  /// Solve Linear Poisson problem.
   void LinearPoisson();
+
+  /// Solve Non-Linear Poisson problem.
   void NonLinearPoisson(std::vector<double>& phi0);
-	
+
+  /// Computes electron charge density and its derivative depending on the potential.
   void org_gaussian_charge_n(std::vector<double>& V, std::vector<double>& rhon, std::vector<double>& drhon_dV);
   void org_gaussian_charge_n(std::vector<double>& V, std::vector<double>& drhon_dV);
-							
+
+  /// Computes the approximation of n with Gaussian formulas.
   std::vector<double> n_approx(std::vector<double>& V);
+
+  /// Computes the approximation of the derivative of n with Gaussian formulas.
   std::vector<double> dn_dV_approx(std::vector<double>& V);
-	
+
+  /// Computes capacitance of the MIS capacitor.
   double CVcurve(std::vector<double>& phi);
 	
-  /// save methods
+  /// Save output of the Poisson methods.
   void savePoisson(std::vector<double>& V, std::vector<double>& n, double niter, std::vector<double>& resnrm, const char* FileName);
+
+  /// Save output of the CVcurve method.
   void saveCV(std::vector<double>& V, std::vector<double>& C, const char* FileName);
 
   /// Compute the (Inf,L2,H1) norm of a piecewise linear function.
   void Norm (tmesh& msh, const std::vector<double>& v, double& norm, norm_type type);
 	
-  /// set methods
+  /// Set T0 method.
+  /** It sets T0 value and update all the other parameters that depend on the temperature:
+      Vth and sigman_kT
+  */
   void set_T0(double T0);
 
 };
