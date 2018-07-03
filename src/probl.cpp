@@ -71,7 +71,7 @@ Probl::Algor(int pmaxit, double ptoll)
 };
 
 void
-Probl::Device(double Vshift, double Csb, double t_semic, double t_ins, double L, bool ins, std::array<int,2>& pins,
+Probl::Device(double Vshift, double t_semic, double t_ins, double L, bool ins, std::array<int,2>& pins,
 	      std::array<int,2>& contacts, double section, double Vdrain, double VG, double VB, int maxcycle)
 {
   int recursive, partforcoarsen;

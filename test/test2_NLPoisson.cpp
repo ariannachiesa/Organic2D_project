@@ -19,8 +19,8 @@ int main(int argc, char** argv){
 	
   /// n. refinement cycles : 1
   /// the mesh is constituted only by two rows of quadrants along the y-axis
-  Probl P(1, 295, 0.54, 2.6, 4.29110133911508e-6, 101, 1000, 1e-10, 1.79738, 1.16183675549126e-11,
-	  3.49436549222355e-8, 4.41e-7, 1.4e-3, true, {1, 0}, {2, 3}, 0.00000081, 5, 35, 0.0);
+  Probl P(1, 295, 0.54, 2.6, 4.29110133911508e-6, 101, 1000, 1e-10, 1.79738, 3.49436549222355e-8,
+	  4.41e-7, 1.4e-3, true, {1, 0}, {2, 3}, 0.00000081, 5, 35, 0.0);
 
   tstart_probl = clock() - tstart_probl;
   std::cout<<"Construction class Probl run time: "<<tstart_probl<<" , ("<<((float)tstart_probl)/CLOCKS_PER_SEC<<" seconds)."<<std::endl;
