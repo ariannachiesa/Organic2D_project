@@ -23,7 +23,7 @@
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Organic_2D
    </div>
-   <div id="projectbrief">Modelling and simulation of organic 2D MIS capacitor</div>
+   <div id="projectbrief">Simulation of organic MIS capacitors</div>
   </td>
  </tr>
  </tbody>
@@ -75,10 +75,10 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a692b15a88516cb52437bd60f33a8edf0"><td class="memItemLeft" align="right" valign="top"><a id="a692b15a88516cb52437bd60f33a8edf0"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_probl.html#a692b15a88516cb52437bd60f33a8edf0">Probl</a> (int maxcycle, double T0=300, double PhiB=0.54, double sigman=2.6, double mu0n=4.29110133911508e-6, int nq=101, int pmaxit=1000, double ptoll=1e-10, double Vshift=1.79738, double Csb=1.16183675549126e-11, double t_semic=3.49436549222355e-8, double t_ins=4.41e-7, double L=1.4e-3, bool ins=true, std::array&lt; int, 2 &gt; pins={1, 0}, std::array&lt; int, 2 &gt; contacts={2, 3}, double section=0.00000081, double Vdrain=5, double VG=0.0, double VB=0.0)</td></tr>
-<tr class="memdesc:a692b15a88516cb52437bd60f33a8edf0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor. <br /></td></tr>
-<tr class="separator:a692b15a88516cb52437bd60f33a8edf0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a10c8dcc131ffcc3bcf2af590323ba961"><td class="memItemLeft" align="right" valign="top"><a id="a10c8dcc131ffcc3bcf2af590323ba961"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_probl.html#a10c8dcc131ffcc3bcf2af590323ba961">Probl</a> (int maxcycle, double T0=300, double PhiB=0.54, double sigman=2.6, double mu0n=4.29110133911508e-6, int nq=101, int pmaxit=1000, double ptoll=1e-10, double Vshift=1.79738, double t_semic=3.49436549222355e-8, double t_ins=4.41e-7, double L=1.4e-3, bool ins=true, std::array&lt; int, 2 &gt; pins={1, 0}, std::array&lt; int, 2 &gt; contacts={2, 3}, double section=0.00000081, double Vdrain=5, double VG=0.0, double VB=0.0)</td></tr>
+<tr class="memdesc:a10c8dcc131ffcc3bcf2af590323ba961"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor. <br /></td></tr>
+<tr class="separator:a10c8dcc131ffcc3bcf2af590323ba961"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab73c319317dcb9cce6b491b0d13ed882"><td class="memItemLeft" align="right" valign="top"><a id="ab73c319317dcb9cce6b491b0d13ed882"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_probl.html#ab73c319317dcb9cce6b491b0d13ed882">Constants</a> (double T0)</td></tr>
 <tr class="memdesc:ab73c319317dcb9cce6b491b0d13ed882"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set physical constants. <br /></td></tr>
@@ -89,16 +89,16 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="separator:af3f026d191bae1943873bd6cb150aedc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a20e64318e853ac58c258c4c1d20a2315"><td class="memItemLeft" align="right" valign="top"><a id="a20e64318e853ac58c258c4c1d20a2315"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_probl.html#a20e64318e853ac58c258c4c1d20a2315">Quad</a> (int n)</td></tr>
-<tr class="memdesc:a20e64318e853ac58c258c4c1d20a2315"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes nodes and wigths for Gaussian quadrature rules. <br /></td></tr>
+<tr class="memdesc:a20e64318e853ac58c258c4c1d20a2315"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes nodes and wigths for Gaussian quadrature rules using Sandia library. <br /></td></tr>
 <tr class="separator:a20e64318e853ac58c258c4c1d20a2315"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aef98437ee923d5ecc17e01bc85656522"><td class="memItemLeft" align="right" valign="top"><a id="aef98437ee923d5ecc17e01bc85656522"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_probl.html#aef98437ee923d5ecc17e01bc85656522">Algor</a> (int pmaxit, double ptoll)</td></tr>
 <tr class="memdesc:aef98437ee923d5ecc17e01bc85656522"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set tolerances for Newton's method. <br /></td></tr>
 <tr class="separator:aef98437ee923d5ecc17e01bc85656522"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a60041def522e51a75d21e172362b6944"><td class="memItemLeft" align="right" valign="top"><a id="a60041def522e51a75d21e172362b6944"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_probl.html#a60041def522e51a75d21e172362b6944">Device</a> (double Vshift, double Csb, double t_semic, double t_ins, double L, bool ins, std::array&lt; int, 2 &gt; &amp;pins, std::array&lt; int, 2 &gt; &amp;contacts, double section, double Vdrain, double VG, double VB, int maxcycle)</td></tr>
-<tr class="memdesc:a60041def522e51a75d21e172362b6944"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set geometrical/physical parameters of the device. <br /></td></tr>
-<tr class="separator:a60041def522e51a75d21e172362b6944"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ada656c3096ea0ea167265f2dcf7aff45"><td class="memItemLeft" align="right" valign="top"><a id="ada656c3096ea0ea167265f2dcf7aff45"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_probl.html#ada656c3096ea0ea167265f2dcf7aff45">Device</a> (double Vshift, double t_semic, double t_ins, double L, bool ins, std::array&lt; int, 2 &gt; &amp;pins, std::array&lt; int, 2 &gt; &amp;contacts, double section, double Vdrain, double VG, double VB, int maxcycle)</td></tr>
+<tr class="memdesc:ada656c3096ea0ea167265f2dcf7aff45"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set geometrical/physical parameters of the device. <br /></td></tr>
+<tr class="separator:ada656c3096ea0ea167265f2dcf7aff45"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a07cc161806dfcce5e7cdf980b5e211c4"><td class="memItemLeft" align="right" valign="top"><a id="a07cc161806dfcce5e7cdf980b5e211c4"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_probl.html#a07cc161806dfcce5e7cdf980b5e211c4">Laplace</a> ()</td></tr>
 <tr class="memdesc:a07cc161806dfcce5e7cdf980b5e211c4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Solve Laplace problem. <br /></td></tr>
@@ -252,10 +252,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_probl.html#ad42ca3b122970b9782a1b76349ec4b05">_VB</a></td></tr>
 <tr class="memdesc:ad42ca3b122970b9782a1b76349ec4b05"><td class="mdescLeft">&#160;</td><td class="mdescRight">Voltage applied at the bulk terminal [V]. <br /></td></tr>
 <tr class="separator:ad42ca3b122970b9782a1b76349ec4b05"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a8df6963bf80a8883d3818cf9b4d7e3"><td class="memItemLeft" align="right" valign="top"><a id="a7a8df6963bf80a8883d3818cf9b4d7e3"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_probl.html#a7a8df6963bf80a8883d3818cf9b4d7e3">_Csb</a></td></tr>
-<tr class="memdesc:a7a8df6963bf80a8883d3818cf9b4d7e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Value of the capacitor of the external control circuit [F]. <br /></td></tr>
-<tr class="separator:a7a8df6963bf80a8883d3818cf9b4d7e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad8663cbe5d931041ea588344559b428a"><td class="memItemLeft" align="right" valign="top"><a id="ad8663cbe5d931041ea588344559b428a"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_probl.html#ad8663cbe5d931041ea588344559b428a">_t_semic</a></td></tr>
 <tr class="memdesc:ad8663cbe5d931041ea588344559b428a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Thickness of semiconductor, along y-axis [m]. <br /></td></tr>

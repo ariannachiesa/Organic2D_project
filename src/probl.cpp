@@ -93,7 +93,6 @@ Probl::Device(double Vshift, double Csb, double t_semic, double t_ins, double L,
   _VG = VG;
   _VB = VB;
   _Vshift = Vshift;
-  _Csb = Csb;
   _t_semic = t_semic;
   _t_ins = t_ins;
   _L = L;
@@ -307,14 +306,14 @@ Probl::Probl(int maxcycle,
 	     double PhiB, double sigman, double mu0n,                                  
 	     int nq,				                                     
 	     int pmaxit, double ptoll,		                                         
-	     double Vshift, double Csb, double t_semic, double t_ins, double L, bool ins, 
-	     std::array<int,2> pins, std::array<int,2> contacts, double section, double Vdrain, double VG, double VB)
+	     double Vshift, double t_semic, double t_ins, double L, bool ins, std::array<int,2> pins,
+	     std::array<int,2> contacts, double section, double Vdrain, double VG, double VB)
 {
   Constants(T0);
   Material(PhiB, sigman, mu0n);
   Quad(nq);
   Algor(pmaxit, ptoll);
-  Device(Vshift, Csb, t_semic, t_ins, L, ins, pins, contacts, section, Vdrain, VG, VB, maxcycle);
+  Device(Vshift, t_semic, t_ins, L, ins, pins, contacts, section, Vdrain, VG, VB, maxcycle);
 };
 
 

@@ -1,7 +1,6 @@
 var searchData=
 [
   ['_5fcontacts',['_contacts',['../class_probl.html#ad0987da6c7975bf9018ff9891012695d',1,'Probl']]],
-  ['_5fcsb',['_Csb',['../class_probl.html#a7a8df6963bf80a8883d3818cf9b4d7e3',1,'Probl']]],
   ['_5fdnodes',['_dnodes',['../class_probl.html#a8889847da2dc2951c2dfa4721eff2c37',1,'Probl']]],
   ['_5fefield',['_Efield',['../class_probl.html#afad911eeef119fd9fd5f032c653402bb',1,'Probl']]],
   ['_5fegap',['_Egap',['../class_probl.html#a4050fa19ae8724f4f0acb0f2cc31ef39',1,'Probl']]],

@@ -7,8 +7,8 @@
 \subsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\Hypertarget{class_probl_a692b15a88516cb52437bd60f33a8edf0}\label{class_probl_a692b15a88516cb52437bd60f33a8edf0}} 
-\mbox{\hyperlink{class_probl_a692b15a88516cb52437bd60f33a8edf0}{Probl}} (int maxcycle, double T0=300, double PhiB=0.\+54, double sigman=2.\+6, double mu0n=4.\+29110133911508e-\/6, int nq=101, int pmaxit=1000, double ptoll=1e-\/10, double Vshift=1.\+79738, double Csb=1.\+16183675549126e-\/11, double t\+\_\+semic=3.\+49436549222355e-\/8, double t\+\_\+ins=4.\+41e-\/7, double L=1.\+4e-\/3, bool ins=true, std\+::array$<$ int, 2 $>$ pins=\{1, 0\}, std\+::array$<$ int, 2 $>$ contacts=\{2, 3\}, double section=0.\+00000081, double Vdrain=5, double V\+G=0.\+0, double V\+B=0.\+0)
+\mbox{\Hypertarget{class_probl_a10c8dcc131ffcc3bcf2af590323ba961}\label{class_probl_a10c8dcc131ffcc3bcf2af590323ba961}} 
+\mbox{\hyperlink{class_probl_a10c8dcc131ffcc3bcf2af590323ba961}{Probl}} (int maxcycle, double T0=300, double PhiB=0.\+54, double sigman=2.\+6, double mu0n=4.\+29110133911508e-\/6, int nq=101, int pmaxit=1000, double ptoll=1e-\/10, double Vshift=1.\+79738, double t\+\_\+semic=3.\+49436549222355e-\/8, double t\+\_\+ins=4.\+41e-\/7, double L=1.\+4e-\/3, bool ins=true, std\+::array$<$ int, 2 $>$ pins=\{1, 0\}, std\+::array$<$ int, 2 $>$ contacts=\{2, 3\}, double section=0.\+00000081, double Vdrain=5, double V\+G=0.\+0, double V\+B=0.\+0)
 \begin{DoxyCompactList}\small\item\em Constructor. \end{DoxyCompactList}\item 
 \mbox{\Hypertarget{class_probl_ab73c319317dcb9cce6b491b0d13ed882}\label{class_probl_ab73c319317dcb9cce6b491b0d13ed882}} 
 void \mbox{\hyperlink{class_probl_ab73c319317dcb9cce6b491b0d13ed882}{Constants}} (double T0)
@@ -18,12 +18,12 @@ void \mbox{\hyperlink{class_probl_af3f026d191bae1943873bd6cb150aedc}{Material}} 
 \begin{DoxyCompactList}\small\item\em Set material parameters. \end{DoxyCompactList}\item 
 \mbox{\Hypertarget{class_probl_a20e64318e853ac58c258c4c1d20a2315}\label{class_probl_a20e64318e853ac58c258c4c1d20a2315}} 
 void \mbox{\hyperlink{class_probl_a20e64318e853ac58c258c4c1d20a2315}{Quad}} (int n)
-\begin{DoxyCompactList}\small\item\em Computes nodes and wigths for Gaussian quadrature rules. \end{DoxyCompactList}\item 
+\begin{DoxyCompactList}\small\item\em Computes nodes and wigths for Gaussian quadrature rules using Sandia library. \end{DoxyCompactList}\item 
 \mbox{\Hypertarget{class_probl_aef98437ee923d5ecc17e01bc85656522}\label{class_probl_aef98437ee923d5ecc17e01bc85656522}} 
 void \mbox{\hyperlink{class_probl_aef98437ee923d5ecc17e01bc85656522}{Algor}} (int pmaxit, double ptoll)
 \begin{DoxyCompactList}\small\item\em Set tolerances for Newton\textquotesingle{}s method. \end{DoxyCompactList}\item 
-\mbox{\Hypertarget{class_probl_a60041def522e51a75d21e172362b6944}\label{class_probl_a60041def522e51a75d21e172362b6944}} 
-void \mbox{\hyperlink{class_probl_a60041def522e51a75d21e172362b6944}{Device}} (double Vshift, double Csb, double t\+\_\+semic, double t\+\_\+ins, double L, bool ins, std\+::array$<$ int, 2 $>$ \&pins, std\+::array$<$ int, 2 $>$ \&contacts, double section, double Vdrain, double VG, double VB, int maxcycle)
+\mbox{\Hypertarget{class_probl_ada656c3096ea0ea167265f2dcf7aff45}\label{class_probl_ada656c3096ea0ea167265f2dcf7aff45}} 
+void \mbox{\hyperlink{class_probl_ada656c3096ea0ea167265f2dcf7aff45}{Device}} (double Vshift, double t\+\_\+semic, double t\+\_\+ins, double L, bool ins, std\+::array$<$ int, 2 $>$ \&pins, std\+::array$<$ int, 2 $>$ \&contacts, double section, double Vdrain, double VG, double VB, int maxcycle)
 \begin{DoxyCompactList}\small\item\em Set geometrical/physical parameters of the device. \end{DoxyCompactList}\item 
 \mbox{\Hypertarget{class_probl_a07cc161806dfcce5e7cdf980b5e211c4}\label{class_probl_a07cc161806dfcce5e7cdf980b5e211c4}} 
 void \mbox{\hyperlink{class_probl_a07cc161806dfcce5e7cdf980b5e211c4}{Laplace}} ()
@@ -141,9 +141,6 @@ double \mbox{\hyperlink{class_probl_ae52092839f1dc1dab7e6b076b0ee272b}{\+\_\+\+V
 \mbox{\Hypertarget{class_probl_ad42ca3b122970b9782a1b76349ec4b05}\label{class_probl_ad42ca3b122970b9782a1b76349ec4b05}} 
 double \mbox{\hyperlink{class_probl_ad42ca3b122970b9782a1b76349ec4b05}{\+\_\+\+VB}}
 \begin{DoxyCompactList}\small\item\em Voltage applied at the bulk terminal \mbox{[}V\mbox{]}. \end{DoxyCompactList}\item 
-\mbox{\Hypertarget{class_probl_a7a8df6963bf80a8883d3818cf9b4d7e3}\label{class_probl_a7a8df6963bf80a8883d3818cf9b4d7e3}} 
-double \mbox{\hyperlink{class_probl_a7a8df6963bf80a8883d3818cf9b4d7e3}{\+\_\+\+Csb}}
-\begin{DoxyCompactList}\small\item\em Value of the capacitor of the external control circuit \mbox{[}F\mbox{]}. \end{DoxyCompactList}\item 
 \mbox{\Hypertarget{class_probl_ad8663cbe5d931041ea588344559b428a}\label{class_probl_ad8663cbe5d931041ea588344559b428a}} 
 double \mbox{\hyperlink{class_probl_ad8663cbe5d931041ea588344559b428a}{\+\_\+t\+\_\+semic}}
 \begin{DoxyCompactList}\small\item\em Thickness of semiconductor, along y-\/axis \mbox{[}m\mbox{]}. \end{DoxyCompactList}\item 

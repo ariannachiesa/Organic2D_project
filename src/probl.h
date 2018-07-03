@@ -75,7 +75,6 @@ public:
   double _Vshift;		///< Shift potential sensed at the gate terminal [V]
   double _VG;			///< Voltage applied at the gate terminal [V]
   double _VB;			///< Voltage applied at the bulk terminal [V]
-  double _Csb;		        ///< Value of the capacitor of the external control circuit [F]
   double _t_semic;		///< Thickness of semiconductor, along y-axis [m]
   double _t_ins;		///< Thickness of insulator, along y-axis [m]
   double _L;			///< Width of device, along x-axis [m]
@@ -100,8 +99,7 @@ public:
 	double PhiB = 0.54, double sigman = 2.6, double mu0n = 4.29110133911508e-6,             
 	int nq = 101,								                 
 	int pmaxit = 1000, double ptoll = 1e-10,				               
-	double Vshift = 1.79738, double Csb = 1.16183675549126e-11, double t_semic = 3.49436549222355e-8,
-	double t_ins = 4.41e-7, double L = 1.4e-3, bool ins = true, std::array<int,2> pins = {1, 0},
+	double Vshift = 1.79738, double t_semic = 3.49436549222355e-8, double t_ins = 4.41e-7, double L = 1.4e-3, bool ins = true, std::array<int,2> pins = {1, 0},
 	std::array<int,2> contacts = {2, 3}, double section = 0.00000081, double Vdrain = 5, double VG = 0.0, double VB = 0.0);
 
   /// Set physical constants.
@@ -110,14 +108,14 @@ public:
   /// Set material parameters.
   void Material(double PhiB, double sigman, double mu0n);
 
-  /// Computes nodes and wigths for Gaussian quadrature rules.
+  /// Computes nodes and wigths for Gaussian quadrature rules using Sandia library.
   void Quad(int n);
 
   /// Set tolerances for Newton's method.
   void Algor(int pmaxit, double ptoll);
 
   /// Set geometrical/physical parameters of the device.
-  void Device(double Vshift, double Csb, double t_semic, double t_ins, double L, bool ins, std::array<int,2>& pins,
+  void Device(double Vshift, double t_semic, double t_ins, double L, bool ins, std::array<int,2>& pins,
 	      std::array<int,2>& contacts, double section, double Vdrain, double VG, double VB, int maxcycle);
 
   /// Solve Laplace problem.
